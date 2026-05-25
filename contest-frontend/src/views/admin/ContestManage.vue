@@ -204,7 +204,11 @@ async function fetchData() {
 }
 
 function edit(row) {
-  const sanitized = { ...row }
+  const sanitized = {
+    ...row,
+    teamMinSize: row.teamMinSize ?? 1,
+    teamMaxSize: row.teamMaxSize ?? 10
+  }
   if (sanitized.contestTime == null) sanitized.contestTime = undefined
   if (sanitized.registerStartTime == null) sanitized.registerStartTime = undefined
   if (sanitized.registerEndTime == null) sanitized.registerEndTime = undefined
@@ -217,6 +221,9 @@ async function save() {
   if (!form.name) { ElMessage.warning('请输入竞赛名称'); return }
   if (!form.category) { ElMessage.warning('请选择竞赛类别'); return }
   if (!form.level) { ElMessage.warning('请选择竞赛级别'); return }
+  if (form.contestType !== 0 && form.teamMinSize > form.teamMaxSize) {
+    ElMessage.warning('团队最少人数不能大于最多人数'); return
+  }
   saving.value = true
   try {
     if (isEdit.value) {
