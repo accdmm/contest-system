@@ -1,54 +1,81 @@
 <template>
-  <div>
+  <div class="page">
     <NavBar />
-    <div class="container">
-      <el-card>
-        <template #header>个人信息</template>
-        <el-form :model="form" label-width="100px">
-          <el-form-item label="学号">
-            <el-input v-model="form.username" disabled />
-          </el-form-item>
-          <el-form-item label="姓名">
-            <el-input v-model="form.name" />
-          </el-form-item>
-          <el-form-item label="邮箱">
-            <el-input v-model="form.email" />
-          </el-form-item>
-          <el-form-item label="手机">
-            <el-input v-model="form.phone" />
-          </el-form-item>
-          <el-form-item label="学院">
-            <el-input v-model="form.college" disabled />
-          </el-form-item>
-          <el-form-item label="专业">
-            <el-input v-model="form.major" disabled />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleUpdate">保存修改</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+    <div class="container profile-page">
+      <h2 class="section-title anim-fade-up">个人中心</h2>
 
-      <el-card style="margin-top:20px">
-        <template #header>修改密码</template>
-        <el-form :model="pwdForm" label-width="100px">
-          <el-form-item label="原密码">
-            <el-input v-model="pwdForm.oldPassword" type="password" show-password />
-          </el-form-item>
-          <el-form-item label="新密码">
-            <el-input v-model="pwdForm.newPassword" type="password" show-password />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleChangePwd">修改密码</el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+      <div class="profile-grid">
+        <!-- Profile Card -->
+        <div class="profile-card anim-fade-up anim-delay-1">
+          <div class="profile-card__header">
+            <div class="avatar">
+              <span class="avatar__text">{{ initials }}</span>
+            </div>
+            <div class="avatar-info">
+              <h3 class="avatar-info__name">{{ form.name || '用户' }}</h3>
+              <p class="avatar-info__meta">{{ form.college }} · {{ form.major }}</p>
+            </div>
+          </div>
+          <div class="profile-card__divider" />
+          <el-form :model="form" label-position="top" class="profile-form">
+            <el-form-item label="学号">
+              <el-input v-model="form.username" disabled />
+            </el-form-item>
+            <el-form-item label="姓名">
+              <el-input v-model="form.name" placeholder="请输入姓名" />
+            </el-form-item>
+            <el-form-item label="邮箱">
+              <el-input v-model="form.email" placeholder="请输入邮箱" />
+            </el-form-item>
+            <el-form-item label="手机">
+              <el-input v-model="form.phone" placeholder="请输入手机号" />
+            </el-form-item>
+            <el-form-item label="学院">
+              <el-input v-model="form.college" disabled />
+            </el-form-item>
+            <el-form-item label="专业">
+              <el-input v-model="form.major" disabled />
+            </el-form-item>
+            <el-form-item>
+              <button class="btn-save" @click.prevent="handleUpdate">保存修改</button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+        <!-- Password Card -->
+        <div class="profile-card anim-fade-up anim-delay-3">
+          <div class="profile-card__header">
+            <div class="avatar avatar--accent">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+            </div>
+            <div class="avatar-info">
+              <h3 class="avatar-info__name">修改密码</h3>
+              <p class="avatar-info__meta">定期更换密码保障账户安全</p>
+            </div>
+          </div>
+          <div class="profile-card__divider" />
+          <el-form :model="pwdForm" label-position="top" class="profile-form">
+            <el-form-item label="原密码">
+              <el-input v-model="pwdForm.oldPassword" type="password" show-password placeholder="输入原密码" />
+            </el-form-item>
+            <el-form-item label="新密码">
+              <el-input v-model="pwdForm.newPassword" type="password" show-password placeholder="输入新密码" />
+            </el-form-item>
+            <el-form-item>
+              <button class="btn-save" @click.prevent="handleChangePwd">修改密码</button>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getUserById, updateProfile, changePassword } from '../../api/user'
@@ -58,26 +85,158 @@ const store = useUserStore()
 const form = reactive({ username: '', name: '', email: '', phone: '', college: '', major: '' })
 const pwdForm = reactive({ oldPassword: '', newPassword: '' })
 
+const initials = computed(() => {
+  if (!form.name) return '?'
+  const parts = form.name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return form.name.slice(0, 2).toUpperCase()
+})
+
 onMounted(async () => {
   try {
     const res = await getUserById(store.userId)
     Object.assign(form, res.data)
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+  }
 })
 
 async function handleUpdate() {
-  await updateProfile(store.userId, form)
-  ElMessage.success('保存成功')
+  try {
+    await updateProfile(store.userId, form)
+    ElMessage.success('保存成功')
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
 }
 
 async function handleChangePwd() {
-  await changePassword(store.userId, pwdForm)
-  ElMessage.success('密码修改成功')
-  pwdForm.oldPassword = ''
-  pwdForm.newPassword = ''
+  if (!pwdForm.oldPassword || !pwdForm.newPassword) {
+    ElMessage.warning('请填写完整密码信息')
+    return
+  }
+  try {
+    await changePassword(store.userId, pwdForm)
+    ElMessage.success('密码修改成功')
+    pwdForm.oldPassword = ''
+    pwdForm.newPassword = ''
+  } catch (e) {
+    ElMessage.error('密码修改失败')
+  }
 }
 </script>
 
 <style scoped>
-.container { max-width: 600px; margin: 20px auto; }
+.profile-page {
+  max-width: 860px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-card {
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--c-border-light);
+  padding: 28px;
+  transition: var(--transition);
+}
+.profile-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.avatar--accent {
+  background: var(--c-accent);
+}
+
+.avatar__text {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.avatar-info__name {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.15rem;
+  color: var(--c-primary);
+  margin: 0;
+}
+
+.avatar-info__meta {
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+  margin: 2px 0 0;
+}
+
+.profile-card__divider {
+  height: 1px;
+  background: var(--c-border-light);
+  margin: 20px 0;
+}
+
+.profile-form {
+  margin-top: 0;
+}
+
+.profile-form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+
+.profile-form :deep(.el-form-item__label) {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  padding-bottom: 4px;
+}
+
+.btn-save {
+  width: 100%;
+  background: var(--c-primary);
+  color: #fff;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 4px;
+}
+.btn-save:hover {
+  background: var(--c-primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.btn-save:active {
+  transform: translateY(0);
+}
 </style>

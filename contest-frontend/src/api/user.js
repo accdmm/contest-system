@@ -27,3 +27,7 @@ export function freezeUser(id) {
 export function unfreezeUser(id) {
   return request.put(`/user/${id}/unfreeze`)
 }
+
+export function pageUsers(params) {
+  return request.get('/user/page', { params })
+}

@@ -33,7 +33,7 @@ export function submitTeamReview(teamId, userId) {
 }
 
 export function getTeamById(id) {
-  return request.get(`/team/${id}`)
+  return request.get(`/team/${id}/detail`)
 }
 
 export function listTeamMembers(teamId) {
@@ -42,4 +42,28 @@ export function listTeamMembers(teamId) {
 
 export function listPendingMembers(teamId) {
   return request.get(`/team/${teamId}/pending`)
+}
+
+export function getTeamByLeader(userId, contestId) {
+  return request.get('/team/leader', { params: { userId, contestId } })
+}
+
+export function leaveTeam(teamId, userId) {
+  return request.put(`/team/${teamId}/leave`, null, { params: { userId } })
+}
+
+export function pageTeams(params) {
+  return request.get('/team/page', { params })
+}
+
+export function adminApproveTeam(teamId) {
+  return request.put(`/team/${teamId}/admin-approve`)
+}
+
+export function adminRejectTeam(teamId, reason) {
+  return request.put(`/team/${teamId}/admin-reject`, { reason })
+}
+
+export function listUserTeams(userId) {
+  return request.get(`/team/user/${userId}`)
 }
