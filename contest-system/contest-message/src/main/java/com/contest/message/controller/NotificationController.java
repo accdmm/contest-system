@@ -39,4 +39,18 @@ public class NotificationController {
         notificationService.markAllAsRead(userId);
         return Result.success();
     }
+
+    @PostMapping("/send")
+    public Result<Void> send(@RequestParam Long userId, @RequestParam Integer type,
+                             @RequestParam String title, @RequestParam String content) {
+        notificationService.sendNotification(userId, type, title, content, null, null);
+        return Result.success();
+    }
+
+    @PostMapping("/broadcast")
+    public Result<Void> broadcast(@RequestParam Integer type, @RequestParam String title,
+                                  @RequestParam String content) {
+        notificationService.sendBroadcast(type, title, content);
+        return Result.success();
+    }
 }
