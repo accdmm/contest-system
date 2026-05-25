@@ -20,17 +20,28 @@ public class RegistrationController {
 
     @PostMapping("/personal")
     public Result<Registration> registerPersonal(@RequestBody Map<String, Object> params) {
-        Long userId = Long.valueOf(params.get("userId").toString());
-        Long contestId = Long.valueOf(params.get("contestId").toString());
+        Object userIdObj = params.get("userId");
+        Object contestIdObj = params.get("contestId");
+        if (userIdObj == null || contestIdObj == null) {
+            return Result.error("缺少必要参数");
+        }
+        Long userId = Long.valueOf(userIdObj.toString());
+        Long contestId = Long.valueOf(contestIdObj.toString());
         String remark = (String) params.getOrDefault("remark", "");
         return Result.success(registrationService.registerPersonal(userId, contestId, remark));
     }
 
     @PostMapping("/team")
     public Result<Registration> registerTeam(@RequestBody Map<String, Object> params) {
-        Long userId = Long.valueOf(params.get("userId").toString());
-        Long contestId = Long.valueOf(params.get("contestId").toString());
-        Long teamId = Long.valueOf(params.get("teamId").toString());
+        Object userIdObj = params.get("userId");
+        Object contestIdObj = params.get("contestId");
+        Object teamIdObj = params.get("teamId");
+        if (userIdObj == null || contestIdObj == null || teamIdObj == null) {
+            return Result.error("缺少必要参数");
+        }
+        Long userId = Long.valueOf(userIdObj.toString());
+        Long contestId = Long.valueOf(contestIdObj.toString());
+        Long teamId = Long.valueOf(teamIdObj.toString());
         return Result.success(registrationService.registerTeam(userId, contestId, teamId));
     }
 
