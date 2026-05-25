@@ -107,8 +107,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN);
         wrapper.orderByDesc(Contest::getCurrentCount);
-        wrapper.last("LIMIT " + limit);
-        return list(wrapper);
+        return page(new Page<>(1, limit), wrapper).getRecords();
     }
 
     @Override
@@ -116,7 +115,6 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN);
         wrapper.orderByDesc(Contest::getCreateTime);
-        wrapper.last("LIMIT " + limit);
-        return list(wrapper);
+        return page(new Page<>(1, limit), wrapper).getRecords();
     }
 }
