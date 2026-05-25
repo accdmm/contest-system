@@ -14,9 +14,11 @@ import com.contest.register.mapper.RegistrationMapper;
 import com.contest.register.service.RegistrationService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,11 +28,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     private final ContestService contestService;
     private final NotificationService notificationService;
     private final UserService userService;
+    private final JdbcTemplate jdbcTemplate;
 
-    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService) {
+    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService, DataSource dataSource) {
         this.contestService = contestService;
         this.notificationService = notificationService;
         this.userService = userService;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     private Contest validateContest(Long contestId, Integer requiredRegType) {
@@ -189,6 +193,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
             if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                 contest.setCurrentCount(contest.getCurrentCount() - 1);
                 contestService.updateById(contest);
+            }
+            if (reg.getTeamId() != null) {
+                jdbcTemplate.update("UPDATE team SET status = ? WHERE id = ? AND status = ?",
+                        CommonConstants.TEAM_FORMING, reg.getTeamId(), CommonConstants.TEAM_APPROVED);
             }
         }
         Contest c = contestService.getById(reg.getContestId());
