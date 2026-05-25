@@ -206,8 +206,8 @@ async function fetchData() {
 function edit(row) {
   const sanitized = {
     ...row,
-    teamMinSize: row.teamMinSize ?? 1,
-    teamMaxSize: row.teamMaxSize ?? 10
+    teamMinSize: row.teamMinSize || 1,
+    teamMaxSize: row.teamMaxSize || 10
   }
   if (sanitized.contestTime == null) sanitized.contestTime = undefined
   if (sanitized.registerStartTime == null) sanitized.registerStartTime = undefined
