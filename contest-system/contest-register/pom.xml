@@ -16,5 +16,20 @@
             <artifactId>contest-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.contest</groupId>
+            <artifactId>contest-competition</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.contest</groupId>
+            <artifactId>contest-message</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.contest</groupId>
+            <artifactId>contest-user</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
