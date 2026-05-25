@@ -1,5 +1,6 @@
 package com.contest.team.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.dto.Result;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
@@ -63,6 +64,12 @@ public class TeamController {
         return Result.success();
     }
 
+    @PutMapping("/{teamId}/leave")
+    public Result<Void> leave(@PathVariable Long teamId, @RequestParam Long userId) {
+        teamService.leaveTeam(teamId, userId);
+        return Result.success();
+    }
+
     @PutMapping("/{teamId}/submit")
     public Result<Void> submitReview(@PathVariable Long teamId, @RequestParam Long userId) {
         teamService.submitForReview(teamId, userId);
@@ -79,12 +86,42 @@ public class TeamController {
         return Result.success(teamService.listPendingMembers(teamId));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/detail")
     public Result<Team> getById(@PathVariable Long id) {
         Team team = teamService.getById(id);
         if (team == null) {
             return Result.error("团队不存在");
         }
         return Result.success(team);
+    }
+
+    @GetMapping("/leader")
+    public Result<Team> getByLeader(@RequestParam Long userId, @RequestParam Long contestId) {
+        Team team = teamService.getByLeaderAndContest(userId, contestId);
+        return Result.success(team);
+    }
+
+    @GetMapping("/page")
+    public Result<IPage<Team>> page(@RequestParam(required = false) Integer status,
+                                    @RequestParam(defaultValue = "1") Integer page,
+                                    @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(teamService.pageTeams(status, page, size));
+    }
+
+    @GetMapping("/user/{userId}")
+    public Result<List<Team>> userTeams(@PathVariable Long userId) {
+        return Result.success(teamService.listUserTeams(userId));
+    }
+
+    @PutMapping("/{teamId}/admin-approve")
+    public Result<Void> adminApprove(@PathVariable Long teamId) {
+        teamService.adminApproveTeam(teamId);
+        return Result.success();
+    }
+
+    @PutMapping("/{teamId}/admin-reject")
+    public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody Map<String, String> params) {
+        teamService.adminRejectTeam(teamId, params.get("reason"));
+        return Result.success();
     }
 }

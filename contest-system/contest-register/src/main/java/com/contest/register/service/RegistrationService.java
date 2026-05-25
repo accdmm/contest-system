@@ -19,4 +19,6 @@ public interface RegistrationService extends IService<Registration> {
     IPage<Registration> pageByUser(Long userId, Integer page, Integer size);
 
     IPage<Registration> pageByContest(Long contestId, Integer page, Integer size, Integer status);
+
+    IPage<Registration> pageAll(Long contestId, Integer status, Integer page, Integer size);
 }

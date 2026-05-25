@@ -19,8 +19,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
-    public Result<Void> handleBusinessException(BusinessException e, HttpServletResponse response) {
-        response.setStatus(e.getCode());
+    public Result<Void> handleBusinessException(BusinessException e) {
         return Result.error(e.getCode(), e.getMessage());
     }
 

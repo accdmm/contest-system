@@ -67,6 +67,14 @@ public class RegistrationController {
         return Result.success(registrationService.pageByContest(contestId, page, size, status));
     }
 
+    @GetMapping("/page")
+    public Result<IPage<Registration>> page(@RequestParam(required = false) Long contestId,
+                                             @RequestParam(required = false) Integer status,
+                                             @RequestParam(defaultValue = "1") Integer page,
+                                             @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(registrationService.pageAll(contestId, status, page, size));
+    }
+
     @GetMapping("/{id}")
     public Result<Registration> getById(@PathVariable Long id) {
         Registration reg = registrationService.getById(id);
