@@ -15,3 +15,11 @@ export function markNotificationRead(id, userId) {
 export function markAllNotificationsRead(userId) {
   return request.put(`/notification/read-all/${userId}`)
 }
+
+export function sendNotification(params) {
+  return request.post('/notification/send', null, { params })
+}
+
+export function sendBroadcast(params) {
+  return request.post('/notification/broadcast', null, { params })
+}

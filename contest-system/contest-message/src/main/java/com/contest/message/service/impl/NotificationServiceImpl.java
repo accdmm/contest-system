@@ -63,8 +63,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     public void markAllAsRead(Long userId) {
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<Notification>()
-                .eq(Notification::getUserId, userId)
-                .eq(Notification::getIsRead, 0);
+                .eq(Notification::getIsRead, 0)
+                .and(w -> w.eq(Notification::getUserId, userId)
+                           .or()
+                           .eq(Notification::getUserId, 0L));
         Notification update = new Notification();
         update.setIsRead(1);
         update(update, wrapper);
@@ -73,7 +75,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     public long countUnread(Long userId) {
         return count(new LambdaQueryWrapper<Notification>()
-                .eq(Notification::getUserId, userId)
-                .eq(Notification::getIsRead, 0));
+                .eq(Notification::getIsRead, 0)
+                .and(w -> w.eq(Notification::getUserId, userId)
+                           .or()
+                           .eq(Notification::getUserId, 0L)));
     }
 }
