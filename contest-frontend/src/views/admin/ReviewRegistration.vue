@@ -225,9 +225,41 @@ async function fetchReg() {
 }
 
 async function approveReg(id) {
-  await approveRegistration(id)
-  ElMessage.success('已通过')
-  fetchReg()
+  try {
+    await approveRegistration(id)
+    ElMessage.success('已通过')
+    fetchReg()
+  } catch (e) { /* handled by axios interceptor */ }
+}
+
+async function approveTeam(id) {
+  try {
+    await adminApproveTeam(id)
+    ElMessage.success('已通过，已自动创建报名记录')
+    fetchTeam()
+  } catch (e) { /* handled by axios interceptor */ }
+}
+
+function showRejectTeam(row) {
+  rejectTarget.value = { type: 'team', id: row.id }
+  rejectTitle.value = '驳回原因'
+  rejectReason.value = ''
+  rejectVisible.value = true
+}
+
+// Common reject
+async function confirmReject() {
+  if (rejectReason.value.length < 5) { ElMessage.warning('驳回原因不少于5个字符'); return }
+  try {
+    if (rejectTarget.value.type === 'reg') {
+      await rejectRegistration(rejectTarget.value.id, rejectReason.value)
+    } else {
+      await adminRejectTeam(rejectTarget.value.id, rejectReason.value)
+    }
+    ElMessage.success('已驳回')
+    rejectVisible.value = false
+    if (rejectTarget.value.type === 'reg') fetchReg(); else fetchTeam()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 function showRejectReg(row) {

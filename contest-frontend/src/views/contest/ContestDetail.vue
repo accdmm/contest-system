@@ -108,7 +108,7 @@
                           <circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/>
                           <path d="M9 12C9 10 10.5 8.5 12 8.5C13.5 8.5 15 10 15 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                         </svg>
-                        <span>{{ myTeam.name }}</span>
+                        <span>{{ myTeam.teamName }}</span>
                       </div>
                       <button class="btn btn-primary btn-block" @click="registerTeamSubmit">
                         以团队报名

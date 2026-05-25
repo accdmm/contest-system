@@ -22,21 +22,35 @@ public class TeamController {
 
     @PostMapping
     public Result<Team> create(@RequestBody Map<String, Object> params) {
-        Long userId = Long.valueOf(params.get("userId").toString());
-        Long contestId = Long.valueOf(params.get("contestId").toString());
-        String teamName = params.get("teamName").toString();
+        Object userIdObj = params.get("userId");
+        Object contestIdObj = params.get("contestId");
+        Object teamNameObj = params.get("teamName");
+        if (userIdObj == null || contestIdObj == null || teamNameObj == null) {
+            return Result.error("缺少必要参数");
+        }
+        Long userId = Long.valueOf(userIdObj.toString());
+        Long contestId = Long.valueOf(contestIdObj.toString());
+        String teamName = teamNameObj.toString();
         return Result.success(teamService.createTeam(userId, contestId, teamName));
     }
 
     @PostMapping("/{teamId}/invite")
     public Result<String> generateInvite(@PathVariable Long teamId, @RequestBody Map<String, Long> params) {
-        return Result.success(teamService.generateInviteCode(teamId, params.get("userId")));
+        Long userId = params.get("userId");
+        if (userId == null) {
+            return Result.error("缺少用户ID");
+        }
+        return Result.success(teamService.generateInviteCode(teamId, userId));
     }
 
     @PostMapping("/join")
     public Result<Team> join(@RequestBody Map<String, String> params) {
-        Long userId = Long.valueOf(params.get("userId"));
+        String userIdStr = params.get("userId");
         String code = params.get("inviteCode");
+        if (userIdStr == null || code == null) {
+            return Result.error("缺少必要参数");
+        }
+        Long userId = Long.valueOf(userIdStr);
         return Result.success(teamService.joinByInviteCode(userId, code));
     }
 
