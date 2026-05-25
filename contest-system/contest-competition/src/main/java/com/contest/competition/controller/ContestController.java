@@ -60,8 +60,9 @@ public class ContestController {
                                        @RequestParam(defaultValue = "10") Integer size,
                                        @RequestParam(required = false) String keyword,
                                        @RequestParam(required = false) String category,
-                                       @RequestParam(required = false) Integer status) {
-        return Result.success(contestService.pageContests(page, size, keyword, category, status));
+                                       @RequestParam(required = false) Integer status,
+                                       @RequestParam(required = false) Integer notStatus) {
+        return Result.success(contestService.pageContests(page, size, keyword, category, status, notStatus));
     }
 
     @GetMapping("/hot")
