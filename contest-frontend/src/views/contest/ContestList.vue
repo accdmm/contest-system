@@ -24,11 +24,7 @@
             </select>
           </div>
           <div class="filter-group">
-            <select v-model="query.status" class="filter-select">
-              <option value="">全部状态</option>
-              <option :value="1">报名中</option>
-              <option :value="2">已截止</option>
-            </select>
+            <span class="filter-status-label">报名中</span>
           </div>
           <button class="btn btn-primary" @click="search">搜索</button>
         </div>
@@ -78,14 +74,12 @@ import { pageContests } from '../../api/contest'
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])
 const total = ref(0)
-const query = reactive({ keyword: '', category: '', status: '', page: 1, size: 12 })
+const query = reactive({ keyword: '', category: '', page: 1, size: 12 })
 
 async function fetchData() {
-  const params = { ...query }
-  if (!params.status) delete params.status
+  const params = { ...query, status: 1 }
   if (!params.category) delete params.category
   if (!params.keyword) delete params.keyword
-  params.notStatus = 0
   try {
     const res = await pageContests(params)
     list.value = res.data.records || []
@@ -164,6 +158,16 @@ onMounted(fetchData)
 
 .filter-input::placeholder {
   color: var(--c-text-light);
+}
+
+.filter-status-label {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  color: var(--c-success);
+  font-weight: 600;
 }
 
 .btn {

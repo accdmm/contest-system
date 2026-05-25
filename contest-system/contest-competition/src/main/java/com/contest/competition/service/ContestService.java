@@ -18,7 +18,7 @@ public interface ContestService extends IService<Contest> {
 
     void deleteContest(Long id);
 
-    IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer notStatus);
+    IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status);
 
     List<Contest> listHotContests(int limit);
 
