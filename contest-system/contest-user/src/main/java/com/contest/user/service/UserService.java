@@ -1,5 +1,6 @@
 package com.contest.user.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.contest.user.entity.User;
 
@@ -16,4 +17,6 @@ public interface UserService extends IService<User> {
     void freezeUser(Long userId);
 
     void unfreezeUser(Long userId);
+
+    IPage<User> pageUsers(String keyword, Integer page, Integer size);
 }

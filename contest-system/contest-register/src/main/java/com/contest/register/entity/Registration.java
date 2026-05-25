@@ -31,6 +31,12 @@ public class Registration {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    @TableField(exist = false)
+    private String contestName;
+
+    @TableField(exist = false)
+    private String userName;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getContestId() { return contestId; }
@@ -53,4 +59,8 @@ public class Registration {
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
     public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public String getContestName() { return contestName; }
+    public void setContestName(String contestName) { this.contestName = contestName; }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 }

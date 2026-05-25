@@ -1,5 +1,6 @@
 package com.contest.user.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.dto.Result;
 import com.contest.common.util.JwtUtil;
 import com.contest.user.entity.User;
@@ -57,6 +58,13 @@ public class UserController {
         }
         user.setPassword(null);
         return Result.success(user);
+    }
+
+    @GetMapping("/page")
+    public Result<IPage<User>> page(@RequestParam(required = false) String keyword,
+                                    @RequestParam(defaultValue = "1") Integer page,
+                                    @RequestParam(defaultValue = "10") Integer size) {
+        return Result.success(userService.pageUsers(keyword, page, size));
     }
 
     @PutMapping("/{id}/profile")
