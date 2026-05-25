@@ -661,15 +661,13 @@ onMounted(fetchData)
 }
 
 .invite-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  position: relative;
   margin-bottom: 16px;
-  padding: 16px 20px;
+  padding: 16px 80px 16px 20px;
   background: var(--c-bg);
   border-radius: var(--radius-sm);
   border: 1px dashed var(--c-border);
+  text-align: center;
 }
 
 .invite-code {
@@ -677,6 +675,13 @@ onMounted(fetchData)
   font-size: 1.3rem;
   letter-spacing: 4px;
   color: var(--c-primary);
+}
+
+.copy-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .copy-btn {
