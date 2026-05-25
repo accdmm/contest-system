@@ -1,0 +1,62 @@
+package com.contest.common.util;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${contest.jwt.expire-hours:2}")
+    private long expireHours;
+
+    private static final String SECRET = "contest-system-jwt-secret-key-2024-2025-2026";
+
+    private SecretKey getKey() {
+        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String generateToken(Long userId, String username, Integer role) {
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + expireHours * 3600 * 1000);
+        return Jwts.builder()
+                .claim("userId", userId)
+                .claim("username", username)
+                .claim("role", role)
+                .setIssuedAt(now)
+                .setExpiration(expiration)
+                .signWith(getKey())
+                .compact();
+    }
+
+    public Claims parseToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public Long getUserId(String token) {
+        return parseToken(token).get("userId", Long.class);
+    }
+
+    public Integer getRole(String token) {
+        return parseToken(token).get("role", Integer.class);
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}

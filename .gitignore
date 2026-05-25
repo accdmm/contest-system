@@ -1,0 +1,11 @@
+node_modules/
+dist/
+target/
+*.log
+*.err
+.ruff_cache/
+uploads/
+.DS_Store
+Thumbs.db
+**/nul
+.idea/
