@@ -663,7 +663,8 @@ onMounted(fetchData)
 .invite-display {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 16px;
   margin-bottom: 16px;
   padding: 16px 20px;
   background: var(--c-bg);
@@ -674,10 +675,8 @@ onMounted(fetchData)
 .invite-code {
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: 1.3rem;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   color: var(--c-primary);
-  flex: 1;
-  text-align: center;
 }
 
 .copy-btn {
