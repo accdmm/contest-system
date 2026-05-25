@@ -663,7 +663,7 @@ onMounted(fetchData)
 .invite-display {
   position: relative;
   margin-bottom: 16px;
-  padding: 16px 80px 16px 20px;
+  padding: 16px 20px;
   background: var(--c-bg);
   border-radius: var(--radius-sm);
   border: 1px dashed var(--c-border);
