@@ -31,3 +31,7 @@ export function pageRegistrationByUser(userId, params) {
 export function pageRegistrationByContest(contestId, params) {
   return request.get(`/registration/contest/${contestId}`, { params })
 }
+
+export function pageRegistration(params) {
+  return request.get('/registration/page', { params })
+}
