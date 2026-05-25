@@ -85,6 +85,7 @@ async function fetchData() {
   if (!params.status) delete params.status
   if (!params.category) delete params.category
   if (!params.keyword) delete params.keyword
+  params.notStatus = 0
   try {
     const res = await pageContests(params)
     list.value = res.data.records || []
