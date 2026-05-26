@@ -131,7 +131,7 @@ public class ChatTools {
         }
     }
 
-    @Tool(description = "报名参加竞赛（个人赛），需提供竞赛名称，将自动搜索并报名")
+    @Tool(description = "报名参加竞赛（个人赛），需提供竞赛名称，将自动搜索并报名。remark为可选备注")
     public String registerForContest(String contestName, String remark) {
         Long userId = CURRENT_USER_ID.get();
         if (userId == null) {
