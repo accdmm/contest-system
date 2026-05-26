@@ -22,7 +22,6 @@ import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 
 import java.util.Arrays;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import org.slf4j.Logger;
@@ -83,7 +82,6 @@ public class AiChatServiceImpl implements AiChatService {
         return emitter;
     }
 
-    @Transactional
     protected void processStream(SseEmitter emitter, ChatRequest request, Long userId) throws IOException {
         AiConversation conversation = getOrCreateConversation(request, userId);
         Long conversationId = conversation.getId();

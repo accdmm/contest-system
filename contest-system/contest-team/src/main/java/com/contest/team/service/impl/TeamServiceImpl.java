@@ -61,11 +61,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     public Team createTeam(Long userId, Long contestId, String teamName) {
         validateContestForTeam(contestId);
 
-        long existingTeam = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMember>()
+        List<TeamMember> existingMembers = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getUserId, userId)
                 .eq(TeamMember::getContestId, contestId)
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        if (existingTeam > 0) {
+        boolean hasActiveTeam = existingMembers.stream()
+                .map(m -> getById(m.getTeamId()))
+                .anyMatch(t -> t != null && t.getStatus() != CommonConstants.TEAM_DISSOLVED);
+        if (hasActiveTeam) {
             throw new BusinessException("你已在同一竞赛的团队中");
         }
 

@@ -37,10 +37,12 @@ public class ChatTools {
     public static void setCurrentUserId(Long userId) { CURRENT_USER_ID.set(userId); }
     public static void clearUserId() { CURRENT_USER_ID.remove(); }
 
-    @Tool(description = "查询正在报名的竞赛列表，支持按分类和关键字过滤")
-    public String queryContests(String keyword, String category, int page, int size) {
+    @Tool(description = "浏览正在报名的竞赛列表，支持按分类和关键字过滤。如需搜索特定竞赛请使用 searchContestDetail")
+    public String queryContests(String keyword, String category, Integer page, Integer size) {
         try {
-            IPage<Contest> result = contestService.pageContests(page, size, keyword, category, 1);
+            int p = page != null && page > 0 ? page : 1;
+            int s = size != null && size > 0 ? size : 10;
+            IPage<Contest> result = contestService.pageContests(p, s, keyword, category, 1);
             List<Contest> records = result.getRecords();
             if (records.isEmpty()) {
                 return "当前没有找到符合条件的竞赛";
@@ -141,7 +143,7 @@ public class ChatTools {
         }
     }
 
-    @Tool(description = "按竞赛名称搜索并查看详细信息，不需要事先知道竞赛ID")
+    @Tool(description = "【推荐】按竞赛名称精确搜索某个竞赛并查看详细信息，不需要事先知道竞赛ID。查找特定竞赛用此工具而非queryContests")
     public String searchContestDetail(String contestName) {
         try {
             IPage<Contest> result = contestService.pageContests(1, 5, contestName, null, 1);
@@ -202,7 +204,7 @@ public class ChatTools {
         }
     }
 
-    @Tool(description = "报名参加竞赛，需提供竞赛名称，将自动搜索并报名。remark为可选备注")
+    @Tool(description = "报名参加个人赛（竞赛类型为个人赛或个人/团队赛均可），需提供竞赛名称，将自动搜索并报名。remark为可选备注")
     public String registerForContest(String contestName, String remark) {
         Long userId = CURRENT_USER_ID.get();
         if (userId == null) {
@@ -233,7 +235,7 @@ public class ChatTools {
         }
     }
 
-    @Tool(description = "创建团队并加入竞赛，需提供竞赛名称和团队名称。仅支持团队赛，创建者自动成为队长。")
+    @Tool(description = "创建团队参加团队赛（竞赛类型为团队赛或个人/团队赛均可），需提供竞赛名称和团队名称，创建者自动成为队长。对仅个人赛的竞赛请调用registerForContest")
     public String createTeamForContest(String contestName, String teamName) {
         Long userId = CURRENT_USER_ID.get();
         if (userId == null) {
@@ -246,7 +248,7 @@ public class ChatTools {
                 return "未找到名称为「" + contestName + "」的竞赛";
             }
             Contest contest = records.get(0);
-            if (contest.getContestType() != CommonConstants.CONTEST_TEAM) {
+            if (contest.getContestType() == CommonConstants.CONTEST_PERSONAL) {
                 return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
             }
             try {
@@ -262,7 +264,7 @@ public class ChatTools {
                     if (msg.contains("你已在同一竞赛的团队中")) {
                         return "你已经在该竞赛中创建或加入了团队，无需重复创建。如需查看团队信息，请使用 queryMyTeams 工具。";
                     }
-                    if (msg.contains("该竞赛仅限个人参赛")) {
+                    if (msg.contains("该竞赛仅限个人报名，无法创建团队")) {
                         return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
                     }
                 }
