@@ -11,6 +11,7 @@ import com.contest.team.service.TeamService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -235,11 +236,14 @@ public class ChatTools {
         }
     }
 
-    @Tool(description = "创建团队参加团队赛（竞赛类型为团队赛或个人/团队赛均可），需提供竞赛名称和团队名称，创建者自动成为队长。对仅个人赛的竞赛请调用registerForContest")
-    public String createTeamForContest(String contestName, String teamName) {
+    @Tool(description = "创建团队参加团队赛（竞赛类型为团队赛或个人/团队赛均可），创建者自动成为队长。对仅个人赛的竞赛请调用registerForContest。注意：必须先询问用户想要的团队名称再调用此工具")
+    public String createTeamForContest(String contestName, @ToolParam(required = false) String teamName) {
         Long userId = CURRENT_USER_ID.get();
         if (userId == null) {
             return "无法获取当前用户信息，请先登录";
+        }
+        if (teamName == null || teamName.isBlank()) {
+            return "请提供团队名称，例如你想创建的团队叫什么名字？";
         }
         try {
             IPage<Contest> result = contestService.pageContests(1, 10, contestName, null, 1);
