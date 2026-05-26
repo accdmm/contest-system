@@ -6,6 +6,7 @@ import com.contest.competition.service.ContestService;
 import com.contest.common.constant.CommonConstants;
 import com.contest.register.entity.Registration;
 import com.contest.register.service.RegistrationService;
+import com.contest.team.entity.Team;
 import com.contest.team.service.TeamService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
@@ -162,6 +163,42 @@ public class ChatTools {
             );
         } catch (Exception e) {
             return "查询竞赛详情失败: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "查询当前用户创建或加入的所有团队及状态")
+    public String queryMyTeams() {
+        Long userId = CURRENT_USER_ID.get();
+        if (userId == null) {
+            return "无法获取当前用户信息";
+        }
+        try {
+            List<Team> teams = teamService.listUserTeams(userId);
+            if (teams.isEmpty()) {
+                return "你还没有创建或加入任何团队";
+            }
+            return teams.stream()
+                .map(t -> {
+                    String statusStr = switch (t.getStatus()) {
+                        case 0 -> "组建中";
+                        case 1 -> "已提交审核";
+                        case 2 -> "已通过";
+                        case 3 -> "已驳回";
+                        case 4 -> "已解散";
+                        default -> "未知";
+                    };
+                    String contestName = "";
+                    try {
+                        Contest c = contestService.getById(t.getContestId());
+                        if (c != null) contestName = c.getName();
+                    } catch (Exception ignored) {}
+                    return String.format("团队: %s | 竞赛: %s | 状态: %s | 人数: %d | 邀请码: %s",
+                        t.getTeamName(), contestName, statusStr, t.getMemberCount(),
+                        t.getInviteCode() != null ? t.getInviteCode() : "无");
+                })
+                .collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            return "查询团队信息失败: " + e.getMessage();
         }
     }
 
