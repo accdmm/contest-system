@@ -1,5 +1,7 @@
 package com.contest.admin.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +17,8 @@ import java.util.UUID;
 @Service
 public class MinioService {
 
+    private static final Logger log = LoggerFactory.getLogger(MinioService.class);
+
     @Value("${contest.upload.dir:uploads}")
     private String uploadDir;
 
@@ -28,6 +32,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new RuntimeException("上传目录创建失败: " + uploadPath, e);
         }
+        log.info("文件上传目录: {}", uploadPath);
     }
 
     public String upload(MultipartFile file) {
