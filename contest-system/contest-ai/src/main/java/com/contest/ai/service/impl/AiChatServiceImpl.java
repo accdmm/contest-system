@@ -17,6 +17,7 @@ import org.springframework.ai.chat.model.StreamingChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 
 import java.util.Arrays;
@@ -95,8 +96,9 @@ public class AiChatServiceImpl implements AiChatService {
             .toolObjects(chatTools)
             .build()
             .getToolCallbacks();
+        ToolCallback[] wrappedCallbacks = wrapToolCallbacks(toolCallbacks, userId);
         ToolCallingChatOptions options = ToolCallingChatOptions.builder()
-            .toolCallbacks(Arrays.asList(toolCallbacks))
+            .toolCallbacks(Arrays.asList(wrappedCallbacks))
             .build();
         Prompt prompt = new Prompt(messages, options);
 
@@ -129,6 +131,29 @@ public class AiChatServiceImpl implements AiChatService {
         } finally {
             ChatTools.clearUserId();
         }
+    }
+
+    private static ToolCallback[] wrapToolCallbacks(ToolCallback[] originals, Long userId) {
+        ToolCallback[] wrapped = new ToolCallback[originals.length];
+        for (int i = 0; i < originals.length; i++) {
+            ToolCallback original = originals[i];
+            wrapped[i] = new ToolCallback() {
+                @Override
+                public ToolDefinition getToolDefinition() {
+                    return original.getToolDefinition();
+                }
+                @Override
+                public String call(String input) {
+                    ChatTools.setCurrentUserId(userId);
+                    try {
+                        return original.call(input);
+                    } finally {
+                        ChatTools.clearUserId();
+                    }
+                }
+            };
+        }
+        return wrapped;
     }
 
     private AiConversation getOrCreateConversation(ChatRequest request, Long userId) {
