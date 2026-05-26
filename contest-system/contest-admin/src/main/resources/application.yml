@@ -14,6 +14,9 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+  ai:
+    dashscope:
+      api-key: sk-725a6f0a71004afe953aa3af89e4441a
 
 mybatis-plus:
   configuration:
@@ -34,11 +37,13 @@ contest:
   invite-code:
     expire-days: 7
   jwt:
-    expire-hours: 2
+    expire-days: 7
   threshold:
     warn-percent: 80
   deadline:
     remind-hours: 24
+  ai:
+    system-prompt: "你是一个高校竞赛报名管理系统的AI助手，可以帮助用户查询竞赛信息、报名状态等。回答要简洁准确。"
 
 # MinIO 文件存储
 minio:
@@ -46,3 +51,5 @@ minio:
   access-key: minioadmin
   secret-key: minioadmin
   bucket: contest-files
+
+

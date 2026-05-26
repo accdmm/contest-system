@@ -159,3 +159,26 @@ CREATE TABLE `operation_log` (
     PRIMARY KEY (`id`),
     KEY `idx_user_time` (`user_id`, `create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
+
+-- 9. ai_conversation AI对话会话表
+CREATE TABLE `ai_conversation` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    `title` VARCHAR(100) DEFAULT NULL COMMENT '对话标题',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话会话表';
+
+-- 10. ai_message AI对话消息表
+CREATE TABLE `ai_message` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `conversation_id` BIGINT UNSIGNED NOT NULL COMMENT '所属会话ID',
+    `role` VARCHAR(20) NOT NULL COMMENT '角色 user/assistant',
+    `content` TEXT COMMENT '消息内容',
+    `tokens` INT DEFAULT NULL COMMENT 'Token数量',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_conversation` (`conversation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话消息表';

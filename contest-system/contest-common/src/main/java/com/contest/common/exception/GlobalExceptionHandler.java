@@ -8,10 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -20,7 +21,8 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
-    public Result<Void> handleBusinessException(BusinessException e) {
+    public Result<Void> handleBusinessException(BusinessException e, HttpServletResponse response) {
+        response.setStatus(e.getCode() >= 100 && e.getCode() < 600 ? e.getCode() : 400);
         return Result.error(e.getCode(), e.getMessage());
     }
 
@@ -38,6 +40,12 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
         return Result.error(400, msg);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public Result<Void> handleMissingHeader(MissingRequestHeaderException e, HttpServletResponse response) {
+        response.setStatus(401);
+        return Result.error(401, "未登录");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

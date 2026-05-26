@@ -13,8 +13,8 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${contest.jwt.expire-hours:2}")
-    private long expireHours;
+    @Value("${contest.jwt.expire-days:7}")
+    private long expireDays;
 
     private static final String SECRET = "contest-system-jwt-secret-key-2024-2025-2026";
 
@@ -24,7 +24,7 @@ public class JwtUtil {
 
     public String generateToken(Long userId, String username, Integer role) {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + expireHours * 3600 * 1000);
+        Date expiration = new Date(now.getTime() + expireDays * 24 * 3600 * 1000);
         return Jwts.builder()
                 .claim("userId", userId)
                 .claim("username", username)
