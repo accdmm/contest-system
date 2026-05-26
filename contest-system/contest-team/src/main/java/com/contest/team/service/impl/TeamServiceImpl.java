@@ -83,8 +83,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
         TeamMember existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, contestId)
-                .eq(TeamMember::getStatus, CommonConstants.MEMBER_REJECTED));
+                .eq(TeamMember::getContestId, contestId));
         if (existing != null) {
             existing.setTeamId(team.getId());
             existing.setRole(CommonConstants.MEMBER_LEADER);
@@ -140,18 +139,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
         validateContestForTeam(team.getContestId());
 
-        long activeCount = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMember>()
+        List<TeamMember> existingMembers = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getUserId, userId)
                 .eq(TeamMember::getContestId, team.getContestId())
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        if (activeCount > 0) {
+        boolean hasActiveTeam = existingMembers.stream()
+                .map(m -> getById(m.getTeamId()))
+                .anyMatch(t -> t != null && t.getStatus() != CommonConstants.TEAM_DISSOLVED);
+        if (hasActiveTeam) {
             throw new BusinessException("你已在同一竞赛的团队中");
         }
 
         TeamMember existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, team.getContestId())
-                .eq(TeamMember::getStatus, CommonConstants.MEMBER_REJECTED));
+                .eq(TeamMember::getContestId, team.getContestId()));
         if (existing != null) {
             existing.setTeamId(team.getId());
             existing.setRole(CommonConstants.MEMBER_NORMAL);
