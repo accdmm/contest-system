@@ -259,8 +259,8 @@ public class ChatTools {
             } catch (Exception e) {
                 String msg = e.getMessage();
                 if (msg != null) {
-                    if (msg.contains("你已经在该竞赛中组队")) {
-                        return "你已经在该竞赛中创建或加入了团队，无需重复创建";
+                    if (msg.contains("你已在同一竞赛的团队中")) {
+                        return "你已经在该竞赛中创建或加入了团队，无需重复创建。如需查看团队信息，请使用 queryMyTeams 工具。";
                     }
                     if (msg.contains("该竞赛仅限个人参赛")) {
                         return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
