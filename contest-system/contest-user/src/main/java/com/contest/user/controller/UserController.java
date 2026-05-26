@@ -7,7 +7,7 @@ import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 

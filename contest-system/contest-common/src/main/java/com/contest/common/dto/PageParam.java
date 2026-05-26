@@ -1,6 +1,6 @@
 package com.contest.common.dto;
 
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Min;
 
 public class PageParam {
 
