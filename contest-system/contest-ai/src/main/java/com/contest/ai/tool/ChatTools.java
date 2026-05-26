@@ -131,6 +131,31 @@ public class ChatTools {
         }
     }
 
+    @Tool(description = "按竞赛名称搜索并查看详细信息，不需要事先知道竞赛ID")
+    public String searchContestDetail(String contestName) {
+        try {
+            IPage<Contest> result = contestService.pageContests(1, 5, contestName, null, 1);
+            List<Contest> records = result.getRecords();
+            if (records.isEmpty()) {
+                return "未找到名称为「" + contestName + "」的竞赛";
+            }
+            Contest c = records.get(0);
+            return String.format(
+                "【%s】\n竞赛ID: %s\n分类: %s\n级别: %s\n主办方: %s\n竞赛时间: %s\n报名时间: %s ~ %s\n地点: %s\n类型: %s\n已报名: %d人\n简介: %s",
+                c.getName(), c.getId(), c.getCategory(), c.getLevel(), c.getOrganizer(),
+                c.getContestTime(), c.getRegisterStartTime(), c.getRegisterEndTime(),
+                c.getLocation(),
+                c.getContestType() == 0 ? "个人" : c.getContestType() == 1 ? "团队" : "个人/团队",
+                c.getCurrentCount(),
+                c.getDescription() != null && c.getDescription().length() > 200
+                    ? c.getDescription().substring(0, 200) + "..."
+                    : c.getDescription()
+            );
+        } catch (Exception e) {
+            return "查询竞赛详情失败: " + e.getMessage();
+        }
+    }
+
     @Tool(description = "报名参加竞赛（个人赛），需提供竞赛名称，将自动搜索并报名。remark为可选备注")
     public String registerForContest(String contestName, String remark) {
         Long userId = CURRENT_USER_ID.get();
