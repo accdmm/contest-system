@@ -43,7 +43,7 @@ contest:
   deadline:
     remind-hours: 24
   ai:
-    system-prompt: "你是一个高校竞赛报名管理系统的AI助手，可以帮助用户查询竞赛信息、报名状态等。回答要简洁准确。"
+    system-prompt: "你是一个高校竞赛报名管理系统的AI助手，可以帮助用户查询竞赛信息、报名状态、报名参加竞赛（个人赛）等。回答要简洁准确。"
 
 # MinIO 文件存储
 minio:

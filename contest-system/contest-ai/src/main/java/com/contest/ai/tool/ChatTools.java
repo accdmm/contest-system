@@ -5,6 +5,8 @@ import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.register.entity.Registration;
 import com.contest.register.service.RegistrationService;
+import com.contest.user.entity.User;
+import com.contest.user.service.UserService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -18,10 +20,13 @@ public class ChatTools {
 
     private final ContestService contestService;
     private final RegistrationService registrationService;
+    private final UserService userService;
 
-    public ChatTools(ContestService contestService, RegistrationService registrationService) {
+    public ChatTools(ContestService contestService, RegistrationService registrationService,
+                     UserService userService) {
         this.contestService = contestService;
         this.registrationService = registrationService;
+        this.userService = userService;
     }
 
     public static void setCurrentUserId(Long userId) { CURRENT_USER_ID.set(userId); }
@@ -98,6 +103,59 @@ public class ChatTools {
                 .collect(Collectors.joining("\n"));
         } catch (Exception e) {
             return "查询报名状态失败: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "获取当前登录用户的个人信息")
+    public String getCurrentUserInfo() {
+        Long userId = CURRENT_USER_ID.get();
+        if (userId == null) {
+            return "无法获取当前用户信息，请先登录";
+        }
+        try {
+            User user = userService.getById(userId);
+            if (user == null) {
+                return "用户不存在";
+            }
+            return String.format(
+                "姓名: %s\n学号: %s\n学院: %s\n专业: %s\n班级: %s\n邮箱: %s\n电话: %s",
+                user.getName(), user.getUsername(),
+                user.getCollege() != null ? user.getCollege() : "未设置",
+                user.getMajor() != null ? user.getMajor() : "未设置",
+                user.getClassName() != null ? user.getClassName() : "未设置",
+                user.getEmail() != null ? user.getEmail() : "未设置",
+                user.getPhone() != null ? user.getPhone() : "未设置"
+            );
+        } catch (Exception e) {
+            return "获取用户信息失败: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "报名参加竞赛（个人赛），需提供竞赛名称，将自动搜索并报名")
+    public String registerForContest(String contestName, String remark) {
+        Long userId = CURRENT_USER_ID.get();
+        if (userId == null) {
+            return "无法获取当前用户信息，请先登录";
+        }
+        try {
+            IPage<Contest> result = contestService.pageContests(1, 10, contestName, null, 1);
+            List<Contest> records = result.getRecords();
+            if (records.isEmpty()) {
+                return "未找到名称为「" + contestName + "」的竞赛，请确认名称是否正确";
+            }
+            Contest contest = records.get(0);
+            try {
+                registrationService.registerPersonal(userId, contest.getId(), remark);
+                return "报名成功！您已成功报名「" + contest.getName() + "」，当前状态为待审核，请耐心等待管理员审核。";
+            } catch (Exception e) {
+                String msg = e.getMessage();
+                if (msg != null && msg.contains("您已报名该竞赛")) {
+                    return "您已报名过「" + contest.getName() + "」，无需重复报名";
+                }
+                return "报名失败: " + (msg != null ? msg : "未知错误");
+            }
+        } catch (Exception e) {
+            return "报名失败: " + e.getMessage();
         }
     }
 }
