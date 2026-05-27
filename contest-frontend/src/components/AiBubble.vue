@@ -123,10 +123,16 @@ function send() {
       scrollDown()
     },
     err => {
-      const msg = err.message && err.message.includes('401')
-        ? '登录已过期，请重新登录后使用'
-        : '抱歉，连接失败，请稍后重试。'
-      messages.value.push({ role: 'assistant', content: msg })
+      if (err.message && err.message.includes('401')) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        messages.value.push({ role: 'assistant', content: '登录已过期，请重新登录后使用' })
+        loading.value = false
+        scrollDown()
+        setTimeout(() => { window.location.href = '/login' }, 1500)
+        return
+      }
+      messages.value.push({ role: 'assistant', content: '抱歉，连接失败，请稍后重试。' })
       loading.value = false
       scrollDown()
     },
