@@ -1,6 +1,6 @@
 const BASE_URL = '/api/ai'
 
-export function createChatStream(conversationId, message, onMessage, onDone, onError) {
+export function createChatStream(conversationId, message, onMessage, onDone, onError, onStart) {
   const token = localStorage.getItem('token')
 
   fetch(`${BASE_URL}/chat`, {
@@ -20,7 +20,6 @@ export function createChatStream(conversationId, message, onMessage, onDone, onE
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
-    let currentEvent = ''
 
     while (true) {
       const { done, value } = await reader.read()
@@ -31,22 +30,36 @@ export function createChatStream(conversationId, message, onMessage, onDone, onE
       buffer = lines.pop() || ''
 
       for (const line of lines) {
-        if (line.startsWith('event:')) {
-          currentEvent = line[6] === ' ' ? line.slice(7).trim() : line.slice(6).trim()
-        } else if (line.startsWith('data:')) {
-          const data = line[5] === ' ' ? line.slice(6) : line.slice(5)
-          if (currentEvent === 'done') {
+        const trimmed = line.trim()
+        if (!trimmed.startsWith('data:')) continue
+        const jsonStr = trimmed[5] === ' ' ? trimmed.slice(6) : trimmed.slice(5)
+        if (!jsonStr) continue
+        try {
+          const event = JSON.parse(jsonStr)
+          if (event.eventType === 'start' && event.eventData && onStart) {
+            onStart(event.eventData)
+          } else if (event.eventType === 'data' && event.eventData) {
+            onMessage(event.eventData)
+          } else if (event.eventType === 'error') {
+            onError(new Error(event.eventData || '服务器错误'))
+          } else if (event.eventType === 'stop') {
             onDone()
-          } else if (currentEvent === 'message' || currentEvent === '') {
-            if (data) onMessage(data)
-          } else if (currentEvent === 'error') {
-            if (data) onError(new Error(data))
           }
+        } catch (e) {
+          // ignore parse errors for partial lines
         }
       }
     }
-    onDone()
   }).catch(err => {
     onError(err)
   })
+}
+
+export function stopChatStream(conversationId) {
+  const token = localStorage.getItem('token')
+  if (!token) return
+  fetch(`${BASE_URL}/stop/${conversationId}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).catch(() => {})
 }

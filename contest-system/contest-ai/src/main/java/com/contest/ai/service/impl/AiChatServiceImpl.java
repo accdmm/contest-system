@@ -4,57 +4,48 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.ai.config.AiProperties;
 import com.contest.ai.entity.AiConversation;
 import com.contest.ai.entity.AiMessage;
+import com.contest.ai.entity.ChatEventVO;
 import com.contest.ai.entity.ChatRequest;
 import com.contest.ai.mapper.AiConversationMapper;
 import com.contest.ai.mapper.AiMessageMapper;
 import com.contest.ai.service.AiChatService;
 import com.contest.ai.tool.ChatTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.StreamingChatModel;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
-
-import java.util.Arrays;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class AiChatServiceImpl implements AiChatService {
 
     private static final Logger log = LoggerFactory.getLogger(AiChatServiceImpl.class);
 
-    private final StreamingChatModel streamingChatModel;
+    private final ChatClient chatClient;
     private final AiConversationMapper conversationMapper;
     private final AiMessageMapper messageMapper;
     private final AiProperties aiProperties;
     private final ChatTools chatTools;
-    private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "ai-chat-" + r.hashCode());
-        t.setDaemon(true);
-        return t;
-    });
+    private final Map<Long, Boolean> generateStatus = new ConcurrentHashMap<>();
 
-    public AiChatServiceImpl(StreamingChatModel streamingChatModel,
+    public AiChatServiceImpl(ChatClient.Builder chatClientBuilder,
                              AiConversationMapper conversationMapper,
                              AiMessageMapper messageMapper,
                              AiProperties aiProperties,
                              ChatTools chatTools) {
-        this.streamingChatModel = streamingChatModel;
+        this.chatClient = chatClientBuilder.build();
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
         this.aiProperties = aiProperties;
@@ -62,79 +53,69 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
-    public SseEmitter chat(ChatRequest request, Long userId) {
-        SseEmitter emitter = new SseEmitter(300000L);
-
-        executor.execute(() -> {
-            try {
-                processStream(emitter, request, userId);
-            } catch (Exception e) {
-                log.error("AI chat stream failed", e);
-                String msg = e.getMessage();
-                if (msg != null && msg.length() > 80) msg = msg.substring(0, 80) + "...";
-                try {
-                    emitter.send(SseEmitter.event().name("error").data(msg != null ? msg : "服务器内部错误"));
-                    emitter.complete();
-                } catch (IOException ignored) {}
-            }
-        });
-
-        return emitter;
-    }
-
-    protected void processStream(SseEmitter emitter, ChatRequest request, Long userId) throws IOException {
+    public Flux<ChatEventVO> chat(ChatRequest request, Long userId) {
         AiConversation conversation = getOrCreateConversation(request, userId);
         Long conversationId = conversation.getId();
 
         saveUserMessage(conversationId, request.getMessage());
 
-        List<Message> messages = buildChatMessages(conversationId, request.getMessage());
-        ChatTools.setCurrentUserId(userId);
-        ToolCallback[] toolCallbacks = MethodToolCallbackProvider.builder()
-            .toolObjects(chatTools)
-            .build()
-            .getToolCallbacks();
-        ToolCallback[] wrappedCallbacks = wrapToolCallbacks(toolCallbacks, userId);
-        ToolCallingChatOptions options = ToolCallingChatOptions.builder()
-            .toolCallbacks(Arrays.asList(wrappedCallbacks))
-            .build();
-        Prompt prompt = new Prompt(messages, options);
+        List<Message> history = loadHistory(conversationId);
+
+        ToolCallback[] wrappedCallbacks = buildWrappedToolCallbacks(userId);
 
         StringBuilder fullResponse = new StringBuilder();
-        try {
-            streamingChatModel.stream(prompt).toStream().forEach(chunk -> {
-                String content = chunk.getResult().getOutput().getText();
-                if (content != null && !content.isEmpty()) {
-                    fullResponse.append(content);
-                    try {
-                        emitter.send(SseEmitter.event().name("message").data(content));
-                    } catch (IOException e) {
-                        throw new RuntimeException("SSE发送失败", e);
+        Long sessionId = conversationId;
+
+        return Flux.concat(
+                Flux.just(ChatEventVO.start(conversationId)),
+                chatClient.prompt()
+                    .system(spec -> spec.text(aiProperties.getSystemPrompt()))
+                    .messages(history)
+                    .tools(wrappedCallbacks)
+                    .user(request.getMessage())
+                    .stream()
+                    .chatResponse()
+                    .doFirst(() -> generateStatus.put(sessionId, true))
+                    .takeWhile(r -> generateStatus.getOrDefault(sessionId, false))
+                    .map(r -> {
+                    String text = r.getResult().getOutput().getText();
+                    if (text != null && !text.isEmpty()) {
+                        fullResponse.append(text);
+                        return ChatEventVO.data(text);
                     }
-                }
-            });
-
-            saveAssistantMessage(conversationId, fullResponse.toString());
-
-            if (conversation.getTitle() == null && fullResponse.length() > 0) {
-                String title = request.getMessage().length() > 30
-                    ? request.getMessage().substring(0, 30) + "..."
-                    : request.getMessage();
-                conversation.setTitle(title);
-                conversationMapper.updateById(conversation);
-            }
-
-            emitter.send(SseEmitter.event().name("done").data(""));
-            emitter.complete();
-        } finally {
-            ChatTools.clearUserId();
-        }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .onErrorResume(e -> {
+                    log.error("AI chat stream error, sessionId={}", sessionId, e);
+                    String msg = e.getMessage();
+                    if (msg != null && msg.length() > 80) msg = msg.substring(0, 80) + "...";
+                    return Flux.just(ChatEventVO.error(msg != null ? msg : "服务器内部错误"));
+                })
+                .concatWithValues(ChatEventVO.stop())
+                .doFinally(signalType -> {
+                    generateStatus.remove(sessionId);
+                    if (signalType == SignalType.ON_COMPLETE && fullResponse.length() > 0) {
+                        saveAssistantMessage(conversationId, fullResponse.toString());
+                        updateTitle(conversation, request.getMessage(), fullResponse.toString());
+                    }
+                })
+        );
     }
 
-    private static ToolCallback[] wrapToolCallbacks(ToolCallback[] originals, Long userId) {
-        ToolCallback[] wrapped = new ToolCallback[originals.length];
-        for (int i = 0; i < originals.length; i++) {
-            ToolCallback original = originals[i];
+    @Override
+    public void stop(Long sessionId) {
+        generateStatus.remove(sessionId);
+    }
+
+    private ToolCallback[] buildWrappedToolCallbacks(Long userId) {
+        ToolCallback[] toolCallbacks = MethodToolCallbackProvider.builder()
+                .toolObjects(chatTools)
+                .build()
+                .getToolCallbacks();
+        ToolCallback[] wrapped = new ToolCallback[toolCallbacks.length];
+        for (int i = 0; i < toolCallbacks.length; i++) {
+            ToolCallback original = toolCallbacks[i];
             wrapped[i] = new ToolCallback() {
                 @Override
                 public ToolDefinition getToolDefinition() {
@@ -152,6 +133,22 @@ public class AiChatServiceImpl implements AiChatService {
             };
         }
         return wrapped;
+    }
+
+    private List<Message> loadHistory(Long conversationId) {
+        List<AiMessage> records = messageMapper.selectList(
+                new LambdaQueryWrapper<AiMessage>()
+                        .eq(AiMessage::getConversationId, conversationId)
+                        .orderByAsc(AiMessage::getCreateTime)
+        );
+        return records.stream().map(msg -> {
+            if ("user".equals(msg.getRole())) {
+                return new UserMessage(msg.getContent());
+            } else if ("assistant".equals(msg.getRole())) {
+                return new AssistantMessage(msg.getContent());
+            }
+            return null;
+        }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private AiConversation getOrCreateConversation(ChatRequest request, Long userId) {
@@ -186,24 +183,11 @@ public class AiChatServiceImpl implements AiChatService {
         messageMapper.insert(msg);
     }
 
-    private List<Message> buildChatMessages(Long conversationId, String userMessage) {
-        List<Message> messages = new ArrayList<>();
-        messages.add(new SystemMessage(aiProperties.getSystemPrompt()));
-
-        List<AiMessage> history = messageMapper.selectList(
-            new LambdaQueryWrapper<AiMessage>()
-                .eq(AiMessage::getConversationId, conversationId)
-                .orderByAsc(AiMessage::getCreateTime)
-        );
-
-        for (AiMessage msg : history) {
-            if ("user".equals(msg.getRole())) {
-                messages.add(new UserMessage(msg.getContent()));
-            } else if ("assistant".equals(msg.getRole())) {
-                messages.add(new AssistantMessage(msg.getContent()));
-            }
+    private void updateTitle(AiConversation conversation, String question, String response) {
+        if (conversation.getTitle() == null && response.length() > 0) {
+            String title = question.length() > 30 ? question.substring(0, 30) + "..." : question;
+            conversation.setTitle(title);
+            conversationMapper.updateById(conversation);
         }
-
-        return messages;
     }
 }

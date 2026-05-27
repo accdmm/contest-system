@@ -31,9 +31,14 @@
         <div class="chat-input">
           <input v-model="inputText" @keydown.enter="send" placeholder="输入消息..."
                  :disabled="loading" class="input-field" />
-          <button @click="send" :disabled="!inputText.trim() || loading" class="send-btn">
+          <button v-if="!loading" @click="send" :disabled="!inputText.trim()" class="send-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+          <button v-else @click="stop" class="stop-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
             </svg>
           </button>
         </div>
@@ -45,7 +50,7 @@
 <script setup>
 import { ref, nextTick, watch } from 'vue'
 import { useUserStore } from '../stores/user'
-import { createChatStream } from '../api/ai'
+import { createChatStream, stopChatStream } from '../api/ai'
 
 const store = useUserStore()
 const isLoggedIn = store.isLoggedIn
@@ -124,8 +129,16 @@ function send() {
       messages.value.push({ role: 'assistant', content: msg })
       loading.value = false
       scrollDown()
-    }
+    },
+    id => { currentConversationId.value = Number(id) }
   )
+}
+
+function stop() {
+  if (currentConversationId.value) {
+    stopChatStream(currentConversationId.value)
+    loading.value = false
+  }
 }
 </script>
 
@@ -340,6 +353,26 @@ function send() {
 .send-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.stop-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #e74c3c;
+  background: #fff;
+  color: #e74c3c;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.stop-btn:hover {
+  background: #e74c3c;
+  color: #fff;
 }
 
 .bubble-slide-enter-active,

@@ -253,8 +253,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (team == null || !team.getLeaderId().equals(userId)) {
             throw new BusinessException("仅队长可解散团队");
         }
-        if (team.getStatus() != CommonConstants.TEAM_FORMING) {
-            throw new BusinessException("仅组建中的团队可解散");
+        if (team.getStatus() == CommonConstants.TEAM_REJECTED || team.getStatus() == CommonConstants.TEAM_DISSOLVED) {
+            throw new BusinessException("该团队当前无法解散");
         }
         team.setStatus(CommonConstants.TEAM_DISSOLVED);
         team.setMemberCount(0);
@@ -271,6 +271,26 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                         "团队已解散", "你所在的团队「" + team.getTeamName() + "」已被队长解散。",
                         teamId, "team");
             }
+        }
+
+        Registration reg = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
+                .one();
+        if (reg != null) {
+            boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
+            reg.setStatus(CommonConstants.REG_CANCELLED);
+            registrationService.updateById(reg);
+            if (wasApproved) {
+                Contest contest = contestService.getById(reg.getContestId());
+                if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
+                    contest.setCurrentCount(contest.getCurrentCount() - 1);
+                    contestService.updateById(contest);
+                }
+            }
+            notificationService.sendNotification(userId, CommonConstants.NOTIFY_SYSTEM,
+                    "报名已取消", "由于团队已解散，竞赛报名已自动取消。",
+                    reg.getContestId(), "contest");
         }
     }
 

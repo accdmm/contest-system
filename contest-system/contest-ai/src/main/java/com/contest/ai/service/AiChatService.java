@@ -1,9 +1,12 @@
 package com.contest.ai.service;
 
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import com.contest.ai.entity.ChatEventVO;
 import com.contest.ai.entity.ChatRequest;
+import reactor.core.publisher.Flux;
 
 public interface AiChatService {
 
-    SseEmitter chat(ChatRequest request, Long userId);
+    Flux<ChatEventVO> chat(ChatRequest request, Long userId);
+
+    void stop(Long sessionId);
 }
