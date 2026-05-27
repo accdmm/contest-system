@@ -141,12 +141,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-
-function formatTime(t) {
-  if (!t) return ''
-  return t.replace('T', ' ')
-}
 import { useRouter } from 'vue-router'
+import { formatTime } from '../../utils/format'
 import NavBar from '../../components/NavBar.vue'
 import ContestCard from '../../components/ContestCard.vue'
 import { listBanners, listAnnouncements } from '../../api/cms'

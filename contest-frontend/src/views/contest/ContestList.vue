@@ -51,16 +51,7 @@
         </div>
       </div>
 
-      <div v-if="total > 0" class="pagination-wrap anim-fade-up">
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          :total="total"
-          :page-size="query.size"
-          :current-page="query.page"
-          @current-change="pageChange"
-        />
-      </div>
+      <BasePagination :total="total" :page-size="query.size" :current-page="query.page" @change="pageChange" />
     </div>
   </div>
 </template>

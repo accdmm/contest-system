@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '../stores/user'
 
 const routes = [
   { path: '/', redirect: '/home' },
@@ -30,6 +31,7 @@ const routes = [
   { path: '/admin/cms', name: 'AdminCms', component: () => import('../views/admin/CmsManage.vue'), meta: { requiresAuth: true, role: 1 } },
   { path: '/admin/notification', name: 'AdminNotification', component: () => import('../views/admin/NotificationManage.vue'), meta: { requiresAuth: true, role: 1 } },
   { path: '/admin/users', name: 'AdminUsers', component: () => import('../views/admin/UserManage.vue'), meta: { requiresAuth: true, role: 1 } },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFound.vue') },
 ]
 
 const router = createRouter({
@@ -38,14 +40,16 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
-  if (to.meta.requiresAuth && !user) {
+  const store = useUserStore()
+  if (to.meta.requiresAuth && !store.isLoggedIn) {
     next('/login')
-  } else if (to.meta.role !== undefined && user?.role !== to.meta.role) {
+  } else if (to.meta.role !== undefined && store.user?.role !== to.meta.role) {
     next('/home')
   } else {
     next()
   }
 })
+
+router.afterEach(() => window.scrollTo(0, 0))
 
 export default router

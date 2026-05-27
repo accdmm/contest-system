@@ -19,7 +19,7 @@
         </div>
 
         <div class="um-card">
-          <el-table :data="list" v-loading="loading" element-loading-background="rgba(245,243,239,0.8)">
+          <el-table :data="list" v-loading="loading" element-loading-background="rgba(245,243,239,0.8)" empty-text="暂无数据">
             <el-table-column prop="id" label="ID" width="64" />
             <el-table-column prop="username" label="学号" width="140" />
             <el-table-column prop="name" label="姓名" width="120" />

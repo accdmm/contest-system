@@ -20,7 +20,7 @@
                   添加轮播图
                 </button>
               </div>
-              <el-table :data="banners" v-loading="false" element-loading-background="rgba(245,243,239,0.8)">
+              <el-table :data="banners" v-loading="false" element-loading-background="rgba(245,243,239,0.8)" empty-text="暂无数据">
                 <el-table-column prop="id" label="ID" width="64" />
                 <el-table-column prop="title" label="描述" min-width="140" />
                 <el-table-column prop="imageUrl" label="图片" width="200">
@@ -47,7 +47,7 @@
                   添加公告
                 </button>
               </div>
-              <el-table :data="announcements" v-loading="false" element-loading-background="rgba(245,243,239,0.8)">
+              <el-table :data="announcements" v-loading="false" element-loading-background="rgba(245,243,239,0.8)" empty-text="暂无数据">
                 <el-table-column prop="id" label="ID" width="64" />
                 <el-table-column prop="title" label="标题" min-width="140" />
                 <el-table-column prop="imageUrl" label="图片" width="200">

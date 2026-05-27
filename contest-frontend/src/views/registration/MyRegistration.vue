@@ -50,16 +50,7 @@
           </div>
         </div>
 
-        <div v-if="total > 0" class="pagination-wrap anim-fade-up">
-          <el-pagination
-            background
-            layout="prev, pager, next"
-            :total="total"
-            :page-size="size"
-            :current-page="page"
-            @current-change="pageChange"
-          />
-        </div>
+        <BasePagination :total="total" :page-size="size" :current-page="page" @change="pageChange" />
       </template>
     </div>
   </div>
@@ -75,14 +66,11 @@ import { useUserStore } from '../../stores/user'
 const store = useUserStore()
 const list = ref([])
 const total = ref(0)
+import { formatTime } from '../../utils/format'
+
 const page = ref(1)
 const size = 10
 const loading = ref(true)
-
-function formatTime(t) {
-  if (!t) return ''
-  return t.replace('T', ' ')
-}
 
 const statusMap = {
   0: { label: '待审核', type: 'warning' },

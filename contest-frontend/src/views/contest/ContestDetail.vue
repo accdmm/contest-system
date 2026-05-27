@@ -186,6 +186,7 @@ import NavBar from '../../components/NavBar.vue'
 import { getContestById } from '../../api/contest'
 import { registerPersonal as apiRegisterPersonal, registerTeam as apiRegisterTeam, approveRegistration, rejectRegistration, cancelRegistration, pageRegistrationByUser, pageRegistrationByContest } from '../../api/registration'
 import { listUserTeams, getTeamById } from '../../api/team'
+import { formatTime } from '../../utils/format'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
@@ -205,11 +206,6 @@ const statusType = computed(() => statusMap[contest.value?.status]?.type || 'inf
 const typeLabel = computed(() => typeMap[contest.value?.contestType] || '')
 
 const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已取消' }
-
-function formatTime(t) {
-  if (!t) return ''
-  return t.replace('T', ' ')
-}
 
 const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId && r.status !== 3))
 const teamReg = computed(() => myRegistrations.value.find(r => r.teamId && r.status !== 3))

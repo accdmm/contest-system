@@ -87,13 +87,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
+import { formatTime } from '../../utils/format'
 import { pageNotificationByUser, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '../../api/notification'
 import { useUserStore } from '../../stores/user'
-
-function formatTime(t) {
-  if (!t) return ''
-  return t.replace('T', ' ')
-}
 
 const store = useUserStore()
 const router = useRouter()
