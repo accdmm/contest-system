@@ -11,8 +11,6 @@ public class TeamMember {
 
     private Long teamId;
 
-    private Long contestId;
-
     private Long userId;
 
     private Integer role;
@@ -36,8 +34,6 @@ public class TeamMember {
     public void setId(Long id) { this.id = id; }
     public Long getTeamId() { return teamId; }
     public void setTeamId(Long teamId) { this.teamId = teamId; }
-    public Long getContestId() { return contestId; }
-    public void setContestId(Long contestId) { this.contestId = contestId; }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
     public Integer getRole() { return role; }

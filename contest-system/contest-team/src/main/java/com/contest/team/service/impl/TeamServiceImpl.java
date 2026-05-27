@@ -43,37 +43,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         this.notificationService = notificationService;
     }
 
-    private void validateContestForTeam(Long contestId) {
-        Contest contest = contestService.getById(contestId);
-        if (contest == null) {
-            throw new BusinessException("竞赛不存在");
-        }
-        if (contest.getStatus() != CommonConstants.CONTEST_OPEN) {
-            throw new BusinessException("竞赛当前未开放报名");
-        }
-        if (contest.getContestType() == CommonConstants.CONTEST_PERSONAL) {
-            throw new BusinessException("该竞赛仅限个人报名，无法创建团队");
-        }
-    }
-
     @Override
     @Transactional
-    public Team createTeam(Long userId, Long contestId, String teamName) {
-        validateContestForTeam(contestId);
-
-        List<TeamMember> existingMembers = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
-                .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, contestId)
-                .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        boolean hasActiveTeam = existingMembers.stream()
-                .map(m -> getById(m.getTeamId()))
-                .anyMatch(t -> t != null);
-        if (hasActiveTeam) {
-            throw new BusinessException("你已在同一竞赛的团队中");
-        }
-
+    public Team createTeam(Long userId, String teamName) {
         Team team = new Team();
-        team.setContestId(contestId);
         team.setLeaderId(userId);
         team.setTeamName(teamName);
         team.setTeamNo("T" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
@@ -81,27 +54,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         team.setMemberCount(1);
         save(team);
 
-        TeamMember existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
-                .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, contestId));
-        if (existing != null) {
-            existing.setTeamId(team.getId());
-            existing.setRole(CommonConstants.MEMBER_LEADER);
-            existing.setStatus(CommonConstants.MEMBER_APPROVED);
-            existing.setApplyTime(LocalDateTime.now());
-            existing.setHandleTime(LocalDateTime.now());
-            teamMemberMapper.updateById(existing);
-        } else {
-            TeamMember leader = new TeamMember();
-            leader.setTeamId(team.getId());
-            leader.setContestId(contestId);
-            leader.setUserId(userId);
-            leader.setRole(CommonConstants.MEMBER_LEADER);
-            leader.setStatus(CommonConstants.MEMBER_APPROVED);
-            leader.setApplyTime(LocalDateTime.now());
-            leader.setHandleTime(LocalDateTime.now());
-            teamMemberMapper.insert(leader);
-        }
+        TeamMember leader = new TeamMember();
+        leader.setTeamId(team.getId());
+        leader.setUserId(userId);
+        leader.setRole(CommonConstants.MEMBER_LEADER);
+        leader.setStatus(CommonConstants.MEMBER_APPROVED);
+        leader.setApplyTime(LocalDateTime.now());
+        leader.setHandleTime(LocalDateTime.now());
+        teamMemberMapper.insert(leader);
 
         return team;
     }
@@ -137,22 +97,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             throw new BusinessException("该团队当前无法加入");
         }
 
-        validateContestForTeam(team.getContestId());
-
-        List<TeamMember> existingMembers = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
-                .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, team.getContestId())
-                .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        boolean hasActiveTeam = existingMembers.stream()
-                .map(m -> getById(m.getTeamId()))
-                .anyMatch(t -> t != null);
-        if (hasActiveTeam) {
-            throw new BusinessException("你已在同一竞赛的团队中");
-        }
-
         TeamMember existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getUserId, userId)
-                .eq(TeamMember::getContestId, team.getContestId()));
+                .eq(TeamMember::getTeamId, team.getId()));
+        if (existing != null && existing.getStatus() == CommonConstants.MEMBER_APPROVED) {
+            throw new BusinessException("你已经是该团队成员");
+        }
         if (existing != null) {
             existing.setTeamId(team.getId());
             existing.setRole(CommonConstants.MEMBER_NORMAL);
@@ -163,7 +113,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         } else {
             TeamMember member = new TeamMember();
             member.setTeamId(team.getId());
-            member.setContestId(team.getContestId());
             member.setUserId(userId);
             member.setRole(CommonConstants.MEMBER_NORMAL);
             member.setStatus(CommonConstants.MEMBER_PENDING);
@@ -330,22 +279,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (team == null || !team.getLeaderId().equals(userId)) {
             throw new BusinessException("仅队长可提交报名");
         }
-        Contest contest = contestService.getById(team.getContestId());
-        if (contest == null) {
-            throw new BusinessException("关联竞赛不存在");
-        }
-        if (contest.getTeamMinSize() != null && contest.getTeamMinSize() > 0
-                && team.getMemberCount() < contest.getTeamMinSize()) {
-            throw new BusinessException("团队人数不足" + contest.getTeamMinSize() + "人，无法提交审核");
-        }
-        if (contest.getTeamMaxSize() != null && contest.getTeamMaxSize() > 0
-                && team.getMemberCount() > contest.getTeamMaxSize()) {
-            throw new BusinessException("团队人数超过上限" + contest.getTeamMaxSize() + "人，无法提交审核");
-        }
         team.setStatus(CommonConstants.TEAM_SUBMITTED);
         updateById(team);
         notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "团队提交审核",
-                "团队「" + team.getTeamName() + "」已提交竞赛「" + contest.getName() + "」的审核申请，请及时审批。",
+                "团队「" + team.getTeamName() + "」已提交审核申请，请及时审批。",
                 teamId, "team");
     }
 
@@ -375,10 +312,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     }
 
     @Override
-    public Team getByLeaderAndContest(Long userId, Long contestId) {
-        return getOne(new LambdaQueryWrapper<Team>()
-                .eq(Team::getLeaderId, userId)
-                .eq(Team::getContestId, contestId));
+    public List<Team> getTeamsByLeader(Long userId) {
+        return list(new LambdaQueryWrapper<Team>()
+                .eq(Team::getLeaderId, userId));
     }
 
     @Override
@@ -401,12 +337,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
         team.setStatus(CommonConstants.TEAM_APPROVED);
         updateById(team);
-        Registration reg = registrationService.registerTeam(team.getLeaderId(), team.getContestId(), teamId);
-        if (reg != null && reg.getId() != null) {
+        Registration reg = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getStatus, CommonConstants.REG_PENDING)
+                .one();
+        if (reg != null) {
             registrationService.approveRegistration(reg.getId());
         }
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
-                "团队审核通过", "你的团队「" + team.getTeamName() + "」已通过管理员审核，报名成功。",
+                "团队审核通过", "你的团队「" + team.getTeamName() + "」已通过管理员审核。",
                 teamId, "team");
     }
 

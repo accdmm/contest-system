@@ -120,25 +120,19 @@
                         </button>
                       </div>
                     </template>
-                    <template v-else-if="myTeam">
+                    <template v-else>
                       <div class="team-info">
-                        <div class="team-info-header">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
-                            <path d="M1 14C1 11.2 3.2 9 6 9C8.8 9 11 11.2 11 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                            <circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/>
-                            <path d="M9 12C9 10 10.5 8.5 12 8.5C13.5 8.5 15 10 15 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                          </svg>
-                          <span>{{ myTeam.teamName }}</span>
-                        </div>
-                        <button class="btn btn-primary btn-block" @click="registerTeamSubmit">
+                        <el-select v-model="selectedTeamId" placeholder="选择团队" class="team-select" size="large">
+                          <el-option v-for="t in myTeams" :key="t.id" :label="t.teamName" :value="t.id" />
+                        </el-select>
+                        <button class="btn btn-primary btn-block" :disabled="!selectedTeamId" @click="registerTeamSubmit">
                           以团队报名
                         </button>
+                        <router-link to="/team/create" class="btn btn-accent btn-block" style="display:flex;align-items:center;justify-content:center;">
+                          创建新团队
+                        </router-link>
                       </div>
                     </template>
-                    <button v-else class="btn btn-accent btn-block" @click="$router.push(`/team/create?contestId=${contest.id}`)">
-                      创建团队
-                    </button>
                   </template>
                 </div>
               </div>
@@ -191,7 +185,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getContestById } from '../../api/contest'
 import { registerPersonal as apiRegisterPersonal, registerTeam as apiRegisterTeam, approveRegistration, rejectRegistration, cancelRegistration, pageRegistrationByUser, pageRegistrationByContest } from '../../api/registration'
-import { getTeamByLeader, getTeamById } from '../../api/team'
+import { listUserTeams, getTeamById } from '../../api/team'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
@@ -200,7 +194,8 @@ const store = useUserStore()
 const contest = ref(null)
 const loading = ref(true)
 const registrations = ref([])
-const myTeam = ref(null)
+const myTeams = ref([])
+const selectedTeamId = ref(null)
 const myRegistrations = ref([])
 
 const statusMap = { 0: { label: '未发布', type: 'info' }, 1: { label: '报名中', type: 'success' }, 2: { label: '已截止', type: 'warning' } }
@@ -229,10 +224,11 @@ async function registerPersonal() {
 }
 
 async function registerTeamSubmit() {
-  if (!myTeam.value) { ElMessage.warning('请先创建团队'); return }
+  if (!selectedTeamId.value) { ElMessage.warning('请选择团队'); return }
   try {
-    await apiRegisterTeam({ userId: store.userId, contestId: contest.value.id, teamId: myTeam.value.id, remark: '' })
+    await apiRegisterTeam({ userId: store.userId, contestId: contest.value.id, teamId: selectedTeamId.value, remark: '' })
     ElMessage.success('团队报名成功，等待审核')
+    selectedTeamId.value = null
     await loadMyRegistration()
   } catch (e) { /* handled by axios interceptor */ }
 }
@@ -284,21 +280,19 @@ async function handleCancelRegistration(reg) {
   } catch { /* handled by interceptor */ }
 }
 
-async function loadMyTeam() {
+async function loadMyTeams() {
   if (!store.isLoggedIn) return
   try {
-    const res = await getTeamByLeader(store.userId, contest.value?.id)
-    if (res.data && res.data.contestId === contest.value?.id) {
-      myTeam.value = res.data
-    }
-  } catch (e) { /* no team */ }
+    const res = await listUserTeams(store.userId)
+    myTeams.value = res.data || []
+  } catch (e) { myTeams.value = [] }
 }
 
 onMounted(async () => {
   try {
     const res = await getContestById(route.params.id)
     contest.value = res.data
-    await Promise.all([loadRegistrations(), loadMyTeam(), loadMyRegistration()])
+    await Promise.all([loadRegistrations(), loadMyTeams(), loadMyRegistration()])
   } catch (e) { /* ignore */ } finally { loading.value = false }
 })
 </script>
@@ -666,6 +660,10 @@ onMounted(async () => {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--c-primary);
+}
+
+.team-select {
+  width: 100%;
 }
 
 /* ===== Info List ===== */

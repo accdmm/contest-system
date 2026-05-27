@@ -23,15 +23,13 @@ public class TeamController {
     @PostMapping
     public Result<Team> create(@RequestBody Map<String, Object> params) {
         Object userIdObj = params.get("userId");
-        Object contestIdObj = params.get("contestId");
         Object teamNameObj = params.get("teamName");
-        if (userIdObj == null || contestIdObj == null || teamNameObj == null) {
+        if (userIdObj == null || teamNameObj == null) {
             return Result.error("缺少必要参数");
         }
         Long userId = Long.valueOf(userIdObj.toString());
-        Long contestId = Long.valueOf(contestIdObj.toString());
         String teamName = teamNameObj.toString();
-        return Result.success(teamService.createTeam(userId, contestId, teamName));
+        return Result.success(teamService.createTeam(userId, teamName));
     }
 
     @PostMapping("/{teamId}/invite")
@@ -110,9 +108,8 @@ public class TeamController {
     }
 
     @GetMapping("/leader")
-    public Result<Team> getByLeader(@RequestParam Long userId, @RequestParam Long contestId) {
-        Team team = teamService.getByLeaderAndContest(userId, contestId);
-        return Result.success(team);
+    public Result<List<Team>> getByLeader(@RequestParam Long userId) {
+        return Result.success(teamService.getTeamsByLeader(userId));
     }
 
     @GetMapping("/page")

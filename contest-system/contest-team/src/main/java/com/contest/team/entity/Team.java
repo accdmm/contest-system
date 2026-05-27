@@ -9,8 +9,6 @@ public class Team {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long contestId;
-
     private Long leaderId;
 
     private String teamName;
@@ -38,8 +36,6 @@ public class Team {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Long getContestId() { return contestId; }
-    public void setContestId(Long contestId) { this.contestId = contestId; }
     public Long getLeaderId() { return leaderId; }
     public void setLeaderId(Long leaderId) { this.leaderId = leaderId; }
     public String getTeamName() { return teamName; }

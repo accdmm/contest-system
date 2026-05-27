@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TeamService extends IService<Team> {
 
-    Team createTeam(Long userId, Long contestId, String teamName);
+    Team createTeam(Long userId, String teamName);
 
     String generateInviteCode(Long teamId, Long userId);
 
@@ -31,7 +31,7 @@ public interface TeamService extends IService<Team> {
 
     List<TeamMember> listPendingMembers(Long teamId);
 
-    Team getByLeaderAndContest(Long userId, Long contestId);
+    List<Team> getTeamsByLeader(Long userId);
 
     IPage<Team> pageTeams(Integer status, Integer page, Integer size);
 

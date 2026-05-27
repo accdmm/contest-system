@@ -44,8 +44,8 @@ export function listPendingMembers(teamId) {
   return request.get(`/team/${teamId}/pending`)
 }
 
-export function getTeamByLeader(userId, contestId) {
-  return request.get('/team/leader', { params: { userId, contestId } })
+export function getTeamsByLeader(userId) {
+  return request.get('/team/leader', { params: { userId } })
 }
 
 export function leaveTeam(teamId, userId) {

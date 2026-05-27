@@ -59,7 +59,6 @@ CREATE TABLE `contest` (
 -- 3. team 团队表
 CREATE TABLE `team` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `contest_id` BIGINT UNSIGNED NOT NULL COMMENT '所属竞赛ID',
     `leader_id` BIGINT UNSIGNED NOT NULL COMMENT '队长用户ID',
     `team_name` VARCHAR(50) NOT NULL COMMENT '团队名称',
     `team_no` VARCHAR(20) NOT NULL COMMENT '唯一团队编号',
@@ -73,7 +72,6 @@ CREATE TABLE `team` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_team_no` (`team_no`),
     UNIQUE KEY `uk_invite_code` (`invite_code`),
-    KEY `idx_contest` (`contest_id`),
     KEY `idx_invite` (`invite_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='团队表';
 
@@ -81,7 +79,6 @@ CREATE TABLE `team` (
 CREATE TABLE `team_member` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
     `team_id` BIGINT UNSIGNED NOT NULL COMMENT '所属团队ID',
-    `contest_id` BIGINT UNSIGNED NOT NULL COMMENT '所属竞赛ID(冗余)',
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '成员用户ID',
     `role` TINYINT NOT NULL DEFAULT 0 COMMENT '成员角色 0=普通成员 1=队长',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '入队审核状态 0=待审核 1=已通过 2=已拒绝/已移除',
@@ -90,8 +87,8 @@ CREATE TABLE `team_member` (
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_contest` (`user_id`, `contest_id`) COMMENT '强制1人1竞赛仅1个团队',
-    KEY `idx_team` (`team_id`)
+    KEY `idx_team` (`team_id`),
+    KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='团队成员关系表';
 
 -- 5. registration 报名记录表

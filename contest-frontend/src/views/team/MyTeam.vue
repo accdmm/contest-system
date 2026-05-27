@@ -54,14 +54,6 @@
                     <span class="meta-dot" />
                     <span class="meta-item">
                       <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/>
-                        <path d="M7 4V7L9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                      </svg>
-                      {{ item.contestName || '未知竞赛' }}
-                    </span>
-                    <span class="meta-dot" />
-                    <span class="meta-item">
-                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
                         <path d="M5 1L7 3L9 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M7 3V13" stroke="currentColor" stroke-width="1.2"/>
                         <path d="M2 10C2 10 3.5 12 7 12C10.5 12 12 10 12 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>

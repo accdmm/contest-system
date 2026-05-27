@@ -19,16 +19,11 @@
               <div class="sidebar-steps">
                 <div class="step-item active">
                   <span class="step-num">1</span>
-                  <span class="step-label">选择竞赛</span>
-                </div>
-                <div class="step-connector" />
-                <div class="step-item active">
-                  <span class="step-num">2</span>
                   <span class="step-label">填写名称</span>
                 </div>
                 <div class="step-connector" />
                 <div class="step-item active">
-                  <span class="step-num">3</span>
+                  <span class="step-num">2</span>
                   <span class="step-label">提交创建</span>
                 </div>
               </div>
@@ -49,27 +44,6 @@
                 class="styled-form"
                 @submit.prevent="handleCreate"
               >
-                <el-form-item label="选择竞赛" required>
-                  <el-select
-                    v-model="form.contestId"
-                    filterable
-                    placeholder="搜索并选择竞赛..."
-                    class="styled-select"
-                    size="large"
-                  >
-                    <el-option
-                      v-for="c in contests"
-                      :key="c.id"
-                      :label="c.name"
-                      :value="c.id"
-                    >
-                      <div class="contest-option">
-                        <span class="option-name">{{ c.name }}</span>
-                      </div>
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-
                 <el-form-item label="团队名称" required>
                   <el-input
                     v-model="form.teamName"
@@ -121,36 +95,26 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { createTeam } from '../../api/team'
-import { pageContests } from '../../api/contest'
 import { useUserStore } from '../../stores/user'
 
-const route = useRoute()
 const router = useRouter()
 const store = useUserStore()
 const loading = ref(false)
-const contests = ref([])
-const form = reactive({ contestId: route.query.contestId || '', teamName: '' })
-
-onMounted(async () => {
-  try {
-    const res = await pageContests({ page: 1, size: 100, status: 1 })
-    contests.value = res.data.records || []
-  } catch (e) { /* ignore */ }
-})
+const form = reactive({ teamName: '' })
 
 async function handleCreate() {
-  if (!form.contestId || !form.teamName) {
-    ElMessage.warning('请填写完整信息')
+  if (!form.teamName) {
+    ElMessage.warning('请输入团队名称')
     return
   }
   loading.value = true
   try {
-    const res = await createTeam({ userId: store.userId, contestId: form.contestId, teamName: form.teamName })
+    const res = await createTeam({ userId: store.userId, teamName: form.teamName })
     ElMessage.success('创建成功')
     router.push(`/team/${res.data.id}`)
   } finally { loading.value = false }

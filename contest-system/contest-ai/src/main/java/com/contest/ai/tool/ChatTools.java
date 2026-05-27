@@ -191,8 +191,13 @@ public class ChatTools {
                     };
                     String contestName = "";
                     try {
-                        Contest c = contestService.getById(t.getContestId());
-                        if (c != null) contestName = c.getName();
+                        Registration reg = registrationService.lambdaQuery()
+                            .eq(com.contest.register.entity.Registration::getTeamId, t.getId())
+                            .last("LIMIT 1").one();
+                        if (reg != null) {
+                            Contest c = contestService.getById(reg.getContestId());
+                            if (c != null) contestName = c.getName();
+                        }
                     } catch (Exception ignored) {}
                     return String.format("团队: %s | 竞赛: %s | 状态: %s | 人数: %d | 邀请码: %s",
                         t.getTeamName(), contestName, statusStr, t.getMemberCount(),
@@ -255,7 +260,7 @@ public class ChatTools {
                 return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
             }
             try {
-                com.contest.team.entity.Team team = teamService.createTeam(userId, contest.getId(), teamName);
+                com.contest.team.entity.Team team = teamService.createTeam(userId, teamName);
                 return "团队创建成功！\n团队名称: " + team.getTeamName()
                     + "\n团队编号: " + team.getTeamNo()
                     + "\n竞赛: " + contest.getName()
