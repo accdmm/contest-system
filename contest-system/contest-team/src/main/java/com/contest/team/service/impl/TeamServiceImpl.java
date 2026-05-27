@@ -67,7 +67,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
         boolean hasActiveTeam = existingMembers.stream()
                 .map(m -> getById(m.getTeamId()))
-                .anyMatch(t -> t != null && t.getStatus() != CommonConstants.TEAM_DISSOLVED);
+                .anyMatch(t -> t != null);
         if (hasActiveTeam) {
             throw new BusinessException("你已在同一竞赛的团队中");
         }
@@ -145,7 +145,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
         boolean hasActiveTeam = existingMembers.stream()
                 .map(m -> getById(m.getTeamId()))
-                .anyMatch(t -> t != null && t.getStatus() != CommonConstants.TEAM_DISSOLVED);
+                .anyMatch(t -> t != null);
         if (hasActiveTeam) {
             throw new BusinessException("你已在同一竞赛的团队中");
         }
@@ -253,12 +253,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (team == null || !team.getLeaderId().equals(userId)) {
             throw new BusinessException("仅队长可解散团队");
         }
-        if (team.getStatus() == CommonConstants.TEAM_REJECTED || team.getStatus() == CommonConstants.TEAM_DISSOLVED) {
-            throw new BusinessException("该团队当前无法解散");
-        }
-        team.setStatus(CommonConstants.TEAM_DISSOLVED);
-        team.setMemberCount(0);
-        updateById(team);
+
+        removeById(teamId);
 
         List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getTeamId, teamId)
@@ -382,8 +378,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     public Team getByLeaderAndContest(Long userId, Long contestId) {
         return getOne(new LambdaQueryWrapper<Team>()
                 .eq(Team::getLeaderId, userId)
-                .eq(Team::getContestId, contestId)
-                .ne(Team::getStatus, CommonConstants.TEAM_DISSOLVED));
+                .eq(Team::getContestId, contestId));
     }
 
     @Override
@@ -453,8 +448,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
         if (members.isEmpty()) return List.of();
         List<Long> teamIds = members.stream().map(TeamMember::getTeamId).collect(Collectors.toList());
-        return listByIds(teamIds).stream()
-                .filter(t -> t.getStatus() != CommonConstants.TEAM_DISSOLVED)
-                .collect(Collectors.toList());
+        return listByIds(teamIds);
     }
 }

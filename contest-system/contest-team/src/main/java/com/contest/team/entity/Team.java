@@ -21,6 +21,9 @@ public class Team {
 
     private LocalDateTime inviteCodeExpire;
 
+    @TableLogic
+    private Integer deleted;
+
     private Integer status;
 
     private Integer memberCount;

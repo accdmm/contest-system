@@ -187,7 +187,6 @@ public class ChatTools {
                         case 1 -> "已提交审核";
                         case 2 -> "已通过";
                         case 3 -> "已驳回";
-                        case 4 -> "已解散";
                         default -> "未知";
                     };
                     String contestName = "";

@@ -26,7 +26,6 @@ public interface CommonConstants {
     int TEAM_SUBMITTED = 1;
     int TEAM_APPROVED = 2;
     int TEAM_REJECTED = 3;
-    int TEAM_DISSOLVED = 4;
 
     int MEMBER_NORMAL = 0;
     int MEMBER_LEADER = 1;
