@@ -6,6 +6,7 @@ import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
+import com.contest.register.entity.Registration;
 import com.contest.register.service.RegistrationService;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
@@ -565,11 +566,24 @@ class TeamServiceImplTest {
         when(teamMemberMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(m1, m2));
         when(teamMemberMapper.updateById(any(TeamMember.class))).thenReturn(1);
 
+        Registration pendingReg = new Registration();
+        pendingReg.setId(10L);
+        pendingReg.setTeamId(1L);
+        pendingReg.setStatus(CommonConstants.REG_PENDING);
+        when(registrationService.lambdaQuery()).thenReturn(mock(LambdaQueryChainWrapper.class,
+                invocation -> {
+                    if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("one".equals(invocation.getMethod().getName())) return pendingReg;
+                    return null;
+                }));
+
         teamService.adminRejectTeam(1L, "不合规，请修改后重新提交");
 
         assertEquals(CommonConstants.TEAM_REJECTED, team.getStatus());
         assertEquals(0, team.getMemberCount());
         assertEquals(CommonConstants.MEMBER_REJECTED, m1.getStatus());
+        assertEquals(CommonConstants.REG_REJECTED, pendingReg.getStatus());
+        verify(registrationService).updateById(pendingReg);
     }
 
     @Test

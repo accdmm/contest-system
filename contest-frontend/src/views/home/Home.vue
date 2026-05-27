@@ -47,7 +47,7 @@
               <div class="banner-overlay">
                 <div class="banner-overlay-content">
                   <h3 v-if="b.title" class="banner-title">{{ b.title }}</h3>
-                  <p v-if="b.description" class="banner-desc">{{ b.description }}</p>
+                  <p v-if="b.content" class="banner-desc">{{ b.content }}</p>
                 </div>
               </div>
             </div>

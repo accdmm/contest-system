@@ -361,6 +361,16 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         team.setMemberCount(0);
         updateById(team);
 
+        Registration reg = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getStatus, CommonConstants.REG_PENDING)
+                .one();
+        if (reg != null) {
+            reg.setStatus(CommonConstants.REG_REJECTED);
+            reg.setReviewReason(reason);
+            registrationService.updateById(reg);
+        }
+
         List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getTeamId, teamId)
                 .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
