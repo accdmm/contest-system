@@ -22,7 +22,7 @@
                     <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/>
                     <path d="M8 4.5V8L10.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                   </svg>
-                  <span>{{ contest.contestTime }}</span>
+                  <span>{{ formatTime(contest.contestTime) }}</span>
                 </div>
                 <div class="info-item">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -36,7 +36,7 @@
                     <path d="M8 1V8L11 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
                     <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2"/>
                   </svg>
-                  <span>报名截止：{{ contest.registerEndTime }}</span>
+                  <span>报名截止：{{ formatTime(contest.registerEndTime) }}</span>
                 </div>
                 <div class="info-item">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -164,11 +164,11 @@
                   </div>
                   <div class="info-row">
                     <dt>竞赛时间</dt>
-                    <dd>{{ contest.contestTime }}</dd>
+                    <dd>{{ formatTime(contest.contestTime) }}</dd>
                   </div>
                   <div class="info-row">
                     <dt>报名截止</dt>
-                    <dd>{{ contest.registerEndTime }}</dd>
+                    <dd>{{ formatTime(contest.registerEndTime) }}</dd>
                   </div>
                   <div class="info-row">
                     <dt>参赛形式</dt>
@@ -211,8 +211,13 @@ const typeLabel = computed(() => typeMap[contest.value?.contestType] || '')
 
 const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已取消' }
 
-const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId))
-const teamReg = computed(() => myRegistrations.value.find(r => r.teamId))
+function formatTime(t) {
+  if (!t) return ''
+  return t.replace('T', ' ')
+}
+
+const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId && r.status !== 3))
+const teamReg = computed(() => myRegistrations.value.find(r => r.teamId && r.status !== 3))
 
 async function registerPersonal() {
   if (!store.isLoggedIn) { router.push('/login'); return }
