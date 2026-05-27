@@ -95,25 +95,47 @@
                 </div>
                 <div v-else class="sidebar-action">
                   <template v-if="contest.contestType !== 1">
-                    <button class="btn btn-primary btn-block" @click="registerPersonal">
+                    <template v-if="personalReg">
+                      <div class="reg-status-bar">
+                        <span class="reg-badge" :class="'reg-badge--' + (personalReg.status === 1 ? 'approved' : personalReg.status === 0 ? 'pending' : 'rejected')">
+                          {{ regStatusMap[personalReg.status] || '未知' }}
+                        </span>
+                        <button v-if="personalReg.status === 0 || personalReg.status === 1" class="btn btn-sm btn-danger" @click="handleCancelRegistration(personalReg)">
+                          取消报名
+                        </button>
+                      </div>
+                    </template>
+                    <button v-else class="btn btn-primary btn-block" @click="registerPersonal">
                       立即报名（个人赛）
                     </button>
                   </template>
                   <template v-if="contest.contestType !== 0">
-                    <div v-if="myTeam" class="team-info">
-                      <div class="team-info-header">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
-                          <path d="M1 14C1 11.2 3.2 9 6 9C8.8 9 11 11.2 11 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                          <circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/>
-                          <path d="M9 12C9 10 10.5 8.5 12 8.5C13.5 8.5 15 10 15 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                        </svg>
-                        <span>{{ myTeam.teamName }}</span>
+                    <template v-if="teamReg">
+                      <div class="reg-status-bar">
+                        <span class="reg-badge" :class="'reg-badge--' + (teamReg.status === 1 ? 'approved' : teamReg.status === 0 ? 'pending' : 'rejected')">
+                          {{ regStatusMap[teamReg.status] || '未知' }}
+                        </span>
+                        <button v-if="teamReg.status === 0 || teamReg.status === 1" class="btn btn-sm btn-danger" @click="handleCancelRegistration(teamReg)">
+                          取消报名
+                        </button>
                       </div>
-                      <button class="btn btn-primary btn-block" @click="registerTeamSubmit">
-                        以团队报名
-                      </button>
-                    </div>
+                    </template>
+                    <template v-else-if="myTeam">
+                      <div class="team-info">
+                        <div class="team-info-header">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+                            <path d="M1 14C1 11.2 3.2 9 6 9C8.8 9 11 11.2 11 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                            <circle cx="12" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/>
+                            <path d="M9 12C9 10 10.5 8.5 12 8.5C13.5 8.5 15 10 15 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                          </svg>
+                          <span>{{ myTeam.teamName }}</span>
+                        </div>
+                        <button class="btn btn-primary btn-block" @click="registerTeamSubmit">
+                          以团队报名
+                        </button>
+                      </div>
+                    </template>
                     <button v-else class="btn btn-accent btn-block" @click="$router.push(`/team/create?contestId=${contest.id}`)">
                       创建团队
                     </button>
@@ -168,7 +190,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getContestById } from '../../api/contest'
-import { registerPersonal as apiRegisterPersonal, registerTeam as apiRegisterTeam, approveRegistration, rejectRegistration, pageRegistrationByContest } from '../../api/registration'
+import { registerPersonal as apiRegisterPersonal, registerTeam as apiRegisterTeam, approveRegistration, rejectRegistration, cancelRegistration, pageRegistrationByUser, pageRegistrationByContest } from '../../api/registration'
 import { getTeamByLeader, getTeamById } from '../../api/team'
 import { useUserStore } from '../../stores/user'
 
@@ -179,6 +201,7 @@ const contest = ref(null)
 const loading = ref(true)
 const registrations = ref([])
 const myTeam = ref(null)
+const myRegistrations = ref([])
 
 const statusMap = { 0: { label: '未发布', type: 'info' }, 1: { label: '报名中', type: 'success' }, 2: { label: '已截止', type: 'warning' } }
 const typeMap = { 0: '仅个人赛', 1: '仅团队赛', 2: '个人赛/团队赛均可' }
@@ -186,11 +209,17 @@ const statusLabel = computed(() => statusMap[contest.value?.status]?.label || ''
 const statusType = computed(() => statusMap[contest.value?.status]?.type || 'info')
 const typeLabel = computed(() => typeMap[contest.value?.contestType] || '')
 
+const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已取消' }
+
+const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId))
+const teamReg = computed(() => myRegistrations.value.find(r => r.teamId))
+
 async function registerPersonal() {
   if (!store.isLoggedIn) { router.push('/login'); return }
   try {
     await apiRegisterPersonal({ userId: store.userId, contestId: contest.value.id, remark: '' })
     ElMessage.success('报名成功，等待审核')
+    await loadMyRegistration()
   } catch (e) { /* handled by axios interceptor */ }
 }
 
@@ -199,6 +228,7 @@ async function registerTeamSubmit() {
   try {
     await apiRegisterTeam({ userId: store.userId, contestId: contest.value.id, teamId: myTeam.value.id, remark: '' })
     ElMessage.success('团队报名成功，等待审核')
+    await loadMyRegistration()
   } catch (e) { /* handled by axios interceptor */ }
 }
 
@@ -228,6 +258,27 @@ async function handleReject(id) {
   }
 }
 
+async function loadMyRegistration() {
+  if (!store.isLoggedIn || !contest.value) return
+  try {
+    const res = await pageRegistrationByUser(store.userId, { page: 1, size: 100 })
+    myRegistrations.value = (res.data.records || []).filter(r => r.contestId === contest.value.id)
+  } catch { myRegistrations.value = [] }
+}
+
+async function handleCancelRegistration(reg) {
+  if (reg.status === 1) {
+    try {
+      await ElMessageBox.confirm('确定取消已通过的报名吗？取消后需重新报名等待审核。', '确认取消')
+    } catch { return }
+  }
+  try {
+    await cancelRegistration(reg.id, store.userId)
+    ElMessage.success('已取消')
+    await loadMyRegistration()
+  } catch { /* handled by interceptor */ }
+}
+
 async function loadMyTeam() {
   if (!store.isLoggedIn) return
   try {
@@ -242,7 +293,7 @@ onMounted(async () => {
   try {
     const res = await getContestById(route.params.id)
     contest.value = res.data
-    await Promise.all([loadRegistrations(), loadMyTeam()])
+    await Promise.all([loadRegistrations(), loadMyTeam(), loadMyRegistration()])
   } catch (e) { /* ignore */ } finally { loading.value = false }
 })
 </script>
@@ -519,6 +570,36 @@ onMounted(async () => {
   font-size: 0.85rem;
   text-align: center;
   margin: 0;
+}
+
+.reg-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reg-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 20px;
+  flex: 1;
+  text-align: center;
+}
+
+.reg-badge--pending {
+  background: rgba(232, 168, 56, 0.12);
+  color: var(--c-warning);
+}
+
+.reg-badge--approved {
+  background: rgba(58, 175, 133, 0.12);
+  color: var(--c-success);
+}
+
+.reg-badge--rejected {
+  background: rgba(232, 93, 74, 0.12);
+  color: var(--c-danger);
 }
 
 .btn-block {

@@ -119,8 +119,9 @@
             <div class="announcement-body">
               <h3 class="announcement-title">{{ a.title }}</h3>
               <p v-if="a.content" class="announcement-content" v-html="a.content"></p>
-              <span class="announcement-time">{{ a.publishTime || a.createTime }}</span>
+              <span class="announcement-time">{{ formatTime(a.publishTime || a.createTime) }}</span>
             </div>
+            <img v-if="a.imageUrl" :src="a.imageUrl" class="announcement-img" />
           </div>
         </div>
         <div v-else class="empty-state">
@@ -140,6 +141,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+
+function formatTime(t) {
+  if (!t) return ''
+  return t.replace('T', ' ')
+}
 import { useRouter } from 'vue-router'
 import NavBar from '../../components/NavBar.vue'
 import ContestCard from '../../components/ContestCard.vue'
@@ -473,6 +479,15 @@ onMounted(async () => {
 .announcement-time {
   font-size: 0.8rem;
   color: var(--c-text-light);
+}
+
+.announcement-img {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
 }
 
 /* ===== Footer ===== */

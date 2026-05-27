@@ -61,7 +61,7 @@
           <div class="notif-card__content">
             <div class="notif-card__header">
               <h4 class="notif-card__title">{{ n.title }}</h4>
-              <span class="notif-card__time">{{ n.createTime }}</span>
+              <span class="notif-card__time">{{ formatTime(n.createTime) }}</span>
             </div>
             <p class="notif-card__body" v-html="n.content"></p>
           </div>
@@ -88,6 +88,11 @@ import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { pageNotificationByUser, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '../../api/notification'
 import { useUserStore } from '../../stores/user'
+
+function formatTime(t) {
+  if (!t) return ''
+  return t.replace('T', ' ')
+}
 
 const store = useUserStore()
 const list = ref([])

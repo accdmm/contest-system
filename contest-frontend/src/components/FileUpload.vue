@@ -10,6 +10,7 @@
       <template #trigger>
         <div v-if="modelValue" class="fu-preview">
           <img :src="modelValue" />
+          <button class="fu-remove" @click.stop="$emit('update:modelValue', '')">×</button>
           <div class="fu-overlay">
             <span>点击替换</span>
           </div>
@@ -103,4 +104,25 @@ async function uploadFile({ file }) {
   transition: var(--transition);
 }
 .fu-preview:hover .fu-overlay { opacity: 1; }
+
+.fu-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  transition: background 0.2s;
+}
+.fu-remove:hover { background: rgba(232,93,74,0.9); }
 </style>

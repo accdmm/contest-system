@@ -37,7 +37,7 @@
             <div class="reg-card__body">
               <div class="reg-card__meta">
                 <span class="meta-label">报名时间</span>
-                <span class="meta-value">{{ item.createTime }}</span>
+                <span class="meta-value">{{ formatTime(item.createTime) }}</span>
               </div>
               <div v-if="item.reviewReason" class="reg-card__meta">
                 <span class="meta-label">驳回原因</span>
@@ -78,6 +78,11 @@ const total = ref(0)
 const page = ref(1)
 const size = 10
 const loading = ref(true)
+
+function formatTime(t) {
+  if (!t) return ''
+  return t.replace('T', ' ')
+}
 
 const statusMap = {
   0: { label: '待审核', type: 'warning' },
