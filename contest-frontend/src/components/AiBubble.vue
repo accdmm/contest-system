@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-bubble" v-if="isLoggedIn">
+  <div class="ai-bubble" v-if="store.isLoggedIn">
     <Transition name="bubble-slide">
       <div v-if="!opened" class="bubble-trigger" @click="openChat">
         <div class="bubble-icon">
@@ -53,7 +53,6 @@ import { useUserStore } from '../stores/user'
 import { createChatStream, stopChatStream } from '../api/ai'
 
 const store = useUserStore()
-const isLoggedIn = store.isLoggedIn
 const opened = ref(false)
 const messages = ref([])
 const inputText = ref('')
