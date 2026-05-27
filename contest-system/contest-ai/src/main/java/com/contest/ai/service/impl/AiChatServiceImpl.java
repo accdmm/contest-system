@@ -71,7 +71,7 @@ public class AiChatServiceImpl implements AiChatService {
                 chatClient.prompt()
                     .system(spec -> spec.text(aiProperties.getSystemPrompt()))
                     .messages(history)
-                    .tools(wrappedCallbacks)
+                    .toolCallbacks(wrappedCallbacks)
                     .user(request.getMessage())
                     .stream()
                     .chatResponse()

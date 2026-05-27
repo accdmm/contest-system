@@ -128,7 +128,6 @@ function send() {
         messages.value.push({ role: 'assistant', content: '登录已过期，请重新登录后使用' })
         loading.value = false
         scrollDown()
-        setTimeout(() => { window.location.href = '/login' }, 1500)
         return
       }
       messages.value.push({ role: 'assistant', content: '抱歉，连接失败，请稍后重试。' })
