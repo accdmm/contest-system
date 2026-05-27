@@ -284,7 +284,7 @@ function tabChange() {
 
 onMounted(async () => {
   await loadContests()
-  regLoading.value = false
+  await fetchReg()
   teamLoading.value = false
 })
 </script>

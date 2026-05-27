@@ -3,6 +3,7 @@ package com.contest.register.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
+import com.contest.common.service.TeamValidator;
 import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
@@ -28,12 +29,13 @@ class RegistrationServiceImplTest {
     @Mock private ContestService contestService;
     @Mock private NotificationService notificationService;
     @Mock private UserService userService;
+    @Mock private TeamValidator teamValidator;
 
     private RegistrationServiceImpl registrationService;
 
     @BeforeEach
     void setUp() {
-        registrationService = new RegistrationServiceImpl(contestService, notificationService, userService);
+        registrationService = new RegistrationServiceImpl(contestService, notificationService, userService, teamValidator);
         ReflectionTestUtils.setField(registrationService, "baseMapper", registrationMapper);
     }
 

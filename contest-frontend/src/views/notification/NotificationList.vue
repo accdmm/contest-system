@@ -84,6 +84,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { pageNotificationByUser, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '../../api/notification'
@@ -95,6 +96,7 @@ function formatTime(t) {
 }
 
 const store = useUserStore()
+const router = useRouter()
 const list = ref([])
 const total = ref(0)
 const unreadCount = ref(0)
@@ -131,6 +133,11 @@ async function handleClick(n) {
       unreadCount.value = Math.max(0, unreadCount.value - 1)
     } catch (e) {
     }
+  }
+  if (n.relatedType === 'contest') {
+    router.push(`/contest/${n.relatedId}`)
+  } else if (n.relatedType === 'team') {
+    router.push(`/team/${n.relatedId}`)
   }
 }
 

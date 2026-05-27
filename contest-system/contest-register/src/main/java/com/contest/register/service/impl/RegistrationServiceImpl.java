@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
+import com.contest.common.service.TeamValidator;
 import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
@@ -25,11 +26,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     private final ContestService contestService;
     private final NotificationService notificationService;
     private final UserService userService;
+    private final TeamValidator teamValidator;
 
-    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService) {
+    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService, TeamValidator teamValidator) {
         this.contestService = contestService;
         this.notificationService = notificationService;
         this.userService = userService;
+        this.teamValidator = teamValidator;
     }
 
     private Contest validateContest(Long contestId, Integer requiredRegType) {
@@ -93,6 +96,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional
     public Registration registerTeam(Long userId, Long contestId, Long teamId) {
+        teamValidator.validateForRegistration(teamId);
         Contest contest = validateContest(contestId, CommonConstants.REG_TEAM);
         checkMaxParticipants(contest);
 
