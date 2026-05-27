@@ -74,18 +74,12 @@ public class AiChatServiceImpl implements AiChatService {
                     .toolCallbacks(wrappedCallbacks)
                     .user(request.getMessage())
                     .stream()
-                    .chatResponse()
+                    .content()
                     .doFirst(() -> generateStatus.put(sessionId, true))
                     .takeWhile(r -> generateStatus.getOrDefault(sessionId, false))
-                    .map(r -> {
-                    String text = r.getResult().getOutput().getText();
-                    if (text != null && !text.isEmpty()) {
-                        fullResponse.append(text);
-                        return ChatEventVO.data(text);
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+                    .filter(text -> text != null && !text.isEmpty())
+                    .doOnNext(text -> fullResponse.append(text))
+                    .map(ChatEventVO::data)
                 .onErrorResume(e -> {
                     log.error("AI chat stream error, sessionId={}", sessionId, e);
                     String msg = e.getMessage();
