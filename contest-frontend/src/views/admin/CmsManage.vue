@@ -50,6 +50,12 @@
               <el-table :data="announcements" v-loading="false" element-loading-background="rgba(245,243,239,0.8)">
                 <el-table-column prop="id" label="ID" width="64" />
                 <el-table-column prop="title" label="标题" min-width="140" />
+                <el-table-column prop="imageUrl" label="图片" width="200">
+                  <template #default="{ row }">
+                    <img v-if="row.imageUrl" :src="row.imageUrl" class="cms-thumb" />
+                    <span v-else style="color:#999;font-size:12px;">无图片</span>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="position" label="位置" width="150" />
                 <el-table-column prop="status" label="状态" width="80" align="center">
                   <template #default="{ row }">
@@ -84,8 +90,8 @@
         <el-form-item v-if="activeTab === 'announcement'" label="内容">
           <el-input v-model="form.content" type="textarea" :rows="4" placeholder="输入公告内容" />
         </el-form-item>
-        <el-form-item label="图片URL">
-          <el-input v-model="form.imageUrl" placeholder="输入图片链接" />
+        <el-form-item label="图片">
+          <FileUpload v-model="form.imageUrl" />
         </el-form-item>
         <el-form-item label="跳转链接">
           <el-input v-model="form.linkUrl" placeholder="输入跳转链接（可选）" />
@@ -122,6 +128,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
+import FileUpload from '../../components/FileUpload.vue'
 import { listBanners, listAnnouncements, createCmsContent, updateCmsContent, deleteCmsContent } from '../../api/cms'
 
 const activeTab = ref('banner')

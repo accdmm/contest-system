@@ -47,6 +47,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
 
     @Override
     public CmsContent updateContent(CmsContent content) {
+        content.setPublishTime(LocalDateTime.now());
         updateById(content);
         return content;
     }

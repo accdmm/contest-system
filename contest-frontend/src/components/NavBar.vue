@@ -23,7 +23,10 @@
       <div class="navbar__actions">
         <template v-if="store.isLoggedIn">
           <div class="navbar__user" @click="dropdownOpen = !dropdownOpen" ref="userMenuRef">
-            <div class="navbar__avatar">{{ store.user?.name?.charAt(0) }}</div>
+            <div class="navbar__avatar">
+              <img v-if="store.user?.avatarUrl" :src="store.user.avatarUrl" class="navbar__avatar-img" />
+              <span v-else>{{ store.user?.name?.charAt(0) }}</span>
+            </div>
             <span class="navbar__username">{{ store.user?.name }}</span>
             <svg class="navbar__chevron" :class="{ 'navbar__chevron--open': dropdownOpen }" width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -288,6 +291,13 @@ function handleLogout() {
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.5px;
+  overflow: hidden;
+}
+
+.navbar__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .navbar__username {

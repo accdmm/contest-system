@@ -19,7 +19,14 @@
         <div class="chat-messages" ref="messagesRef">
           <div v-for="(msg, i) in messages" :key="i"
                class="msg" :class="msg.role">
+            <div v-if="msg.role === 'assistant'" class="msg-avatar">
+              <img src="/images/ai-avatar.jpg" alt="AI" />
+            </div>
             <div class="msg-content">{{ msg.content }}</div>
+            <div v-if="msg.role === 'user'" class="msg-avatar">
+              <img v-if="store.user?.avatarUrl" :src="store.user.avatarUrl" />
+              <span v-else>{{ store.user?.name?.charAt(0) }}</span>
+            </div>
           </div>
           <div v-if="loading" class="msg assistant">
             <div class="msg-content thinking">
@@ -282,6 +289,35 @@ function stop() {
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.msg.user .msg-avatar {
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.msg.assistant .msg-avatar {
+  margin-right: 8px;
 }
 
 .msg.user .msg-content {

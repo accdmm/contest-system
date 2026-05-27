@@ -8,9 +8,11 @@
         <!-- Profile Card -->
         <div class="profile-card anim-fade-up anim-delay-1">
           <div class="profile-card__header">
-            <div class="avatar">
-              <span class="avatar__text">{{ initials }}</span>
+            <div class="avatar" style="cursor:pointer; overflow:hidden;" @click="avatarInput.click()">
+              <img v-if="form.avatarUrl" :src="form.avatarUrl" class="avatar-img" />
+              <span v-else class="avatar__text">{{ initials }}</span>
             </div>
+            <input type="file" ref="avatarInput" accept="image/*" @change="handleAvatarUpload" hidden />
             <div class="avatar-info">
               <h3 class="avatar-info__name">{{ form.name || '用户' }}</h3>
               <p class="avatar-info__meta">{{ form.college }} · {{ form.major }}</p>
@@ -80,10 +82,12 @@ import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getUserById, updateProfile, changePassword } from '../../api/user'
 import { useUserStore } from '../../stores/user'
+import request from '../../api/request'
 
 const store = useUserStore()
-const form = reactive({ username: '', name: '', email: '', phone: '', college: '', major: '' })
+const form = reactive({ username: '', name: '', email: '', phone: '', college: '', major: '', avatarUrl: '' })
 const pwdForm = reactive({ oldPassword: '', newPassword: '' })
+const avatarInput = ref(null)
 
 const initials = computed(() => {
   if (!form.name) return '?'
@@ -100,9 +104,25 @@ onMounted(async () => {
   }
 })
 
+async function handleAvatarUpload(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const f = new FormData()
+  f.append('file', file)
+  try {
+    const res = await request.post('/upload', f, { headers: { 'Content-Type': 'multipart/form-data' } })
+    form.avatarUrl = res.data
+    ElMessage.success('头像上传成功')
+  } catch { /* handled by interceptor */ }
+}
+
 async function handleUpdate() {
   try {
     await updateProfile(store.userId, form)
+    if (store.user) {
+      store.user.avatarUrl = form.avatarUrl
+      localStorage.setItem('user', JSON.stringify(store.user))
+    }
     ElMessage.success('保存成功')
   } catch (e) {
     ElMessage.error('保存失败')
@@ -181,6 +201,12 @@ async function handleChangePwd() {
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: 1.3rem;
   font-weight: 500;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .avatar-info__name {
