@@ -498,13 +498,19 @@ onMounted(async () => {
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .card-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   .hero-title {
     font-size: 2.5rem;
   }
   .hero-decoration {
     display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

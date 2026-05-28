@@ -528,89 +528,7 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 20px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  line-height: 1.4;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all .2s ease;
-  outline: none;
-  text-decoration: none;
-  user-select: none;
-}
 
-.btn:active {
-  transform: scale(.97);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--c-accent), var(--c-accent-light));
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(232, 93, 74, .25);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(232, 93, 74, .35);
-}
-
-.btn-primary:disabled {
-  opacity: .5;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.btn-accent {
-  background: var(--c-surface);
-  color: var(--c-accent);
-  border: 1.5px solid var(--c-accent);
-  box-shadow: none;
-}
-
-.btn-accent:hover {
-  background: var(--c-accent);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(232, 93, 74, .25);
-}
-
-.btn-sm {
-  padding: 6px 14px;
-  font-size: 0.8rem;
-  border-radius: 6px;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.btn-disabled {
-  background: var(--c-border) !important;
-  color: var(--c-text-light) !important;
-  cursor: not-allowed !important;
-  box-shadow: none !important;
-  transform: none !important;
-  border-color: transparent !important;
-}
-
-.btn-danger {
-  background: transparent;
-  color: var(--c-danger);
-  border: 1px solid var(--c-danger);
-}
-
-.btn-danger:hover {
-  background: var(--c-danger);
-  color: #fff;
-}
 
 /* ===== Sidebar ===== */
 .sidebar-card {
@@ -673,48 +591,6 @@ onMounted(async () => {
 .reg-badge--rejected {
   background: rgba(232, 93, 74, 0.12);
   color: var(--c-danger);
-}
-
-.btn-block {
-  width: 100%;
-  justify-content: center;
-}
-
-.btn-disabled {
-  background: var(--c-border) !important;
-  color: var(--c-text-light) !important;
-  cursor: not-allowed !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-.btn-accent {
-  background: var(--c-accent);
-  color: #fff;
-}
-
-.btn-accent:hover {
-  background: var(--c-accent-light);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-success {
-  background: var(--c-success);
-  color: #fff;
-}
-
-.btn-success:hover {
-  opacity: 0.9;
-}
-
-.btn-danger {
-  background: var(--c-danger);
-  color: #fff;
-}
-
-.btn-danger:hover {
-  opacity: 0.9;
 }
 
 /* ===== Team Info ===== */

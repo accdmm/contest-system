@@ -20,6 +20,56 @@
         </router-link>
       </nav>
 
+      <button class="navbar__hamburger" @click="drawerOpen = true" aria-label="菜单">
+        <span /><span /><span />
+      </button>
+
+      <el-drawer
+        v-model="drawerOpen"
+        direction="ltr"
+        size="280px"
+        :with-header="false"
+        class="mobile-drawer"
+      >
+        <div class="drawer-header">
+          <span class="drawer-brand">竞赛报名系统</span>
+        </div>
+        <div class="drawer-body">
+          <router-link
+            v-for="link in navLinks"
+            :key="link.path"
+            :to="link.path"
+            class="drawer-link"
+            :class="{ 'drawer-link--active': route.path === link.path }"
+            @click="drawerOpen = false"
+          >
+            {{ link.label }}
+            <span v-if="link.path === '/notification' && unreadCount > 0" class="drawer-badge" />
+          </router-link>
+
+          <div class="drawer-divider" />
+
+          <router-link to="/my-teams" class="drawer-link" @click="drawerOpen = false">我的团队</router-link>
+          <router-link to="/team/create" class="drawer-link" @click="drawerOpen = false">创建团队</router-link>
+          <div class="drawer-link" @click="handleJoinTeam(); drawerOpen = false">加入团队</div>
+          <router-link to="/profile" class="drawer-link" @click="drawerOpen = false">个人信息</router-link>
+
+          <template v-if="store.isAdmin">
+            <div class="drawer-divider" />
+            <div class="drawer-section-label">管理后台</div>
+            <router-link to="/admin" class="drawer-link" @click="drawerOpen = false">仪表盘</router-link>
+            <router-link to="/admin/contest" class="drawer-link" @click="drawerOpen = false">竞赛管理</router-link>
+            <router-link to="/admin/review" class="drawer-link" @click="drawerOpen = false">报名审核</router-link>
+            <router-link to="/admin/cms" class="drawer-link" @click="drawerOpen = false">内容管理</router-link>
+            <router-link to="/admin/notification" class="drawer-link" @click="drawerOpen = false">通知推送</router-link>
+            <router-link to="/admin/users" class="drawer-link" @click="drawerOpen = false">用户管理</router-link>
+          </template>
+
+          <div class="drawer-divider" />
+          <div class="drawer-link drawer-link--danger" @click="handleLogout(); drawerOpen = false">退出登录</div>
+        </div>
+      </el-drawer>
+
       <div class="navbar__actions">
         <template v-if="store.isLoggedIn">
           <div class="navbar__user" @click="dropdownOpen = !dropdownOpen" ref="userMenuRef">
@@ -91,6 +141,7 @@ const router = useRouter()
 const store = useUserStore()
 
 const dropdownOpen = ref(false)
+const drawerOpen = ref(false)
 const userMenuRef = ref(null)
 const unreadCount = ref(0)
 let pollTimer = null
@@ -399,5 +450,115 @@ function handleLogout() {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-4px) scale(0.97);
+}
+
+/* ===== Hamburger ===== */
+.navbar__hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: var(--transition);
+}
+.navbar__hamburger:hover {
+  background: rgba(26, 35, 50, 0.04);
+}
+.navbar__hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--c-primary);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* ===== Mobile Drawer ===== */
+.mobile-drawer :deep(.el-drawer__body) {
+  padding: 0;
+}
+.drawer-header {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+.drawer-brand {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.15rem;
+  color: var(--c-primary);
+}
+.drawer-body {
+  padding: 12px;
+}
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--c-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.drawer-link:hover {
+  background: rgba(26, 35, 50, 0.04);
+}
+.drawer-link--active {
+  color: var(--c-primary);
+  background: rgba(26, 35, 50, 0.06);
+  font-weight: 600;
+}
+.drawer-link--danger {
+  color: var(--c-danger);
+}
+.drawer-link--danger:hover {
+  background: rgba(232, 93, 74, 0.08);
+}
+.drawer-badge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-danger);
+  margin-left: auto;
+}
+.drawer-divider {
+  height: 1px;
+  background: var(--c-border-light);
+  margin: 8px 12px;
+}
+.drawer-section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 14px 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .navbar__links {
+    display: none;
+  }
+  .navbar__hamburger {
+    display: flex;
+  }
+  .navbar__username {
+    display: none;
+  }
+}
+@media (min-width: 769px) {
+  .navbar__hamburger {
+    display: none;
+  }
 }
 </style>

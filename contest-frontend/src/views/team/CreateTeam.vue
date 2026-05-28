@@ -52,6 +52,7 @@
                     size="large"
                     maxlength="50"
                     show-word-limit
+                    autofocus
                   >
                     <template #prefix>
                       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

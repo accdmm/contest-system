@@ -371,5 +371,7 @@ onMounted(async () => {
   .rr-toolbar { flex-direction: column; align-items: stretch; }
   .rr-filter-group { flex-direction: column; }
   .rr-select, .rr-select--sm { width: 100%; }
+  .rr-table-wrap { overflow-x: auto; }
+  .rr-table-wrap .el-table { min-width: 700px; }
 }
 </style>

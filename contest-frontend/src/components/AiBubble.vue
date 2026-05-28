@@ -208,7 +208,7 @@ function stop() {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--c-accent);
   animation: pulse-ring 2s ease-out infinite;
 }
 
@@ -223,9 +223,9 @@ function stop() {
   right: 0;
   width: 360px;
   height: 500px;
-  background: #f0f4ff;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.18);
+  background: var(--c-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -236,7 +236,7 @@ function stop() {
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+  background: linear-gradient(135deg, var(--c-primary), var(--c-primary-light));
   color: #fff;
 }
 
@@ -266,7 +266,7 @@ function stop() {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #e8eefb;
+  background: var(--c-bg);
 }
 
 .msg {
@@ -321,16 +321,16 @@ function stop() {
 }
 
 .msg.user .msg-content {
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: var(--c-primary);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
 .msg.assistant .msg-content {
-  background: #fff;
-  color: #1a2332;
+  background: var(--c-surface);
+  color: var(--c-text);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
 .thinking {
@@ -372,7 +372,7 @@ function stop() {
 }
 
 .input-field:focus {
-  border-color: #3b82f6;
+  border-color: var(--c-primary);
 }
 
 .send-btn {
@@ -380,7 +380,7 @@ function stop() {
   height: 38px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: var(--c-primary);
   color: #fff;
   cursor: pointer;
   display: flex;
@@ -399,9 +399,9 @@ function stop() {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  border: 2px solid #e74c3c;
-  background: #fff;
-  color: #e74c3c;
+  border: 2px solid var(--c-danger);
+  background: var(--c-surface);
+  color: var(--c-danger);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -411,7 +411,7 @@ function stop() {
 }
 
 .stop-btn:hover {
-  background: #e74c3c;
+  background: var(--c-danger);
   color: #fff;
 }
 

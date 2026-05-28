@@ -51,7 +51,7 @@
           <el-tab-pane label="登录" name="login">
             <el-form ref="loginForm" :model="loginData" :rules="rules" label-position="top" class="login-form">
               <el-form-item label="账号" prop="username">
-                <el-input v-model="loginData.username" placeholder="学号或管理员账号" />
+                <el-input v-model="loginData.username" placeholder="学号或管理员账号" ref="usernameRef" />
               </el-form-item>
               <el-form-item label="密码" prop="password">
                 <el-input v-model="loginData.password" type="password" show-password placeholder="请输入密码" />
@@ -91,14 +91,19 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { login, register } from '../../api/user'
 import { useUserStore } from '../../stores/user'
 
+const usernameRef = ref(null)
 const router = useRouter()
 const store = useUserStore()
+
+onMounted(() => {
+  usernameRef.value?.focus()
+})
 const activeTab = ref('login')
 const loading = ref(false)
 const loginForm = ref(null)

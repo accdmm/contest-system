@@ -265,18 +265,12 @@ onMounted(fetchData)
 .cm-page {
   min-height: 100vh;
   padding-top: 72px;
-  background: #f5f3ef;
+  background: var(--c-bg);
   font-family: 'DM Sans', sans-serif;
 }
 
 .cm-bg {
   padding: 40px 0 60px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
 }
 
 .cm-header {
@@ -290,14 +284,14 @@ onMounted(fetchData)
 .cm-title {
   font-family: 'DM Serif Display', serif;
   font-size: 32px;
-  color: #1a2332;
+  color: var(--c-text);
   margin: 0 0 6px;
   letter-spacing: -0.02em;
 }
 
 .cm-subtitle {
   font-size: 14px;
-  color: #1a2332;
+  color: var(--c-text);
   opacity: 0.5;
   margin: 0;
 }
@@ -307,7 +301,7 @@ onMounted(fetchData)
   align-items: center;
   height: 40px;
   padding: 0 20px;
-  background: #1a2332;
+  background: var(--c-primary);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -320,15 +314,15 @@ onMounted(fetchData)
 }
 
 .cm-add-btn:hover {
-  background: #2a3a52;
+  background: var(--c-primary-light);
   color: #fff;
 }
 
 .cm-table-wrap {
-  background: #fff;
-  border-radius: 16px;
+  background: var(--c-surface);
+  border-radius: var(--radius-md);
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(26, 35, 50, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .cm-table-wrap :deep(.el-table) {
@@ -336,8 +330,8 @@ onMounted(fetchData)
 }
 
 .cm-table-wrap :deep(.el-table th.el-table__cell) {
-  background: #f5f3ef;
-  color: #1a2332;
+  background: var(--c-bg);
+  color: var(--c-primary);
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 13px;
@@ -351,7 +345,7 @@ onMounted(fetchData)
 }
 
 .cm-table-wrap :deep(.el-table td.el-table__cell) {
-  border-bottom: 1px solid #f0eeea;
+  border-bottom: 1px solid var(--c-border-light);
   padding: 10px 0;
 }
 
@@ -365,7 +359,7 @@ onMounted(fetchData)
 
 .cm-cell-name {
   font-weight: 500;
-  color: #1a2332;
+  color: var(--c-primary);
 }
 
 .cm-status {
@@ -379,7 +373,7 @@ onMounted(fetchData)
 
 .cm-status--info {
   background: rgba(26, 35, 50, 0.06);
-  color: #1a2332;
+  color: var(--c-primary);
 }
 
 .cm-status--success {
@@ -395,10 +389,10 @@ onMounted(fetchData)
 .cm-action-btn {
   height: 30px;
   padding: 0 14px;
-  border: 1px solid #e0ddd7;
+  border: 1px solid var(--c-border);
   border-radius: 8px;
-  background: #fff;
-  color: #1a2332;
+  background: var(--c-surface);
+  color: var(--c-primary);
   font-family: 'DM Sans', sans-serif;
   font-size: 12px;
   font-weight: 500;
@@ -407,8 +401,8 @@ onMounted(fetchData)
 }
 
 .cm-action-btn:hover {
-  border-color: #1a2332;
-  background: #1a2332;
+  border-color: var(--c-primary);
+  background: var(--c-primary);
   color: #fff;
 }
 
@@ -435,13 +429,13 @@ onMounted(fetchData)
 }
 
 .cm-action--danger {
-  color: #e85d4a;
+  color: var(--c-accent);
   border-color: rgba(232, 93, 74, 0.3);
 }
 
 .cm-action--danger:hover {
-  background: #e85d4a;
-  border-color: #e85d4a;
+  background: var(--c-accent);
+  border-color: var(--c-accent);
   color: #fff;
 }
 
@@ -454,11 +448,11 @@ onMounted(fetchData)
 .cm-pagination :deep(.el-pagination.is-background .btn-prev),
 .cm-pagination :deep(.el-pagination.is-background .btn-next),
 .cm-pagination :deep(.el-pagination.is-background .el-pager li) {
-  background: #fff;
-  border: 1px solid #e0ddd7;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 8px;
   margin: 0 2px;
-  color: #1a2332;
+  color: var(--c-primary);
   font-family: 'DM Sans', sans-serif;
   min-width: 32px;
   height: 32px;
@@ -466,19 +460,19 @@ onMounted(fetchData)
 }
 
 .cm-pagination :deep(.el-pagination.is-background .el-pager li.is-active) {
-  background: #1a2332;
-  border-color: #1a2332;
+  background: var(--c-primary);
+  border-color: var(--c-primary);
   color: #fff;
 }
 
 .cm-dialog :deep(.el-dialog) {
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(26, 35, 50, 0.15);
+  box-shadow: var(--shadow-xl);
 }
 
 .cm-dialog :deep(.el-dialog__header) {
-  background: #f5f3ef;
+  background: var(--c-bg);
   padding: 24px 28px 16px;
   margin: 0;
 }
@@ -486,7 +480,7 @@ onMounted(fetchData)
 .cm-dialog :deep(.el-dialog__title) {
   font-family: 'DM Serif Display', serif;
   font-size: 20px;
-  color: #1a2332;
+  color: var(--c-primary);
 }
 
 .cm-dialog :deep(.el-dialog__body) {
@@ -501,14 +495,14 @@ onMounted(fetchData)
 .cm-form :deep(.el-form-item__label) {
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  color: #1a2332;
+  color: var(--c-primary);
 }
 
 .cm-form :deep(.el-input__wrapper),
 .cm-form :deep(.el-select .el-input__wrapper),
 .cm-form :deep(.el-textarea__inner) {
   border-radius: 10px;
-  border: 1px solid #e0ddd7;
+  border: 1px solid var(--c-border);
   box-shadow: none;
   transition: border-color 0.2s ease;
 }
@@ -516,12 +510,12 @@ onMounted(fetchData)
 .cm-form :deep(.el-input__wrapper:hover),
 .cm-form :deep(.el-select .el-input__wrapper:hover),
 .cm-form :deep(.el-textarea__inner:hover) {
-  border-color: #1a2332;
+  border-color: var(--c-primary);
 }
 
 .cm-form :deep(.el-input__wrapper.is-focus),
 .cm-form :deep(.el-select .el-input__wrapper.is-focus) {
-  border-color: #1a2332;
+  border-color: var(--c-primary);
   box-shadow: 0 0 0 2px rgba(26, 35, 50, 0.08);
 }
 
@@ -539,22 +533,22 @@ onMounted(fetchData)
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  border: 1px solid #e0ddd7;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
-  color: #1a2332;
+  color: var(--c-primary);
   transition: all 0.2s ease;
   user-select: none;
 }
 
 .cm-radio-option:hover {
-  border-color: #1a2332;
+  border-color: var(--c-primary);
 }
 
 .cm-radio-option.active {
-  background: #1a2332;
-  border-color: #1a2332;
+  background: var(--c-primary);
+  border-color: var(--c-primary);
   color: #fff;
 }
 
@@ -568,16 +562,16 @@ onMounted(fetchData)
 
 .cm-radio-option.active .cm-radio-dot {
   background: currentColor;
-  box-shadow: inset 0 0 0 2px #1a2332;
+  box-shadow: inset 0 0 0 2px #fff;
 }
 
 .cm-dialog-cancel {
   height: 38px;
   padding: 0 22px;
-  border: 1px solid #e0ddd7;
+  border: 1px solid var(--c-border);
   border-radius: 10px;
-  background: #fff;
-  color: #1a2332;
+  background: var(--c-surface);
+  color: var(--c-primary);
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -585,7 +579,7 @@ onMounted(fetchData)
 }
 
 .cm-dialog-cancel:hover {
-  border-color: #1a2332;
+  border-color: var(--c-primary);
 }
 
 .cm-dialog-save {
@@ -593,7 +587,7 @@ onMounted(fetchData)
   padding: 0 22px;
   border: none;
   border-radius: 10px;
-  background: #1a2332;
+  background: var(--c-primary);
   color: #fff;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
@@ -602,7 +596,7 @@ onMounted(fetchData)
 }
 
 .cm-dialog-save:hover {
-  background: #2a3a52;
+  background: var(--c-primary-light);
 }
 
 @media (max-width: 768px) {
@@ -612,7 +606,11 @@ onMounted(fetchData)
 
   .cm-table-wrap {
     padding: 16px;
-    border-radius: 12px;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+  }
+  .cm-table-wrap .el-table {
+    min-width: 780px;
   }
 }
 </style>
