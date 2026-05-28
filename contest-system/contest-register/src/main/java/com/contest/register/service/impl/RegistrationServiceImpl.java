@@ -57,7 +57,17 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return contest;
     }
 
-    private void checkMaxParticipants(Contest contest) {
+    private void checkMaxParticipants(Long contestId, Integer maxParticipants) {
+        if (maxParticipants == null || maxParticipants <= 0) return;
+        long currentTotal = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getContestId, contestId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
+        if (currentTotal >= maxParticipants) {
+            throw new BusinessException("报名人数已满，无法继续报名");
+        }
+    }
+
+    private void checkMaxParticipantsForApproval(Contest contest) {
         Integer max = contest.getMaxParticipants();
         if (max != null && max > 0 && contest.getCurrentCount() != null && contest.getCurrentCount() >= max) {
             throw new BusinessException("报名人数已满，无法继续报名");
@@ -68,7 +78,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Transactional
     public Registration registerPersonal(Long userId, Long contestId, String remark) {
         Contest contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
-        checkMaxParticipants(contest);
+        checkMaxParticipants(contestId, contest.getMaxParticipants());
 
         long count = count(new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getUserId, userId)
@@ -98,7 +108,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     public Registration registerTeam(Long userId, Long contestId, Long teamId) {
         teamValidator.validateForRegistration(teamId);
         Contest contest = validateContest(contestId, CommonConstants.REG_TEAM);
-        checkMaxParticipants(contest);
+        checkMaxParticipants(contestId, contest.getMaxParticipants());
 
         long count = count(new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getUserId, userId)
@@ -132,7 +142,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
         Contest contest = contestService.getById(reg.getContestId());
         if (contest != null) {
-            checkMaxParticipants(contest);
+            checkMaxParticipantsForApproval(contest);
             contest.setCurrentCount(contest.getCurrentCount() == null ? 1 : contest.getCurrentCount() + 1);
             contestService.updateById(contest);
         }

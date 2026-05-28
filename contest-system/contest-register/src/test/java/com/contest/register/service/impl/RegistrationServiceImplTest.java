@@ -87,9 +87,9 @@ class RegistrationServiceImplTest {
     @Test
     void registerPersonal_shouldThrowWhenMaxParticipantsReached() {
         Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setCurrentCount(100);
-        c.setMaxParticipants(100);
+        c.setMaxParticipants(1);
         when(contestService.getById(1L)).thenReturn(c);
+        when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
         assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
     }
