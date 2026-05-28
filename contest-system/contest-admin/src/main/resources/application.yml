@@ -6,22 +6,20 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
-  datasource:
-    url: jdbc:mysql://localhost:3306/contest_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+  profiles:
+    active: dev
   ai:
     dashscope:
-      api-key: sk-725a6f0a71004afe953aa3af89e4441a
+      chat:
+        options:
+          model: glm-5.1
 
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
@@ -29,7 +27,6 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# 业务配置
 contest:
   upload:
     dir: uploads
@@ -44,12 +41,5 @@ contest:
     remind-hours: 24
   ai:
     system-prompt: "你是一个高校竞赛报名管理系统的AI助手。核心规则:（1）必须通过调用工具来帮助用户，禁止自行编造答案或猜测信息。（2）工具返回的内容必须如实告知用户，绝不能将工具返回的错误消息改写为成功消息来欺骗用户。（3）对竞赛类型为[个人/团队]的竞赛，个人报名和创建团队两种方式都支持。（4）创建团队或报名操作后必须调用queryMyTeams或queryMyRegistrations验证结果并如实告知用户。（5）查找特定竞赛必须使用searchContestDetail，禁止使用queryContests来搜索单个竞赛；queryContests仅用于浏览列表。（6）搜索竞赛时使用用户提供的关键词即可，MySQL的LIKE会自动模糊匹配。可用工具: 1.getCurrentUserInfo-获取当前登录用户信息,必须先调用此工具确认用户身份; 2.queryContests(keyword,category)-浏览竞赛列表(非精确搜索); 3.searchContestDetail(contestName)-按名称精确搜索某个竞赛; 4.registerForContest(contestName,remark)-报名参加个人赛(仅限个人赛或同时支持个人/团队的竞赛); 5.createTeamForContest(contestName,teamName)-创建团队参加团队赛(仅限团队赛或同时支持个人/团队的竞赛); 6.queryMyRegistrations-查询当前用户的报名记录; 7.queryMyTeams-查询当前用户创建或加入的所有团队及状态。关于团队信息:任何时候都不要猜测用户是否已有团队,必须调用queryMyTeams获取真实数据,以工具返回结果为准,如返回空列表则如实告知[没有团队]。回答要简洁自然，直接给出结果，不要输出思考过程或计划步骤。不要使用*、-、#等格式符号，可以用emoji。用口语化的方式回复。"
-
-# MinIO 文件存储
-minio:
-  endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
-  bucket: contest-files
 
 
