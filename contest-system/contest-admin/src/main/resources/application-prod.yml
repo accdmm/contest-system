@@ -12,6 +12,11 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
+# MinIO / S3 兼容对象存储
+# 云部署示例(endpoint用MinIO服务名/公网IP):
+#   Docker内网: http://minio:9000
+#   公网IP直连: http://123.123.123.123:9000
+#   阿里云OSS:  https://oss-cn-hangzhou.aliyuncs.com
 minio:
   endpoint: ${MINIO_ENDPOINT}
   access-key: ${MINIO_ACCESS_KEY}

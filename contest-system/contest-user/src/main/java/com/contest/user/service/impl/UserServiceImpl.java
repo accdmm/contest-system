@@ -64,6 +64,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (existing == null) {
             throw new BusinessException("用户不存在");
         }
+        // 防止前端提交空字符串覆盖已有头像
+        if (user.getAvatarUrl() != null && user.getAvatarUrl().isBlank()) {
+            user.setAvatarUrl(null);
+        }
         user.setId(userId);
         user.setPassword(null);
         user.setUsername(null);

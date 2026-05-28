@@ -13,7 +13,8 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
+  # 云部署示例: http://minio:9000 (Docker内网) 或 http://公网IP:9000
+  endpoint: http://localhost:9005
+  access-key: YOUR_MINIO_ACCESS_KEY
+  secret-key: YOUR_MINIO_SECRET_KEY
   bucket: contest-files
