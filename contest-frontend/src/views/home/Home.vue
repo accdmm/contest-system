@@ -68,7 +68,7 @@
             v-for="(c, i) in hotContests"
             :key="c.id"
             class="anim-fade-up"
-            :class="['anim-delay-' + (i + 1), i === 0 ? 'card-featured' : '']"
+            :class="'anim-delay-' + (i + 1)"
           >
             <ContestCard :contest="c" />
           </div>
@@ -91,7 +91,7 @@
             v-for="(c, i) in latestContests"
             :key="c.id"
             class="anim-fade-up"
-            :class="['anim-delay-' + (i + 1), i === 0 ? 'card-featured' : '']"
+            :class="'anim-delay-' + (i + 1)"
           >
             <ContestCard :contest="c" />
           </div>
@@ -457,16 +457,8 @@ onMounted(async () => {
 /* ===== Card Grid ===== */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 20px;
-}
-
-.card-grid .card-featured {
-  grid-column: span 6;
-}
-
-.card-grid > :not(.card-featured) {
-  grid-column: span 3;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
 
 /* ===== Section Markers ===== */
@@ -578,11 +570,8 @@ onMounted(async () => {
   .card-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .card-grid .card-featured {
-    grid-column: 1 / -1;
-  }
-  .card-grid > :not(.card-featured) {
-    grid-column: span 1;
+  .card-grid {
+    gap: 16px;
   }
   .hero-title {
     font-size: clamp(2.2rem, 4vw, 3.5rem);
@@ -596,11 +585,8 @@ onMounted(async () => {
   .card-grid {
     grid-template-columns: 1fr;
   }
-  .card-grid .card-featured {
-    grid-column: 1 / -1;
-  }
-  .card-grid > :not(.card-featured) {
-    grid-column: 1 / -1;
+  .card-grid {
+    grid-template-columns: 1fr;
   }
   .hero {
     padding: 60px 0 60px;

@@ -13,7 +13,7 @@
 
       <div class="contest-card__meta">
         <el-tag size="small" class="contest-card__tag">{{ contest.category }}</el-tag>
-        <el-tag size="small" v-if="contest.level" class="contest-card__tag contest-card__tag--level">
+        <el-tag size="small" v-if="contest.level" class="contest-card__tag" :class="contest.level === '国家级' ? 'contest-card__tag--gold' : 'contest-card__tag--level'">
             {{ levelLabel }}
         </el-tag>
       </div>
@@ -92,7 +92,7 @@ function goDetail() {
 
 <style scoped>
 .contest-card {
-  border-radius: 2px;
+  border-radius: 2px 16px 2px 16px;
   overflow: hidden;
   background: var(--c-surface);
   box-shadow:
@@ -232,6 +232,12 @@ function goDetail() {
 .contest-card__tag--level {
   background: rgba(232, 93, 74, 0.08) !important;
   color: var(--c-accent) !important;
+}
+
+.contest-card__tag--gold {
+  background: transparent !important;
+  color: var(--c-gold) !important;
+  border: 1px solid rgba(201, 168, 76, 0.4) !important;
 }
 
 .contest-card__info {
