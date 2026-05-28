@@ -13,7 +13,7 @@
               <h1 class="hero-title">{{ contest.name }}</h1>
               <div class="hero-meta">
                 <span class="meta-chip">{{ contest.category }}</span>
-                <span class="meta-chip">{{ contest.level }}</span>
+                <span class="meta-chip" :class="contest.level === '国家级' ? 'meta-chip--gold' : ''">{{ contest.level }}</span>
                 <span class="meta-chip">{{ contest.organizer }}</span>
               </div>
               <div class="hero-info">
@@ -125,10 +125,10 @@
                         <el-select v-model="selectedTeamId" placeholder="选择团队" class="team-select" size="large">
                           <el-option v-for="t in myTeams" :key="t.id" :label="t.teamName" :value="t.id" />
                         </el-select>
-                        <button class="btn btn-primary btn-block" :disabled="!selectedTeamId" @click="registerTeamSubmit">
+                        <button class="btn btn-accent btn-block" :disabled="!selectedTeamId" @click="registerTeamSubmit">
                           以团队报名
                         </button>
-                        <button class="btn btn-accent btn-block" @click="$router.push('/team/create')">
+                        <button class="btn btn-block btn-secondary" @click="$router.push('/team/create')">
                           创建新团队
                         </button>
                       </div>
@@ -300,8 +300,8 @@ onMounted(async () => {
 
 /* ===== Hero ===== */
 .hero {
-  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-light) 100%);
-  padding: 60px 0 48px;
+  background: linear-gradient(180deg, var(--c-primary-dark) 0%, var(--c-primary) 100%);
+  padding: 64px 0 56px;
   position: relative;
   overflow: hidden;
 }
@@ -314,7 +314,7 @@ onMounted(async () => {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201, 168, 76, 0.06);
   pointer-events: none;
 }
 
@@ -326,7 +326,7 @@ onMounted(async () => {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.02);
+  background: rgba(201, 168, 76, 0.03);
   pointer-events: none;
 }
 
@@ -344,11 +344,13 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 4px 14px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.9);
-  font-size: 0.8rem;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 500;
+  letter-spacing: 0.05em;
   margin-bottom: 16px;
 }
 
@@ -363,86 +365,108 @@ onMounted(async () => {
 .badge-info { background: var(--c-info); }
 
 .hero-title {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 2.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 400;
   color: #fff;
-  margin: 0 0 16px;
-  line-height: 1.25;
+  margin: 0 0 20px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .hero-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .meta-chip {
-  padding: 4px 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.1);
+  padding: 6px 16px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.85);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.meta-chip--gold {
+  background: transparent;
+  color: var(--c-gold);
+  border: 1px solid rgba(201, 168, 76, 0.4);
 }
 
 .hero-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 12px;
+  gap: 24px;
+  margin-bottom: 16px;
 }
 
 .info-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: rgba(255,255,255,0.75);
-  font-size: 0.85rem;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.82rem;
 }
 
 .hero-type {
   display: inline-block;
-  padding: 4px 14px;
-  border-radius: var(--radius-sm);
+  padding: 6px 16px;
+  border-radius: 2px;
   border: 1px solid var(--c-accent);
   color: var(--c-accent);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.05em;
 }
 
 /* ===== Detail Body ===== */
 .detail-body {
-  padding: 40px 0 60px;
+  padding: 48px 0 64px;
 }
 
 .detail-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 32px;
+  grid-template-columns: 1fr 380px;
+  gap: 4rem;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .detail-layout {
-    grid-template-columns: 1fr;
-  }
+/* ===== Main Content ===== */
+.detail-main .content-section {
+  background: var(--c-paper);
+  border-radius: 0;
+  padding: 2.5rem;
+  box-shadow: none;
+  border: none;
+  margin-bottom: 2px;
+  position: relative;
 }
 
-/* ===== Main Content ===== */
-.content-section {
-  background: var(--c-surface);
-  border-radius: var(--radius-md);
-  padding: 32px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--c-border-light);
-  margin-bottom: 24px;
+.detail-main .content-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: var(--c-border-light);
+}
+
+.detail-main .content-section:last-child::after {
+  display: none;
 }
 
 .description {
-  line-height: 1.8;
-  color: var(--c-text);
+  line-height: 1.9;
+  color: var(--c-ink);
   font-size: 0.95rem;
 }
 
@@ -452,7 +476,7 @@ onMounted(async () => {
 
 .description :deep(img) {
   max-width: 100%;
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
 }
 
 .description :deep(ul), .description :deep(ol) {
@@ -470,7 +494,7 @@ onMounted(async () => {
 }
 
 .description :deep(h1), .description :deep(h2), .description :deep(h3) {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-display);
   margin: 1.5em 0 0.5em;
 }
 
@@ -478,17 +502,18 @@ onMounted(async () => {
 .registration-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .reg-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: var(--c-bg);
-  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  background: var(--c-surface);
+  border-radius: 2px;
   gap: 12px;
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
 .reg-info {
@@ -501,21 +526,24 @@ onMounted(async () => {
 .reg-user {
   font-weight: 600;
   font-size: 0.9rem;
+  color: var(--c-ink);
 }
 
 .reg-type-tag {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 2px;
   font-weight: 500;
+  font-family: var(--font-mono);
 }
 
-.tag-personal { background: rgba(58,175,133,0.12); color: var(--c-success); }
-.tag-team { background: rgba(91,127,165,0.12); color: var(--c-info); }
+.tag-personal { background: rgba(58,175,133,0.1); color: var(--c-success); }
+.tag-team { background: rgba(91,127,165,0.1); color: var(--c-info); }
 
 .reg-status {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
+  font-family: var(--font-mono);
 }
 
 .status-pending { color: var(--c-warning); }
@@ -528,32 +556,37 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
-
-
 /* ===== Sidebar ===== */
 .sidebar-card {
   background: var(--c-surface);
-  border-radius: var(--radius-md);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--c-border-light);
+  border-radius: 2px;
+  padding: 28px;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.03),
+    0 4px 12px rgba(0,0,0,0.04);
   margin-bottom: 20px;
 }
 
+.detail-sidebar .sidebar-card:first-child {
+  position: sticky;
+  top: 92px;
+}
+
 .sidebar-title {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
   font-weight: 400;
   color: var(--c-primary);
-  margin: 0 0 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--c-border-light);
+  margin: 0 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--c-accent);
+  width: 60%;
 }
 
 .sidebar-action {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sidebar-hint {
@@ -570,26 +603,28 @@ onMounted(async () => {
 }
 
 .reg-badge {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 20px;
+  padding: 8px 14px;
+  border-radius: 2px;
   flex: 1;
   text-align: center;
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
 }
 
 .reg-badge--pending {
-  background: rgba(232, 168, 56, 0.12);
+  background: rgba(232, 168, 56, 0.1);
   color: var(--c-warning);
 }
 
 .reg-badge--approved {
-  background: rgba(58, 175, 133, 0.12);
+  background: rgba(58, 175, 133, 0.1);
   color: var(--c-success);
 }
 
 .reg-badge--rejected {
-  background: rgba(232, 93, 74, 0.12);
+  background: rgba(232, 93, 74, 0.1);
   color: var(--c-danger);
 }
 
@@ -597,7 +632,7 @@ onMounted(async () => {
 .team-info {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .team-info-header {
@@ -606,7 +641,7 @@ onMounted(async () => {
   gap: 8px;
   padding: 10px 14px;
   background: var(--c-bg);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--c-primary);
@@ -614,6 +649,67 @@ onMounted(async () => {
 
 .team-select {
   width: 100%;
+}
+
+.team-select :deep(.el-select__wrapper) {
+  border-radius: 2px !important;
+}
+
+.team-select :deep(.el-select__wrapper:hover) {
+  border-color: var(--c-gold) !important;
+}
+
+/* ===== Sidebar Button Overrides ===== */
+.sidebar-action .btn {
+  border-radius: 2px !important;
+  padding: 14px 20px !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.03em;
+}
+
+.sidebar-action .btn-primary {
+  background: var(--c-accent) !important;
+  box-shadow: 0 4px 14px rgba(232, 93, 74, 0.2) !important;
+}
+
+.sidebar-action .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(232, 93, 74, 0.3) !important;
+}
+
+.sidebar-action .btn-accent {
+  background: transparent;
+  color: var(--c-gold);
+  border: 1px solid var(--c-gold);
+}
+
+.sidebar-action .btn-accent:hover {
+  background: var(--c-gold);
+  color: var(--c-primary-dark);
+}
+
+.sidebar-action .btn-danger {
+  background: transparent;
+  color: var(--c-danger);
+  border: 1px solid var(--c-danger);
+}
+
+.sidebar-action .btn-danger:hover {
+  background: var(--c-danger);
+  color: #fff;
+}
+
+.sidebar-action .btn-secondary {
+  background: var(--c-accent) !important;
+  color: #fff !important;
+  opacity: 0.85;
+  font-size: 0.78rem !important;
+}
+
+.sidebar-action .btn-secondary:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(232, 93, 74, 0.2) !important;
 }
 
 /* ===== Info List ===== */
@@ -626,9 +722,9 @@ onMounted(async () => {
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--c-border-light);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .info-row:last-child {
@@ -638,10 +734,14 @@ onMounted(async () => {
 .info-row dt {
   color: var(--c-text-muted);
   flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .info-row dd {
-  color: var(--c-text);
+  color: var(--c-ink);
   font-weight: 500;
   text-align: right;
   word-break: break-word;
@@ -649,21 +749,38 @@ onMounted(async () => {
 }
 
 /* ===== Responsive ===== */
+@media (min-width: 1024px) {
+  .detail-sidebar .sidebar-card:first-child {
+    position: sticky;
+    top: 92px;
+  }
+}
+
+@media (max-width: 900px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
     padding: 40px 0 32px;
   }
   .hero-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
   }
   .hero-info {
     gap: 12px;
   }
-  .content-section {
-    padding: 20px;
+  .detail-main .content-section {
+    padding: 1.5rem;
   }
   .detail-body {
     padding: 24px 0 40px;
+  }
+  .sidebar-card {
+    padding: 20px;
   }
   .reg-card {
     flex-direction: column;
