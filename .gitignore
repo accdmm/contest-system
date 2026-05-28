@@ -10,3 +10,6 @@ Thumbs.db
 **/nul
 .idea/
 *.iml
+run-tests.sh
+run-tests.cmd
+AGENTS.md
