@@ -15,8 +15,8 @@
           <h1 class="hero-title">发现你的竞赛之路</h1>
           <p class="hero-subtitle">汇聚全国高校权威赛事，助你以赛促学、以赛促创，在竞技中成长，在挑战中突破。</p>
           <div class="hero-actions">
-            <el-button size="large" round class="btn-hero-gold" @click="$router.push('/contest')">浏览全部竞赛</el-button>
-            <el-button size="large" round class="btn-hero-coral" @click="handleJoin">立即加入</el-button>
+            <el-button type="primary" size="large" round @click="$router.push('/contest')">浏览全部竞赛</el-button>
+            <el-button size="large" round @click="handleJoin">立即加入</el-button>
           </div>
         </div>
         <div class="hero-decoration anim-slide-right anim-delay-2">
@@ -60,8 +60,8 @@
     <section class="section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title"><span class="section-marker">01</span> 热门竞赛</h2>
-          <el-button text class="section-link-all" @click="$router.push('/contest')">查看全部 <span class="link-arrow">&rarr;</span></el-button>
+          <h2 class="section-title">热门竞赛</h2>
+          <el-button text type="primary" @click="$router.push('/contest')">查看全部 &rarr;</el-button>
         </div>
         <div v-if="hotContests.length" class="card-grid">
           <div
@@ -80,11 +80,11 @@
     </section>
 
     <!-- Latest Contests -->
-    <section class="section">
+    <section class="section section--alt">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title"><span class="section-marker">02</span> 最新竞赛</h2>
-          <el-button text class="section-link-all" @click="$router.push('/contest')">查看全部 <span class="link-arrow">&rarr;</span></el-button>
+          <h2 class="section-title">最新竞赛</h2>
+          <el-button text type="primary" @click="$router.push('/contest')">查看全部 &rarr;</el-button>
         </div>
         <div v-if="latestContests.length" class="card-grid">
           <div
@@ -258,25 +258,23 @@ onMounted(async () => {
 
 .hero-badge {
   display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--c-accent);
-  padding-left: 12px;
-  border-left: 2px solid var(--c-accent);
+  background: rgba(232, 93, 74, 0.12);
+  padding: 6px 16px;
+  border-radius: 20px;
   margin-bottom: 20px;
 }
 
 .hero-title {
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-family: 'DM Serif Display', serif;
+  font-size: 3.5rem;
   color: #fff;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
   margin-bottom: 20px;
-  text-wrap: balance;
 }
 
 .hero-subtitle {
@@ -289,41 +287,30 @@ onMounted(async () => {
 
 .hero-actions {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .hero-actions .el-button {
-  padding: 14px 36px;
-  font-size: 0.9rem;
-  border-radius: 2px !important;
-  font-weight: 600 !important;
+  padding: 12px 32px;
+  font-size: 0.95rem;
 }
 
-.btn-hero-gold {
-  background: transparent !important;
-  color: var(--c-gold) !important;
-  border: 1px solid var(--c-gold) !important;
-  transition: all 0.4s var(--ease-editorial) !important;
-}
-
-.btn-hero-gold:hover {
-  background: var(--c-gold) !important;
-  color: var(--c-primary-dark) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(201, 168, 76, 0.25) !important;
-}
-
-.btn-hero-coral {
+.hero-actions .el-button--primary {
   background: var(--c-accent) !important;
-  color: #fff !important;
-  border: 1px solid var(--c-accent) !important;
-  transition: all 0.4s var(--ease-editorial) !important;
 }
 
-.btn-hero-coral:hover {
+.hero-actions .el-button--primary:hover {
   background: var(--c-accent-light) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(232, 93, 74, 0.3) !important;
+}
+
+.hero-actions .el-button:not(.el-button--primary) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.hero-actions .el-button:not(.el-button--primary):hover {
+  background: rgba(255, 255, 255, 0.14) !important;
 }
 
 .hero-decoration {
@@ -457,36 +444,8 @@ onMounted(async () => {
 /* ===== Card Grid ===== */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-
-/* ===== Section Markers ===== */
-.section-marker {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--c-gold);
-  letter-spacing: 0.05em;
-  margin-right: 8px;
-  vertical-align: middle;
-}
-
-.section-link-all {
-  font-size: 0.85rem !important;
-  color: var(--c-gold) !important;
-  font-weight: 500 !important;
-  transition: all 0.3s var(--ease-editorial) !important;
-  letter-spacing: 0.02em;
-}
-
-.section-link-all .link-arrow {
-  display: inline-block;
-  transition: transform 0.3s var(--ease-editorial);
-}
-
-.section-link-all:hover .link-arrow {
-  transform: translateX(4px);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }
 
 /* ===== Announcements ===== */
@@ -568,16 +527,19 @@ onMounted(async () => {
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .card-grid {
-    gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
   }
   .hero-title {
-    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-size: 2.5rem;
   }
   .hero-decoration {
     display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -585,21 +547,14 @@ onMounted(async () => {
   .card-grid {
     grid-template-columns: 1fr;
   }
-  .card-grid {
-    grid-template-columns: 1fr;
-  }
   .hero {
     padding: 60px 0 60px;
   }
   .hero-title {
-    font-size: clamp(1.8rem, 8vw, 2.5rem);
+    font-size: 2rem;
   }
   .hero-actions {
     flex-direction: column;
-  }
-  .hero-actions .el-button {
-    width: 100%;
-    justify-content: center;
   }
   .section-header {
     flex-direction: column;
