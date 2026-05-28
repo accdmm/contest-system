@@ -32,7 +32,6 @@
   --c-paper: #f7f5f0;
   --c-ink: #1a1a1a;
   --font-display: 'DM Serif Display', 'Noto Serif SC', serif;
-  --font-body: 'DM Sans', 'Noto Sans SC', sans-serif;
   --font-mono: 'DM Mono', 'JetBrains Mono', 'Fira Code', monospace;
   --ease-editorial: cubic-bezier(0.23, 1, 0.32, 1);
 }

@@ -635,18 +635,6 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.team-info-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: var(--c-bg);
-  border-radius: 2px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--c-primary);
-}
-
 .team-select {
   width: 100%;
 }
