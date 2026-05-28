@@ -92,7 +92,7 @@ function goDetail() {
 
 <style scoped>
 .contest-card {
-  border-radius: 2px 16px 2px 16px;
+  border-radius: 2px;
   overflow: hidden;
   background: var(--c-surface);
   box-shadow:
@@ -112,7 +112,7 @@ function goDetail() {
 
 .contest-card__cover {
   position: relative;
-  height: 130px;
+  height: 190px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;

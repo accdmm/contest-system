@@ -80,7 +80,7 @@
     </section>
 
     <!-- Latest Contests -->
-    <section class="section section--alt">
+    <section class="section">
       <div class="container">
         <div class="section-header">
           <h2 class="section-title"><span class="section-marker">02</span> 最新竞赛</h2>
