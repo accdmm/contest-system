@@ -15,8 +15,8 @@
           <h1 class="hero-title">发现你的竞赛之路</h1>
           <p class="hero-subtitle">汇聚全国高校权威赛事，助你以赛促学、以赛促创，在竞技中成长，在挑战中突破。</p>
           <div class="hero-actions">
-            <el-button type="primary" size="large" round @click="$router.push('/contest')">浏览全部竞赛</el-button>
-            <el-button size="large" round @click="handleJoin">立即加入</el-button>
+            <el-button size="large" round class="btn-hero-gold" @click="$router.push('/contest')">浏览全部竞赛</el-button>
+            <el-button size="large" round class="btn-hero-coral" @click="handleJoin">立即加入</el-button>
           </div>
         </div>
         <div class="hero-decoration anim-slide-right anim-delay-2">
@@ -185,35 +185,54 @@ onMounted(async () => {
   position: relative;
   padding: 100px 0 80px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--c-primary) 0%, #0f1622 100%);
+  background-color: var(--c-primary-dark);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 2;
 }
 
 .hero-bg {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
 .hero-shape {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.08;
+  opacity: 0.06;
 }
 
 .hero-shape--1 {
   width: 600px;
   height: 600px;
-  background: var(--c-accent);
+  background: var(--c-gold);
   top: -200px;
-  right: -150px;
+  right: -100px;
+  opacity: 0.04;
 }
 
 .hero-shape--2 {
-  width: 400px;
-  height: 400px;
-  background: #fff;
-  bottom: -100px;
-  left: -100px;
+  width: 500px;
+  height: 500px;
+  border: 1px solid rgba(201, 168, 76, 0.08);
+  top: 50%;
+  left: -200px;
+  transform: translateY(-50%);
+  background: none;
 }
 
 .hero-shape--3 {
@@ -222,11 +241,10 @@ onMounted(async () => {
   background: var(--c-accent);
   bottom: 20%;
   right: 30%;
+  opacity: 0.06;
 }
 
 .hero-inner {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -240,23 +258,25 @@ onMounted(async () => {
 
 .hero-badge {
   display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--c-accent);
-  background: rgba(232, 93, 74, 0.12);
-  padding: 6px 16px;
-  border-radius: 20px;
+  padding-left: 12px;
+  border-left: 2px solid var(--c-accent);
   margin-bottom: 20px;
 }
 
 .hero-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 3.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 5.5rem);
   color: #fff;
-  line-height: 1.15;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
   margin-bottom: 20px;
+  text-wrap: balance;
 }
 
 .hero-subtitle {
@@ -269,43 +289,65 @@ onMounted(async () => {
 
 .hero-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .hero-actions .el-button {
-  padding: 12px 32px;
-  font-size: 0.95rem;
+  padding: 14px 36px;
+  font-size: 0.9rem;
+  border-radius: 2px !important;
+  font-weight: 600 !important;
 }
 
-.hero-actions .el-button--primary {
+.btn-hero-gold {
+  background: transparent !important;
+  color: var(--c-gold) !important;
+  border: 1px solid var(--c-gold) !important;
+  transition: all 0.4s var(--ease-editorial) !important;
+}
+
+.btn-hero-gold:hover {
+  background: var(--c-gold) !important;
+  color: var(--c-primary-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(201, 168, 76, 0.25) !important;
+}
+
+.btn-hero-coral {
   background: var(--c-accent) !important;
-}
-
-.hero-actions .el-button--primary:hover {
-  background: var(--c-accent-light) !important;
-}
-
-.hero-actions .el-button:not(.el-button--primary) {
-  background: rgba(255, 255, 255, 0.08) !important;
   color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid var(--c-accent) !important;
+  transition: all 0.4s var(--ease-editorial) !important;
 }
 
-.hero-actions .el-button:not(.el-button--primary):hover {
-  background: rgba(255, 255, 255, 0.14) !important;
+.btn-hero-coral:hover {
+  background: var(--c-accent-light) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 93, 74, 0.3) !important;
 }
 
 .hero-decoration {
   flex-shrink: 0;
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 340px;
+  height: 340px;
+}
+
+.hero-decoration::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 460px;
+  height: 460px;
+  border: 1px solid rgba(201, 168, 76, 0.08);
+  border-radius: 50%;
 }
 
 .hero-decoration-ring {
-  width: 280px;
-  height: 280px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 340px;
+  height: 340px;
+  border: 1px solid rgba(201, 168, 76, 0.15);
   border-radius: 50%;
   position: absolute;
   top: 0;
@@ -315,16 +357,16 @@ onMounted(async () => {
 .hero-decoration-ring::before {
   content: '';
   position: absolute;
-  inset: 30px;
-  border: 1px solid rgba(232, 93, 74, 0.2);
+  inset: 40px;
+  border: 1px solid rgba(201, 168, 76, 0.1);
   border-radius: 50%;
 }
 
 .hero-decoration-ring::after {
   content: '';
   position: absolute;
-  inset: 60px;
-  background: rgba(232, 93, 74, 0.1);
+  inset: 80px;
+  background: rgba(201, 168, 76, 0.05);
   border-radius: 50%;
 }
 
@@ -335,15 +377,15 @@ onMounted(async () => {
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background: var(--c-accent);
+  background: var(--c-gold);
   border-radius: 50%;
   box-shadow:
-    20px 20px 0 rgba(232, 93, 74, 0.3),
-    -20px -20px 0 rgba(232, 93, 74, 0.3),
-    20px -20px 0 rgba(232, 93, 74, 0.2),
-    -20px 20px 0 rgba(232, 93, 74, 0.2),
-    0 -30px 0 rgba(255, 255, 255, 0.1),
-    0 30px 0 rgba(255, 255, 255, 0.1);
+    24px 24px 0 rgba(201, 168, 76, 0.25),
+    -24px -24px 0 rgba(201, 168, 76, 0.25),
+    24px -24px 0 rgba(201, 168, 76, 0.15),
+    -24px 24px 0 rgba(201, 168, 76, 0.15),
+    0 -36px 0 rgba(255, 255, 255, 0.08),
+    0 36px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ===== Banner ===== */
@@ -501,7 +543,7 @@ onMounted(async () => {
     grid-template-columns: repeat(3, 1fr);
   }
   .hero-title {
-    font-size: 2.5rem;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
   }
   .hero-decoration {
     display: none;
@@ -522,10 +564,14 @@ onMounted(async () => {
     padding: 60px 0 60px;
   }
   .hero-title {
-    font-size: 2rem;
+    font-size: clamp(1.8rem, 8vw, 2.5rem);
   }
   .hero-actions {
     flex-direction: column;
+  }
+  .hero-actions .el-button {
+    width: 100%;
+    justify-content: center;
   }
   .section-header {
     flex-direction: column;
