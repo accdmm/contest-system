@@ -14,3 +14,7 @@ run-tests.sh
 run-tests.cmd
 AGENTS.md
 test-and-report.sh
+*.cmd
+*.png
+api_test.py
+create_contest.json
