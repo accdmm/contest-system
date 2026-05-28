@@ -12,6 +12,7 @@ import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
 import com.contest.register.entity.Registration;
 import com.contest.register.mapper.RegistrationMapper;
+import com.contest.register.service.AdminNotifyService;
 import com.contest.register.service.RegistrationService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Registration> implements RegistrationService {
@@ -27,12 +30,14 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     private final NotificationService notificationService;
     private final UserService userService;
     private final TeamValidator teamValidator;
+    private final AdminNotifyService adminNotifyService;
 
-    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService, TeamValidator teamValidator) {
+    public RegistrationServiceImpl(ContestService contestService, NotificationService notificationService, UserService userService, TeamValidator teamValidator, AdminNotifyService adminNotifyService) {
         this.contestService = contestService;
         this.notificationService = notificationService;
         this.userService = userService;
         this.teamValidator = teamValidator;
+        this.adminNotifyService = adminNotifyService;
     }
 
     private Contest validateContest(Long contestId, Integer requiredRegType) {
@@ -50,11 +55,6 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
             throw new BusinessException("该竞赛仅限团队报名");
         }
         return contest;
-    }
-
-    private void notifyAdmins(Integer type, String title, String content, Long relatedId, String relatedType) {
-        List<User> admins = userService.list(new LambdaQueryWrapper<User>().eq(User::getRole, 1));
-        admins.forEach(admin -> notificationService.sendNotification(admin.getId(), type, title, content, relatedId, relatedType));
     }
 
     private void checkMaxParticipants(Contest contest) {
@@ -87,7 +87,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         save(reg);
         User user = userService.getById(userId);
         String userName = user != null ? user.getName() : "用户" + userId;
-        notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
+        adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的个人报名，请及时审核。",
                 contestId, "contest");
         return reg;
@@ -117,7 +117,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         save(reg);
         User user = userService.getById(userId);
         String userName = user != null ? user.getName() : "用户" + userId;
-        notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
+        adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的团队报名，请及时审核。",
                 contestId, "contest");
         return reg;
@@ -199,7 +199,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         User user = userService.getById(userId);
         String userName = user != null ? user.getName() : "用户" + userId;
         String contestName = c != null ? c.getName() : "未知竞赛";
-        notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
+        adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
                 userName + " 取消了竞赛「" + contestName + "」的报名。",
                 reg.getContestId(), "contest");
     }
@@ -210,12 +210,24 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 .eq(Registration::getUserId, userId)
                 .orderByDesc(Registration::getCreateTime);
         IPage<Registration> result = page(new Page<>(page, size), wrapper);
-        result.getRecords().forEach(reg -> {
-            if (reg.getContestId() != null) {
-                Contest c = contestService.getById(reg.getContestId());
-                reg.setContestName(c != null ? c.getName() : null);
+        List<Registration> records = result.getRecords();
+        if (!records.isEmpty()) {
+            List<Long> contestIds = records.stream()
+                    .map(Registration::getContestId)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!contestIds.isEmpty()) {
+                List<Contest> contests = contestService.listByIds(contestIds);
+                Map<Long, String> contestNameMap = contests.stream()
+                        .collect(Collectors.toMap(Contest::getId, Contest::getName));
+                records.forEach(reg -> {
+                    if (reg.getContestId() != null) {
+                        reg.setContestName(contestNameMap.get(reg.getContestId()));
+                    }
+                });
             }
-        });
+        }
         return result;
     }
 
@@ -241,16 +253,41 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
         wrapper.orderByDesc(Registration::getCreateTime);
         IPage<Registration> result = page(new Page<>(page, size), wrapper);
-        result.getRecords().forEach(reg -> {
-            if (reg.getContestId() != null) {
-                Contest c = contestService.getById(reg.getContestId());
-                reg.setContestName(c != null ? c.getName() : null);
+        List<Registration> records = result.getRecords();
+        if (!records.isEmpty()) {
+            List<Long> contestIds = records.stream()
+                    .map(Registration::getContestId)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            Map<Long, String> contestNameMap = java.util.Collections.emptyMap();
+            if (!contestIds.isEmpty()) {
+                List<Contest> contests = contestService.listByIds(contestIds);
+                contestNameMap = contests.stream()
+                        .collect(Collectors.toMap(Contest::getId, Contest::getName));
             }
-            if (reg.getUserId() != null) {
-                var u = userService.getById(reg.getUserId());
-                reg.setUserName(u != null ? u.getName() : null);
+            List<Long> userIds = records.stream()
+                    .map(Registration::getUserId)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            Map<Long, String> userNameMap = java.util.Collections.emptyMap();
+            if (!userIds.isEmpty()) {
+                List<User> users = userService.listByIds(userIds);
+                userNameMap = users.stream()
+                        .collect(Collectors.toMap(User::getId, User::getName));
             }
-        });
+            Map<Long, String> finalContestNameMap = contestNameMap;
+            Map<Long, String> finalUserNameMap = userNameMap;
+            records.forEach(reg -> {
+                if (reg.getContestId() != null) {
+                    reg.setContestName(finalContestNameMap.get(reg.getContestId()));
+                }
+                if (reg.getUserId() != null) {
+                    reg.setUserName(finalUserNameMap.get(reg.getUserId()));
+                }
+            });
+        }
         return result;
     }
 }

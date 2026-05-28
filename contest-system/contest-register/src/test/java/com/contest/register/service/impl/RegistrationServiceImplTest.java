@@ -9,6 +9,7 @@ import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
 import com.contest.register.entity.Registration;
 import com.contest.register.mapper.RegistrationMapper;
+import com.contest.register.service.AdminNotifyService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,12 +31,13 @@ class RegistrationServiceImplTest {
     @Mock private NotificationService notificationService;
     @Mock private UserService userService;
     @Mock private TeamValidator teamValidator;
+    @Mock private AdminNotifyService adminNotifyService;
 
     private RegistrationServiceImpl registrationService;
 
     @BeforeEach
     void setUp() {
-        registrationService = new RegistrationServiceImpl(contestService, notificationService, userService, teamValidator);
+        registrationService = new RegistrationServiceImpl(contestService, notificationService, userService, teamValidator, adminNotifyService);
         ReflectionTestUtils.setField(registrationService, "baseMapper", registrationMapper);
     }
 
@@ -101,7 +103,6 @@ class RegistrationServiceImplTest {
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
         when(registrationMapper.insert(any(Registration.class))).thenReturn(1);
-        when(userService.list(any(LambdaQueryWrapper.class))).thenReturn(java.util.List.of());
 
         Registration result = registrationService.registerPersonal(1L, 1L, "参赛");
 
@@ -138,7 +139,6 @@ class RegistrationServiceImplTest {
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
         when(registrationMapper.insert(any(Registration.class))).thenReturn(1);
-        when(userService.list(any(LambdaQueryWrapper.class))).thenReturn(java.util.List.of());
 
         Registration result = registrationService.registerTeam(1L, 1L, 1L);
 
@@ -179,7 +179,6 @@ class RegistrationServiceImplTest {
         User user = new User();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
-        when(userService.list(any(LambdaQueryWrapper.class))).thenReturn(java.util.List.of());
 
         registrationService.cancelRegistration(1L, 1L);
 
@@ -202,7 +201,6 @@ class RegistrationServiceImplTest {
         User user = new User();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
-        when(userService.list(any(LambdaQueryWrapper.class))).thenReturn(java.util.List.of());
 
         registrationService.cancelRegistration(1L, 1L);
 
@@ -325,7 +323,7 @@ class RegistrationServiceImplTest {
                 }}
         );
         Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        when(contestService.getById(1L)).thenReturn(c);
+        when(contestService.listByIds(anyList())).thenReturn(java.util.List.of(c));
 
         var page = registrationService.pageByUser(1L, 1, 10);
 

@@ -15,11 +15,16 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class ChatTools {
 
+    private static final Logger log = LoggerFactory.getLogger(ChatTools.class);
     private static final ThreadLocal<Long> CURRENT_USER_ID = new ThreadLocal<>();
 
     private final ContestService contestService;
@@ -102,11 +107,7 @@ public class ChatTools {
                         case 3 -> "已取消";
                         default -> "未知";
                     };
-                    String contestName = "";
-                    try {
-                        Contest c = contestService.getById(r.getContestId());
-                        if (c != null) contestName = c.getName();
-                    } catch (Exception ignored) {}
+                    String contestName = r.getContestName() != null ? r.getContestName() : "";
                     return String.format("%s | 类型: %s | 状态: %s%s",
                         contestName,
                         r.getRegType() == 0 ? "个人" : "团队",
@@ -180,6 +181,21 @@ public class ChatTools {
             if (teams.isEmpty()) {
                 return "你还没有创建或加入任何团队";
             }
+            List<Long> teamIds = teams.stream().map(Team::getId).collect(Collectors.toList());
+            List<Registration> teamRegs = registrationService.lambdaQuery()
+                .in(Registration::getTeamId, teamIds)
+                .list();
+            Map<Long, Long> teamContestMap = teamRegs.stream()
+                .filter(r -> r.getTeamId() != null && r.getContestId() != null)
+                .collect(Collectors.toMap(Registration::getTeamId, Registration::getContestId, (a, b) -> a));
+            List<Long> contestIds = teamContestMap.values().stream().distinct().collect(Collectors.toList());
+            Map<Long, String> contestNameMap = java.util.Collections.emptyMap();
+            if (!contestIds.isEmpty()) {
+                List<Contest> contests = contestService.listByIds(contestIds);
+                contestNameMap = contests.stream()
+                    .collect(Collectors.toMap(Contest::getId, Contest::getName));
+            }
+            Map<Long, String> finalContestNameMap = contestNameMap;
             return teams.stream()
                 .map(t -> {
                     String statusStr = switch (t.getStatus()) {
@@ -189,16 +205,9 @@ public class ChatTools {
                         case 3 -> "已驳回";
                         default -> "未知";
                     };
-                    String contestName = "";
-                    try {
-                        Registration reg = registrationService.lambdaQuery()
-                            .eq(com.contest.register.entity.Registration::getTeamId, t.getId())
-                            .last("LIMIT 1").one();
-                        if (reg != null) {
-                            Contest c = contestService.getById(reg.getContestId());
-                            if (c != null) contestName = c.getName();
-                        }
-                    } catch (Exception ignored) {}
+                    Long contestId = teamContestMap.get(t.getId());
+                    String contestName = contestId != null ? finalContestNameMap.get(contestId) : "";
+                    if (contestName == null) contestName = "";
                     return String.format("团队: %s | 竞赛: %s | 状态: %s | 人数: %d | 邀请码: %s",
                         t.getTeamName(), contestName, statusStr, t.getMemberCount(),
                         t.getInviteCode() != null ? t.getInviteCode() : "无");

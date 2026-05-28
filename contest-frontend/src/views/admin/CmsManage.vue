@@ -165,22 +165,28 @@ function editItem(row) {
 }
 
 async function save() {
-  const payload = { ...form, contentType: activeTab.value === 'banner' ? 0 : 1 }
-  if (isEdit.value) {
-    await updateCmsContent(payload)
-  } else {
-    await createCmsContent(payload)
-  }
-  ElMessage.success('保存成功')
-  dialogVisible.value = false
-  refresh()
+  try {
+    const payload = { ...form, contentType: activeTab.value === 'banner' ? 0 : 1 }
+    if (isEdit.value) {
+      await updateCmsContent(payload)
+    } else {
+      await createCmsContent(payload)
+    }
+    ElMessage.success('保存成功')
+    dialogVisible.value = false
+    refresh()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 async function del(id) {
-  await ElMessageBox.confirm('确定删除？')
-  await deleteCmsContent(id)
-  ElMessage.success('已删除')
-  refresh()
+  try {
+    await ElMessageBox.confirm('确定删除？')
+    await deleteCmsContent(id)
+    ElMessage.success('已删除')
+    refresh()
+  } catch (e) {
+    if (e !== 'cancel') { /* handled by axios interceptor */ }
+  }
 }
 
 function refresh() {

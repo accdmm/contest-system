@@ -259,13 +259,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getTeamById, listTeamMembers, listPendingMembers, generateInviteCode, approveMember, rejectMember, removeMember, dissolveTeam, submitTeamReview, joinByInviteCode, leaveTeam } from '../../api/team'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
+const router = useRouter()
 const store = useUserStore()
 const loading = ref(true)
 const team = ref(null)
@@ -295,9 +296,11 @@ async function fetchData() {
 }
 
 async function generateCode() {
-  await generateInviteCode(team.value.id, store.userId)
-  ElMessage.success('邀请码已重新生成')
-  fetchData()
+  try {
+    await generateInviteCode(team.value.id, store.userId)
+    ElMessage.success('邀请码已重新生成')
+    fetchData()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 async function copyInviteCode() {
@@ -309,34 +312,42 @@ async function copyInviteCode() {
   }
 }
 
-async function approve(id) { await approveMember(team.value.id, store.userId, id); ElMessage.success('已通过'); fetchData() }
-async function reject(id) { await rejectMember(team.value.id, store.userId, id); ElMessage.success('已拒绝'); fetchData() }
-async function remove(id) { await removeMember(team.value.id, store.userId, id); ElMessage.success('已移除'); fetchData() }
+async function approve(id) { try { await approveMember(team.value.id, store.userId, id); ElMessage.success('已通过'); fetchData() } catch (e) { /* handled by axios interceptor */ } }
+async function reject(id) { try { await rejectMember(team.value.id, store.userId, id); ElMessage.success('已拒绝'); fetchData() } catch (e) { /* handled by axios interceptor */ } }
+async function remove(id) { try { await removeMember(team.value.id, store.userId, id); ElMessage.success('已移除'); fetchData() } catch (e) { /* handled by axios interceptor */ } }
 
 async function dissolve() {
-  await dissolveTeam(team.value.id, store.userId)
-  ElMessage.success('团队已解散')
-  fetchData()
+  try {
+    await dissolveTeam(team.value.id, store.userId)
+    ElMessage.success('团队已解散')
+    fetchData()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 async function handleLeave() {
-  await leaveTeam(team.value.id, store.userId)
-  ElMessage.success('已退出团队')
-  router.push('/home')
+  try {
+    await leaveTeam(team.value.id, store.userId)
+    ElMessage.success('已退出团队')
+    router.push('/home')
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 async function submitReview() {
-  await submitTeamReview(team.value.id, store.userId)
-  ElMessage.success('已提交审核')
-  fetchData()
+  try {
+    await submitTeamReview(team.value.id, store.userId)
+    ElMessage.success('已提交审核')
+    fetchData()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 async function joinTeam() {
   if (!inviteCode.value) { ElMessage.warning('请输入邀请码'); return }
-  await joinByInviteCode({ userId: store.userId, inviteCode: inviteCode.value })
-  ElMessage.success('已申请加入，等待队长审核')
-  inviteCode.value = ''
-  fetchData()
+  try {
+    await joinByInviteCode({ userId: store.userId, inviteCode: inviteCode.value })
+    ElMessage.success('已申请加入，等待队长审核')
+    inviteCode.value = ''
+    fetchData()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 onMounted(fetchData)

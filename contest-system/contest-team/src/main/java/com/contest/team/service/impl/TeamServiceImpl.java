@@ -10,6 +10,7 @@ import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
 import com.contest.register.entity.Registration;
+import com.contest.register.service.AdminNotifyService;
 import com.contest.register.service.RegistrationService;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
@@ -34,13 +35,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     private final UserService userService;
     private final RegistrationService registrationService;
     private final NotificationService notificationService;
+    private final AdminNotifyService adminNotifyService;
 
-    public TeamServiceImpl(TeamMemberMapper teamMemberMapper, ContestService contestService, UserService userService, RegistrationService registrationService, NotificationService notificationService) {
+    public TeamServiceImpl(TeamMemberMapper teamMemberMapper, ContestService contestService, UserService userService, RegistrationService registrationService, NotificationService notificationService, AdminNotifyService adminNotifyService) {
         this.teamMemberMapper = teamMemberMapper;
         this.contestService = contestService;
         this.userService = userService;
         this.registrationService = registrationService;
         this.notificationService = notificationService;
+        this.adminNotifyService = adminNotifyService;
     }
 
     @Override
@@ -67,6 +70,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     }
 
     @Override
+    @Transactional
     public String generateInviteCode(Long teamId, Long userId) {
         Team team = getById(teamId);
         if (team == null) {
@@ -267,11 +271,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
     }
 
-    private void notifyAdmins(Integer type, String title, String content, Long relatedId, String relatedType) {
-        List<User> admins = userService.list(new LambdaQueryWrapper<User>().eq(User::getRole, 1));
-        admins.forEach(admin -> notificationService.sendNotification(admin.getId(), type, title, content, relatedId, relatedType));
-    }
-
     @Override
     @Transactional
     public void submitForReview(Long teamId, Long userId) {
@@ -281,7 +280,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
         team.setStatus(CommonConstants.TEAM_SUBMITTED);
         updateById(team);
-        notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "团队提交审核",
+        adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "团队提交审核",
                 "团队「" + team.getTeamName() + "」已提交审核申请，请及时审批。",
                 teamId, "team");
     }
@@ -303,9 +302,19 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     }
 
     private List<TeamMember> enrichWithUserName(List<TeamMember> members) {
+        List<Long> userIds = members.stream()
+                .map(TeamMember::getUserId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+        if (userIds.isEmpty()) {
+            return members;
+        }
+        List<User> users = userService.listByIds(userIds);
+        java.util.Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
         return members.stream().peek(m -> {
             if (m.getUserId() != null) {
-                var user = userService.getById(m.getUserId());
+                User user = userMap.get(m.getUserId());
                 m.setUserName(user != null ? user.getName() : null);
             }
         }).collect(Collectors.toList());

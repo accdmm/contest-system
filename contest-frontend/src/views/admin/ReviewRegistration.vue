@@ -272,9 +272,11 @@ async function fetchTeam() {
 }
 
 async function approveTeam(id) {
-  await adminApproveTeam(id)
-  ElMessage.success('已通过，已自动创建报名记录')
-  fetchTeam()
+  try {
+    await adminApproveTeam(id)
+    ElMessage.success('已通过，已自动创建报名记录')
+    fetchTeam()
+  } catch (e) { /* handled by axios interceptor */ }
 }
 
 function tabChange() {

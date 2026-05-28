@@ -7,6 +7,7 @@ import com.contest.common.exception.BusinessException;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
 import com.contest.register.entity.Registration;
+import com.contest.register.service.AdminNotifyService;
 import com.contest.register.service.RegistrationService;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
@@ -37,12 +38,13 @@ class TeamServiceImplTest {
     @Mock private UserService userService;
     @Mock private RegistrationService registrationService;
     @Mock private NotificationService notificationService;
+    @Mock private AdminNotifyService adminNotifyService;
 
     private TeamServiceImpl teamService;
 
     @BeforeEach
     void setUp() {
-        teamService = new TeamServiceImpl(teamMemberMapper, contestService, userService, registrationService, notificationService);
+        teamService = new TeamServiceImpl(teamMemberMapper, contestService, userService, registrationService, notificationService, adminNotifyService);
         ReflectionTestUtils.setField(teamService, "baseMapper", teamMapper);
     }
 
@@ -471,7 +473,6 @@ class TeamServiceImplTest {
         team.setStatus(CommonConstants.TEAM_FORMING);
         when(teamMapper.selectById(1L)).thenReturn(team);
         when(teamMapper.updateById(any(Team.class))).thenReturn(1);
-        when(userService.list(any(LambdaQueryWrapper.class))).thenReturn(List.of());
 
         teamService.submitForReview(1L, 1L);
 
@@ -618,8 +619,9 @@ class TeamServiceImplTest {
         m.setStatus(CommonConstants.MEMBER_APPROVED);
         when(teamMemberMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(m));
         User user = new User();
+        user.setId(1L);
         user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
+        when(userService.listByIds(anyList())).thenReturn(List.of(user));
 
         List<TeamMember> result = teamService.listMembers(1L);
 
@@ -634,8 +636,9 @@ class TeamServiceImplTest {
         m.setStatus(CommonConstants.MEMBER_PENDING);
         when(teamMemberMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(m));
         User user = new User();
+        user.setId(1L);
         user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
+        when(userService.listByIds(anyList())).thenReturn(List.of(user));
 
         List<TeamMember> result = teamService.listPendingMembers(1L);
 
