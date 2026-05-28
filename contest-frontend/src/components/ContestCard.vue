@@ -92,19 +92,22 @@ function goDetail() {
 
 <style scoped>
 .contest-card {
-  border-radius: var(--radius-lg);
+  border-radius: 2px;
   overflow: hidden;
   background: var(--c-surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.03),
+    0 2px 4px rgba(0,0,0,0.02),
+    0 8px 16px rgba(0,0,0,0.02);
   cursor: pointer;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--c-border-light);
+  transition: all 0.5s var(--ease-editorial);
 }
 
 .contest-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--shadow-xl);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.04),
+    0 12px 24px rgba(0,0,0,0.06);
 }
 
 .contest-card__cover {
@@ -114,6 +117,21 @@ function goDetail() {
   align-items: flex-start;
   justify-content: space-between;
   padding: 14px;
+  background-size: 100%;
+  transition: background-size 0.6s var(--ease-editorial);
+}
+
+.contest-card:hover .contest-card__cover {
+  background-size: 105%;
+}
+
+.contest-card__cover::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(10, 16, 24, 0.7) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .contest-card__badge {
@@ -127,6 +145,8 @@ function goDetail() {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);
   color: var(--c-primary);
+  position: relative;
+  z-index: 1;
 }
 
 .contest-card__dot {
@@ -158,6 +178,8 @@ function goDetail() {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
   color: #fff;
+  position: relative;
+  z-index: 1;
 }
 
 .contest-card__body {
@@ -165,16 +187,30 @@ function goDetail() {
 }
 
 .contest-card__title {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 400;
   color: var(--c-primary);
   line-height: 1.35;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: color 0.3s var(--ease-editorial);
+}
+
+.contest-card:hover .contest-card__title {
+  color: var(--c-accent);
+}
+
+.contest-card__title::after {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: var(--c-accent);
+  margin-top: 0.5rem;
 }
 
 .contest-card__meta {
@@ -190,6 +226,7 @@ function goDetail() {
   line-height: 22px !important;
   background: rgba(26, 35, 50, 0.06) !important;
   color: var(--c-text-muted) !important;
+  border-radius: 2px !important;
 }
 
 .contest-card__tag--level {

@@ -60,15 +60,15 @@
     <section class="section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">热门竞赛</h2>
-          <el-button text type="primary" @click="$router.push('/contest')">查看全部 &rarr;</el-button>
+          <h2 class="section-title"><span class="section-marker">01</span> 热门竞赛</h2>
+          <el-button text class="section-link-all" @click="$router.push('/contest')">查看全部 <span class="link-arrow">&rarr;</span></el-button>
         </div>
         <div v-if="hotContests.length" class="card-grid">
           <div
             v-for="(c, i) in hotContests"
             :key="c.id"
             class="anim-fade-up"
-            :class="'anim-delay-' + (i + 1)"
+            :class="['anim-delay-' + (i + 1), i === 0 ? 'card-featured' : '']"
           >
             <ContestCard :contest="c" />
           </div>
@@ -83,15 +83,15 @@
     <section class="section section--alt">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">最新竞赛</h2>
-          <el-button text type="primary" @click="$router.push('/contest')">查看全部 &rarr;</el-button>
+          <h2 class="section-title"><span class="section-marker">02</span> 最新竞赛</h2>
+          <el-button text class="section-link-all" @click="$router.push('/contest')">查看全部 <span class="link-arrow">&rarr;</span></el-button>
         </div>
         <div v-if="latestContests.length" class="card-grid">
           <div
             v-for="(c, i) in latestContests"
             :key="c.id"
             class="anim-fade-up"
-            :class="'anim-delay-' + (i + 1)"
+            :class="['anim-delay-' + (i + 1), i === 0 ? 'card-featured' : '']"
           >
             <ContestCard :contest="c" />
           </div>
@@ -457,8 +457,44 @@ onMounted(async () => {
 /* ===== Card Grid ===== */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(12, 1fr);
   gap: 20px;
+}
+
+.card-grid .card-featured {
+  grid-column: span 6;
+}
+
+.card-grid > :not(.card-featured) {
+  grid-column: span 3;
+}
+
+/* ===== Section Markers ===== */
+.section-marker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--c-gold);
+  letter-spacing: 0.05em;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.section-link-all {
+  font-size: 0.85rem !important;
+  color: var(--c-gold) !important;
+  font-weight: 500 !important;
+  transition: all 0.3s var(--ease-editorial) !important;
+  letter-spacing: 0.02em;
+}
+
+.section-link-all .link-arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-editorial);
+}
+
+.section-link-all:hover .link-arrow {
+  transform: translateX(4px);
 }
 
 /* ===== Announcements ===== */
@@ -540,7 +576,13 @@ onMounted(async () => {
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .card-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .card-grid .card-featured {
+    grid-column: 1 / -1;
+  }
+  .card-grid > :not(.card-featured) {
+    grid-column: span 1;
   }
   .hero-title {
     font-size: clamp(2.2rem, 4vw, 3.5rem);
@@ -550,15 +592,15 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 820px) {
-  .card-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 640px) {
   .card-grid {
     grid-template-columns: 1fr;
+  }
+  .card-grid .card-featured {
+    grid-column: 1 / -1;
+  }
+  .card-grid > :not(.card-featured) {
+    grid-column: 1 / -1;
   }
   .hero {
     padding: 60px 0 60px;
