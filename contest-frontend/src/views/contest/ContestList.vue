@@ -105,7 +105,7 @@ import { pageContests } from '../../api/contest'
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])
 const total = ref(0)
-const query = reactive({ keyword: '', category: '', status: '', sortBy: '', page: 1, size: 6 })
+const query = reactive({ keyword: '', category: '', status: '', contestType: '', sortBy: '', page: 1, size: 6 })
 
 async function fetchData() {
   const params = { ...query }
