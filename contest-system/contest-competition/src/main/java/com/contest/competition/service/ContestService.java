@@ -20,6 +20,8 @@ public interface ContestService extends IService<Contest> {
 
     IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy);
 
+    IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy);
+
     List<Contest> listHotContests(int limit);
 
     List<Contest> listLatestContests(int limit);
