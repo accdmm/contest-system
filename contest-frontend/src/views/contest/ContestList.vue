@@ -113,6 +113,7 @@ async function fetchData() {
   if (!params.keyword) delete params.keyword
   if (!params.status && params.status !== 0) delete params.status
   if (!params.sortBy) delete params.sortBy
+  if (params.contestType === '') delete params.contestType
   try {
     const res = await pageContests(params)
     list.value = res.data.records || []

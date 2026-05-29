@@ -1,11 +1,13 @@
 <template>
   <div class="contest-card" @click="goDetail">
     <div class="contest-card__cover" :style="coverStyle">
-      <div class="contest-card__badge" :class="`contest-card__badge--${statusType}`">
-        <span class="contest-card__dot" />
-        {{ statusLabel }}
+      <div class="contest-card__cover-top">
+        <div class="contest-card__badge" :class="`contest-card__badge--${statusType}`">
+          <span class="contest-card__dot" />
+          {{ statusLabel }}
+        </div>
       </div>
-      <div class="contest-card__cover-right">
+      <div class="contest-card__cover-bottom">
         <span class="contest-card__type-chip" :class="`contest-card__type-chip--${contestTypeType}`">
           {{ contestTypeLabel }}
         </span>
@@ -124,11 +126,25 @@ function goDetail() {
   position: relative;
   height: 190px;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   justify-content: space-between;
   padding: 14px;
   background-size: 100%;
   transition: background-size 0.6s var(--ease-editorial);
+}
+
+.contest-card__cover-top {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.contest-card__cover-bottom {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .contest-card:hover .contest-card__cover {
@@ -178,15 +194,6 @@ function goDetail() {
 
 .contest-card__badge--info .contest-card__dot {
   background: var(--c-text-muted);
-}
-
-.contest-card__cover-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  position: relative;
-  z-index: 1;
 }
 
 .contest-card__type-chip {
