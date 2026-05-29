@@ -3,7 +3,13 @@
     <NavBar />
     <div v-loading="loading" class="detail-wrap">
       <template v-if="contest">
-        <div class="hero anim-fade">
+        <div class="hero anim-fade" :style="heroBg">
+          <div class="hero-bg">
+            <div class="hero-shape hero-shape--1"></div>
+            <div class="hero-shape hero-shape--2"></div>
+            <div class="hero-shape hero-shape--3"></div>
+            <div class="hero-stars"></div>
+          </div>
           <div class="container hero-inner">
             <div class="hero-body">
               <div class="hero-badge">
@@ -205,6 +211,17 @@ const statusLabel = computed(() => statusMap[contest.value?.status]?.label || ''
 const statusType = computed(() => statusMap[contest.value?.status]?.type || 'info')
 const typeLabel = computed(() => typeMap[contest.value?.contestType] || '')
 
+const categoryGradients = {
+  '理工类': 'linear-gradient(160deg, #0f1923 0%, #1a2a3a 40%, #0f1923 100%)',
+  '文史类': 'linear-gradient(160deg, #3a204a 0%, #5a3a6a 40%, #3a204a 100%)',
+  '艺术类': 'linear-gradient(160deg, #4a1510 0%, #7a2a20 40%, #4a1510 100%)',
+  '体育类': 'linear-gradient(160deg, #0a3a2a 0%, #1a5a3a 40%, #0a3a2a 100%)',
+  '创新创业类': 'linear-gradient(160deg, #3a2a0a 0%, #5a4a1a 40%, #3a2a0a 100%)',
+}
+const heroBg = computed(() => ({
+  background: categoryGradients[contest.value?.category] || 'linear-gradient(160deg, #0a1018 0%, #12102a 40%, #0a1018 100%)'
+}))
+
 const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已取消' }
 
 const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId && r.status !== 3))
@@ -300,39 +317,135 @@ onMounted(async () => {
 
 /* ===== Hero ===== */
 .hero {
-  background: linear-gradient(180deg, var(--c-primary-dark) 0%, var(--c-primary) 100%);
-  padding: 64px 0 56px;
   position: relative;
+  padding: 80px 0 64px;
   overflow: hidden;
 }
 
 .hero::before {
   content: '';
   position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 500px;
-  height: 500px;
-  border-radius: 50%;
-  border: 1px solid rgba(201, 168, 76, 0.06);
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
   pointer-events: none;
+  z-index: 1;
 }
 
 .hero::after {
   content: '';
   position: absolute;
-  bottom: -30%;
-  left: -10%;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: rgba(201, 168, 76, 0.03);
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(168,85,247,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(201,168,76,0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 20%, rgba(232,93,74,0.08) 0%, transparent 40%);
+  animation: nebula-drift 20s ease-in-out infinite alternate;
   pointer-events: none;
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.06;
+}
+
+.hero-shape--1 {
+  width: 600px;
+  height: 600px;
+  background: var(--c-gold);
+  top: -200px;
+  right: -100px;
+  opacity: 0.04;
+}
+
+.hero-shape--2 {
+  width: 500px;
+  height: 500px;
+  border: 1px solid rgba(201, 168, 76, 0.08);
+  top: 50%;
+  left: -200px;
+  transform: translateY(-50%);
+  background: none;
+}
+
+.hero-shape--3 {
+  width: 200px;
+  height: 200px;
+  background: var(--c-accent);
+  bottom: 20%;
+  right: 30%;
+  opacity: 0.06;
+}
+
+.hero-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-stars::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  animation: star-twinkle 4s ease-in-out infinite;
+  box-shadow:
+    80px 60px 0 0 rgba(255,255,255,0.6),
+    200px 30px 0 0 rgba(255,255,255,0.5),
+    350px 80px 0 0 rgba(201,168,76,0.5),
+    500px 45px 0 0 rgba(255,255,255,0.7),
+    650px 100px 0 0 rgba(200,168,255,0.5),
+    100px 150px 0 0 rgba(255,255,255,0.4),
+    300px 180px 0 0 rgba(201,168,76,0.4),
+    550px 200px 0 0 rgba(255,255,255,0.6),
+    700px 160px 0 0 rgba(200,168,255,0.4),
+    150px 250px 0 0 rgba(255,255,255,0.5),
+    400px 280px 0 0 rgba(201,168,76,0.4),
+    600px 300px 0 0 rgba(255,255,255,0.5),
+    50px 320px 0 0 rgba(200,168,255,0.4),
+    250px 350px 0 0 rgba(255,255,255,0.6),
+    500px 380px 0 0 rgba(201,168,76,0.4),
+    680px 340px 0 0 rgba(255,255,255,0.5),
+    180px 420px 0 0 rgba(200,168,255,0.4),
+    450px 450px 0 0 rgba(255,255,255,0.5);
+}
+
+.hero-stars::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(201, 168, 76, 0.6);
+  animation: star-twinkle 7s ease-in-out infinite 1s;
+  box-shadow:
+    150px 100px 0 0,
+    400px 50px 0 0,
+    600px 250px 0 0,
+    80px 400px 0 0,
+    500px 420px 0 0;
 }
 
 .hero-inner {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .hero-body {
@@ -425,6 +538,19 @@ onMounted(async () => {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.05em;
+}
+
+/* ===== Animations ===== */
+@keyframes nebula-drift {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.6; }
+  50% { transform: scale(1.05) translate(-1%, 1%); opacity: 1; }
+  100% { transform: scale(1) translate(1%, -1%); opacity: 0.6; }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+  70% { opacity: 0.2; }
 }
 
 /* ===== Detail Body ===== */
