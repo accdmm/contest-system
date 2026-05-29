@@ -50,6 +50,14 @@
               <option value="0">草稿</option>
             </select>
           </div>
+          <div class="filter-group">
+            <select v-model="query.contestType" class="filter-select">
+              <option value="">全部形式</option>
+              <option value="0">个人赛</option>
+              <option value="1">团队赛</option>
+              <option value="2">均可</option>
+            </select>
+          </div>
           <div class="filter-group filter-group--sort">
             <select v-model="query.sortBy" class="filter-select">
               <option value="">按更新时间</option>

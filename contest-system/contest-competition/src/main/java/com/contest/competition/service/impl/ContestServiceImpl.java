@@ -98,7 +98,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     }
 
     @Override
-    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy) {
+    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
         LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(Contest::getName, keyword);
@@ -108,6 +108,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         }
         if (status != null) {
             wrapper.eq(Contest::getStatus, status);
+        }
+        if (contestType != null) {
+            wrapper.eq(Contest::getContestType, contestType);
         }
         if ("hot".equals(sortBy)) {
             wrapper.orderByDesc(Contest::getCurrentCount);

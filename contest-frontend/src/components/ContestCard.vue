@@ -5,7 +5,12 @@
         <span class="contest-card__dot" />
         {{ statusLabel }}
       </div>
-      <span class="contest-card__category-tag">{{ contest.category }}</span>
+      <div class="contest-card__cover-right">
+        <span class="contest-card__type-chip" :class="`contest-card__type-chip--${contestTypeType}`">
+          {{ contestTypeLabel }}
+        </span>
+        <span class="contest-card__category-tag">{{ contest.category }}</span>
+      </div>
     </div>
 
     <div class="contest-card__body">
@@ -57,6 +62,11 @@ const statusType = computed(() => statusMap[props.contest.status]?.type || 'info
 
 const levelMap = { '校级': '校级', '市级': '市级', '省级': '省级', '国家级': '国家级' }
 const levelLabel = computed(() => levelMap[props.contest.level] || '—')
+
+const typeMap = { 0: '个人赛', 1: '团队赛', 2: '均可' }
+const typeTypeMap = { 0: 'personal', 1: 'team', 2: 'both' }
+const contestTypeLabel = computed(() => typeMap[props.contest.contestType] || '')
+const contestTypeType = computed(() => typeTypeMap[props.contest.contestType] || '')
 
 const gradientMap = {
   '理工类': 'linear-gradient(135deg, #1a2332 0%, #2a3a52 50%, #3a4a6a 100%)',
@@ -168,6 +178,42 @@ function goDetail() {
 
 .contest-card__badge--info .contest-card__dot {
   background: var(--c-text-muted);
+}
+
+.contest-card__cover-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.contest-card__type-chip {
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.contest-card__type-chip--personal {
+  background: rgba(58, 175, 133, 0.2);
+  color: #3aaf85;
+  border: 1px solid rgba(58, 175, 133, 0.3);
+}
+
+.contest-card__type-chip--team {
+  background: rgba(91, 127, 165, 0.2);
+  color: #8ab4d6;
+  border: 1px solid rgba(91, 127, 165, 0.3);
+}
+
+.contest-card__type-chip--both {
+  background: rgba(201, 168, 76, 0.2);
+  color: var(--c-gold);
+  border: 1px solid rgba(201, 168, 76, 0.3);
 }
 
 .contest-card__category-tag {
