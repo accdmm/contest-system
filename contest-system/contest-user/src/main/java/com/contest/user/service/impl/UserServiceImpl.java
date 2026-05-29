@@ -34,12 +34,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     private void validatePassword(String password) {
-        if (password == null || password.length() < 8 || password.length() > 20) {
-            throw new BusinessException("密码长度需为8-20位");
+        if (password == null || password.length() < 6 || password.length() > 20) {
+            throw new BusinessException("密码长度需为6-20位");
         }
         if (!Pattern.compile("[a-zA-Z]").matcher(password).find()
-                || !Pattern.compile("[0-9]").matcher(password).find()) {
-            throw new BusinessException("密码需同时包含字母和数字");
+                && !Pattern.compile("[0-9]").matcher(password).find()) {
+            throw new BusinessException("密码需包含字母或数字");
         }
     }
 

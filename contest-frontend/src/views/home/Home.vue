@@ -174,7 +174,7 @@ onMounted(async () => {
   try {
     const [bRes, aRes, hotRes, latestRes] = await Promise.all([
       listBanners(),
-      listAnnouncements(),
+      listAnnouncements('message_center'),
       getHotContests(4),
       getLatestContests(4)
     ])

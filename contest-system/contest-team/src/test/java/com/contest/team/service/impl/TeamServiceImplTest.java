@@ -215,6 +215,13 @@ class TeamServiceImplTest {
         team.setLeaderId(1L);
         when(teamMapper.selectById(1L)).thenReturn(team);
         when(teamMemberMapper.selectById(1L)).thenReturn(null);
+        when(registrationService.lambdaQuery()).thenReturn(mock(LambdaQueryChainWrapper.class,
+                invocation -> {
+                    if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("ne".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("list".equals(invocation.getMethod().getName())) return List.of();
+                    return null;
+                }));
 
         assertThrows(BusinessException.class, () -> teamService.approveMember(1L, 1L, 1L));
     }
@@ -234,6 +241,13 @@ class TeamServiceImplTest {
         member.setStatus(CommonConstants.MEMBER_PENDING);
         when(teamMemberMapper.selectById(1L)).thenReturn(member);
         when(teamMemberMapper.updateById(any(TeamMember.class))).thenReturn(1);
+        when(registrationService.lambdaQuery()).thenReturn(mock(LambdaQueryChainWrapper.class,
+                invocation -> {
+                    if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("ne".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("list".equals(invocation.getMethod().getName())) return List.of();
+                    return null;
+                }));
 
         teamService.approveMember(1L, 1L, 1L);
 
@@ -354,7 +368,7 @@ class TeamServiceImplTest {
                 invocation -> {
                     if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
                     if ("ne".equals(invocation.getMethod().getName())) return invocation.getMock();
-                    if ("one".equals(invocation.getMethod().getName())) return null;
+                    if ("list".equals(invocation.getMethod().getName())) return List.of();
                     return null;
                 }));
 
@@ -379,11 +393,16 @@ class TeamServiceImplTest {
         m2.setStatus(CommonConstants.MEMBER_APPROVED);
         when(teamMemberMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(m1, m2));
         when(teamMemberMapper.updateById(any(TeamMember.class))).thenReturn(1);
+        Registration pendingReg = new Registration();
+        pendingReg.setId(10L);
+        pendingReg.setTeamId(1L);
+        pendingReg.setContestId(1L);
+        pendingReg.setStatus(CommonConstants.REG_PENDING);
         when(registrationService.lambdaQuery()).thenReturn(mock(LambdaQueryChainWrapper.class,
                 invocation -> {
                     if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
                     if ("ne".equals(invocation.getMethod().getName())) return invocation.getMock();
-                    if ("one".equals(invocation.getMethod().getName())) return null;
+                    if ("list".equals(invocation.getMethod().getName())) return List.of(pendingReg);
                     return null;
                 }));
 
@@ -392,6 +411,7 @@ class TeamServiceImplTest {
         verify(notificationService).sendNotification(eq(3L), anyInt(), anyString(), anyString(), anyLong(), anyString());
         assertEquals(CommonConstants.MEMBER_REJECTED, m1.getStatus());
         assertEquals(CommonConstants.MEMBER_REJECTED, m2.getStatus());
+        assertEquals(CommonConstants.REG_CANCELLED, pendingReg.getStatus());
     }
 
     @Test
@@ -436,14 +456,13 @@ class TeamServiceImplTest {
         member.setRole(CommonConstants.MEMBER_NORMAL);
         member.setStatus(CommonConstants.MEMBER_APPROVED);
         when(teamMemberMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(member);
-        when(teamMemberMapper.deleteById(1L)).thenReturn(1);
         User user = new User();
         user.setName("张三");
         when(userService.getById(3L)).thenReturn(user);
 
         teamService.leaveTeam(1L, 3L);
 
-        verify(teamMemberMapper).deleteById(1L);
+        verify(teamMemberMapper).updateById(any(TeamMember.class));
         verify(teamMapper).updateById(team);
         assertEquals(1, team.getMemberCount());
     }
@@ -471,8 +490,17 @@ class TeamServiceImplTest {
         team.setLeaderId(1L);
         team.setTeamName("测试团队");
         team.setStatus(CommonConstants.TEAM_FORMING);
+        team.setMemberCount(2);
         when(teamMapper.selectById(1L)).thenReturn(team);
         when(teamMapper.updateById(any(Team.class))).thenReturn(1);
+        when(registrationService.lambdaQuery()).thenReturn(mock(LambdaQueryChainWrapper.class,
+                invocation -> {
+                    if ("eq".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("ne".equals(invocation.getMethod().getName())) return invocation.getMock();
+                    if ("list".equals(invocation.getMethod().getName())) return List.of();
+                    return null;
+                }));
+        when(teamMemberMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
         teamService.submitForReview(1L, 1L);
 

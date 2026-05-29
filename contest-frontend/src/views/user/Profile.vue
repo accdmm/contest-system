@@ -120,7 +120,7 @@ async function handleUpdate() {
   try {
     await updateProfile(store.userId, form)
     if (store.user) {
-      store.user.avatarUrl = form.avatarUrl
+      Object.assign(store.user, form)
       localStorage.setItem('user', JSON.stringify(store.user))
     }
     ElMessage.success('保存成功')

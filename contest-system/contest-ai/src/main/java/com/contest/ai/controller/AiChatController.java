@@ -24,6 +24,9 @@ public class AiChatController {
     @PostMapping("/chat")
     public Flux<ChatEventVO> chat(@RequestBody ChatRequest request, HttpServletRequest servletRequest) {
         Long userId = resolveUserId(servletRequest);
+        if (userId == null) {
+            return Flux.just(ChatEventVO.error("未登录或登录已过期"));
+        }
         return aiChatService.chat(request, userId);
     }
 

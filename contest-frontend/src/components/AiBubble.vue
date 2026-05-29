@@ -142,8 +142,7 @@ function send() {
     err => {
       const msg = err.message || ''
       if (msg.includes('401')) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        store.logout()
         messages.value.push({ role: 'assistant', content: '登录已过期，请重新登录后使用' })
       } else {
         const detail = msg.replace(/^\d+:\s*/, '').trim()

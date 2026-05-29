@@ -140,6 +140,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (team == null || !team.getLeaderId().equals(userId)) {
             throw new BusinessException("仅队长可审核成员");
         }
+        Integer maxSize = resolveTeamMaxSize(teamId);
+        int currentCount = team.getMemberCount() != null ? team.getMemberCount() : 0;
+        if (maxSize != null && currentCount + 1 > maxSize) {
+            throw new BusinessException("团队人数已达上限（最多" + maxSize + "人），无法添加更多成员");
+        }
         TeamMember member = teamMemberMapper.selectById(memberId);
         if (member == null || !member.getTeamId().equals(teamId)) {
             throw new BusinessException("成员申请不存在");
@@ -222,11 +227,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             }
         }
 
-        Registration reg = registrationService.lambdaQuery()
+        List<Registration> regs = registrationService.lambdaQuery()
                 .eq(Registration::getTeamId, teamId)
                 .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
-                .one();
-        if (reg != null) {
+                .list();
+        for (Registration reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_CANCELLED);
             registrationService.updateById(reg);
@@ -258,7 +263,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (member.getStatus() != CommonConstants.MEMBER_APPROVED) {
             throw new BusinessException("你不是该团队的正式成员");
         }
-        teamMemberMapper.deleteById(member.getId());
+        member.setStatus(CommonConstants.MEMBER_REJECTED);
+        member.setHandleTime(LocalDateTime.now());
+        teamMemberMapper.updateById(member);
         Team team = getById(teamId);
         if (team != null) {
             team.setMemberCount(Math.max(0, team.getMemberCount() - 1));
@@ -277,6 +284,19 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         Team team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
             throw new BusinessException("仅队长可提交报名");
+        }
+        Integer minSize = resolveTeamMinSize(teamId);
+        int effectiveMin = (minSize != null && minSize > 0) ? minSize : 2;
+        int currentCount = team.getMemberCount() != null ? team.getMemberCount() : 0;
+        if (currentCount < effectiveMin) {
+            throw new BusinessException("团队人数不足最低要求（至少" + effectiveMin + "人），无法提交审核");
+        }
+        long approvedNonLeaderCount = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .eq(TeamMember::getStatus, CommonConstants.MEMBER_APPROVED)
+                .ne(TeamMember::getRole, CommonConstants.MEMBER_LEADER));
+        if (approvedNonLeaderCount == 0) {
+            throw new BusinessException("团队中暂无已通过的普通成员，无法提交审核");
         }
         team.setStatus(CommonConstants.TEAM_SUBMITTED);
         updateById(team);
@@ -397,6 +417,34 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                         teamId, "team");
             }
         }
+    }
+
+    private Integer resolveTeamMaxSize(Long teamId) {
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
+                .list();
+        if (!regs.isEmpty()) {
+            Contest contest = contestService.getById(regs.get(0).getContestId());
+            if (contest != null && contest.getTeamMaxSize() != null && contest.getTeamMaxSize() > 0) {
+                return contest.getTeamMaxSize();
+            }
+        }
+        return null;
+    }
+
+    private Integer resolveTeamMinSize(Long teamId) {
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
+                .list();
+        if (!regs.isEmpty()) {
+            Contest contest = contestService.getById(regs.get(0).getContestId());
+            if (contest != null && contest.getTeamMinSize() != null && contest.getTeamMinSize() > 0) {
+                return contest.getTeamMinSize();
+            }
+        }
+        return null;
     }
 
     @Override

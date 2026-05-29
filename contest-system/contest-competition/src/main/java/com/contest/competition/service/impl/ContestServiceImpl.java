@@ -12,6 +12,7 @@ import com.contest.competition.service.ContestService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +20,16 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
 
     @Override
     public Contest createContest(Contest contest) {
+        LocalDateTime now = LocalDateTime.now();
+        if (contest.getRegisterStartTime() != null && contest.getRegisterStartTime().isBefore(now)) {
+            throw new BusinessException("报名开始时间不能早于当前时间");
+        }
+        if (contest.getRegisterEndTime() != null && contest.getRegisterEndTime().isBefore(now)) {
+            throw new BusinessException("报名截止时间不能早于当前时间");
+        }
+        if (contest.getContestTime() != null && contest.getContestTime().isBefore(now)) {
+            throw new BusinessException("竞赛时间不能早于当前时间");
+        }
         contest.setStatus(CommonConstants.CONTEST_DRAFT);
         contest.setCurrentCount(0);
         save(contest);

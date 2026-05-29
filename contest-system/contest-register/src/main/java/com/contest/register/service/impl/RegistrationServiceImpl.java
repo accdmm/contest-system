@@ -19,6 +19,7 @@ import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,6 +48,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
         if (contest.getStatus() != CommonConstants.CONTEST_OPEN) {
             throw new BusinessException("竞赛当前未开放报名");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (contest.getRegisterStartTime() != null && now.isBefore(contest.getRegisterStartTime())) {
+            throw new BusinessException("报名尚未开始");
+        }
+        if (contest.getRegisterEndTime() != null && now.isAfter(contest.getRegisterEndTime())) {
+            throw new BusinessException("报名已截止");
         }
         if (contest.getContestType() == CommonConstants.CONTEST_PERSONAL && requiredRegType == CommonConstants.REG_TEAM) {
             throw new BusinessException("该竞赛仅限个人报名");

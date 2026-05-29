@@ -110,9 +110,13 @@ function pageChange(p) {
 }
 
 async function editUser(row) {
-  const res = await getUserById(row.id)
-  editForm.value = { ...res.data }
-  dialogVisible.value = true
+  try {
+    const res = await getUserById(row.id)
+    editForm.value = { ...res.data }
+    dialogVisible.value = true
+  } catch {
+    ElMessage.error('获取用户信息失败')
+  }
 }
 
 async function handleSave() {
