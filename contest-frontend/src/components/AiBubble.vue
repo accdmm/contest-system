@@ -140,15 +140,15 @@ function send() {
       scrollDown()
     },
     err => {
-      if (err.message && err.message.includes('401')) {
+      const msg = err.message || ''
+      if (msg.includes('401')) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         messages.value.push({ role: 'assistant', content: '登录已过期，请重新登录后使用' })
-        loading.value = false
-        scrollDown()
-        return
+      } else {
+        const detail = msg.replace(/^\d+:\s*/, '').trim()
+        messages.value.push({ role: 'assistant', content: detail || '抱歉，连接失败，请稍后重试。' })
       }
-      messages.value.push({ role: 'assistant', content: '抱歉，连接失败，请稍后重试。' })
       loading.value = false
       scrollDown()
     },

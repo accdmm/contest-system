@@ -3,7 +3,9 @@ package com.contest.ai.controller;
 import com.contest.ai.entity.ChatEventVO;
 import com.contest.ai.entity.ChatRequest;
 import com.contest.ai.service.AiChatService;
+import com.contest.common.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -12,19 +14,33 @@ import reactor.core.publisher.Flux;
 public class AiChatController {
 
     private final AiChatService aiChatService;
+    private final JwtUtil jwtUtil;
 
-    public AiChatController(AiChatService aiChatService) {
+    public AiChatController(AiChatService aiChatService, JwtUtil jwtUtil) {
         this.aiChatService = aiChatService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/chat")
     public Flux<ChatEventVO> chat(@RequestBody ChatRequest request, HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute("userId");
+        Long userId = resolveUserId(servletRequest);
         return aiChatService.chat(request, userId);
     }
 
     @PostMapping("/stop/{sessionId}")
     public void stop(@PathVariable Long sessionId) {
         aiChatService.stop(sessionId);
+    }
+
+    private Long resolveUserId(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            try {
+                return jwtUtil.getUserId(authHeader.substring(7));
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
     }
 }

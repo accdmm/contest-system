@@ -537,12 +537,10 @@ onMounted(async () => {
 }
 
 .banner-header-label {
-  font-family: 'DM Serif Display', serif;
-  font-size: 0.85rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--c-gold);
-  flex-shrink: 0;
+   font-family: 'DM Serif Display', Georgia, serif;
+   font-size: 1.35rem;
+   color: var(--c-primary);
+   flex-shrink: 0;
 }
 
 .banner-header-line {

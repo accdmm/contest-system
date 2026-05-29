@@ -24,7 +24,19 @@
             </select>
           </div>
           <div class="filter-group">
-            <span class="filter-status-label">报名中</span>
+            <select v-model="query.status" class="filter-select">
+              <option value="">全部状态</option>
+              <option value="1">报名中</option>
+              <option value="2">已截止</option>
+              <option value="0">草稿</option>
+            </select>
+          </div>
+          <div class="filter-group filter-group--sort">
+            <select v-model="query.sortBy" class="filter-select">
+              <option value="">按更新时间</option>
+              <option value="hot">按热门程度</option>
+              <option value="deadline">按报名截止</option>
+            </select>
           </div>
           <button class="btn btn-primary" @click="search">搜索</button>
         </div>
@@ -60,17 +72,20 @@
 import { ref, reactive, onMounted } from 'vue'
 import NavBar from '../../components/NavBar.vue'
 import ContestCard from '../../components/ContestCard.vue'
+import BasePagination from '../../components/BasePagination.vue'
 import { pageContests } from '../../api/contest'
 
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])
 const total = ref(0)
-const query = reactive({ keyword: '', category: '', page: 1, size: 12 })
+const query = reactive({ keyword: '', category: '', status: '', sortBy: '', page: 1, size: 6 })
 
 async function fetchData() {
-  const params = { ...query, status: 1 }
+  const params = { ...query }
   if (!params.category) delete params.category
   if (!params.keyword) delete params.keyword
+  if (!params.status && params.status !== 0) delete params.status
+  if (!params.sortBy) delete params.sortBy
   try {
     const res = await pageContests(params)
     list.value = res.data.records || []
@@ -126,6 +141,11 @@ onMounted(fetchData)
   min-width: 160px;
 }
 
+.filter-group--sort {
+  flex: 0.6;
+  min-width: 140px;
+}
+
 .filter-input,
 .filter-select {
   width: 100%;
@@ -149,16 +169,6 @@ onMounted(fetchData)
 
 .filter-input::placeholder {
   color: var(--c-text-light);
-}
-
-.filter-status-label {
-  display: flex;
-  align-items: center;
-  height: 44px;
-  padding: 0 14px;
-  font-size: 0.9rem;
-  color: var(--c-success);
-  font-weight: 600;
 }
 
 .btn {
@@ -191,14 +201,8 @@ onMounted(fetchData)
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-}
-
-@media (max-width: 1024px) {
-  .card-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (max-width: 768px) {
