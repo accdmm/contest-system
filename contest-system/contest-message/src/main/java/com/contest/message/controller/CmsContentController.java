@@ -3,6 +3,7 @@ package com.contest.message.controller;
 import com.contest.common.dto.Result;
 import com.contest.message.entity.CmsContent;
 import com.contest.message.service.CmsContentService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +29,13 @@ public class CmsContentController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('cms:create')")
     public Result<CmsContent> create(@RequestBody CmsContent content) {
         return Result.success(cmsContentService.createContent(content));
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('cms:update')")
     public Result<CmsContent> update(@RequestBody CmsContent content) {
         return Result.success(cmsContentService.updateContent(content));
     }
@@ -47,6 +50,7 @@ public class CmsContentController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('cms:delete')")
     public Result<Void> delete(@PathVariable Long id) {
         cmsContentService.removeById(id);
         return Result.success();

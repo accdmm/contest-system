@@ -6,16 +6,29 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
+import com.contest.user.entity.College;
+import com.contest.user.entity.Major;
 import com.contest.user.entity.User;
+import com.contest.user.mapper.CollegeMapper;
+import com.contest.user.mapper.MajorMapper;
 import com.contest.user.mapper.UserMapper;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import cn.hutool.crypto.digest.DigestUtil;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final CollegeMapper collegeMapper;
+    private final MajorMapper majorMapper;
+
+    public UserServiceImpl(CollegeMapper collegeMapper, MajorMapper majorMapper) {
+        this.collegeMapper = collegeMapper;
+        this.majorMapper = majorMapper;
+    }
 
     @Override
     public User login(String username, String password) {
@@ -51,6 +64,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
+        if (user.getCollegeId() != null) {
+            College college = collegeMapper.selectById(user.getCollegeId());
+            if (college != null) {
+                user.setCollege(college.getName());
+            }
+        }
+        if (user.getMajorId() != null) {
+            Major major = majorMapper.selectById(user.getMajorId());
+            if (major != null) {
+                user.setMajor(major.getName());
+            }
+        }
         user.setPassword(DigestUtil.bcrypt(rawPassword));
         user.setRole(CommonConstants.ROLE_STUDENT);
         user.setStatus(CommonConstants.STATUS_NORMAL);
@@ -67,6 +92,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 防止前端提交空字符串覆盖已有头像
         if (user.getAvatarUrl() != null && user.getAvatarUrl().isBlank()) {
             user.setAvatarUrl(null);
+        }
+        if (user.getCollegeId() != null) {
+            College college = collegeMapper.selectById(user.getCollegeId());
+            if (college != null) {
+                user.setCollege(college.getName());
+            }
+        }
+        if (user.getMajorId() != null) {
+            Major major = majorMapper.selectById(user.getMajorId());
+            if (major != null) {
+                user.setMajor(major.getName());
+            }
         }
         user.setId(userId);
         user.setPassword(null);
@@ -126,5 +163,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         IPage<User> result = page(new Page<>(page, size), wrapper);
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
+    }
+
+    @Override
+    public List<User> listTeachers() {
+        List<User> teachers = list(new LambdaQueryWrapper<User>()
+                .eq(User::getRole, CommonConstants.ROLE_TEACHER)
+                .eq(User::getStatus, CommonConstants.STATUS_NORMAL));
+        teachers.forEach(t -> t.setPassword(null));
+        return teachers;
     }
 }

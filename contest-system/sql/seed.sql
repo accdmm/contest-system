@@ -5,20 +5,88 @@
 
 USE contest_system;
 
+-- ===================== 0. 学院专业数据 =====================
+INSERT INTO `college` (`id`, `name`) VALUES
+(1, '计算机学院'),
+(2, '数学学院'),
+(3, '物理学院'),
+(4, '电子信息学院'),
+(5, '机械学院'),
+(6, '经济管理学院'),
+(7, '外国语学院'),
+(8, '创新创业学院'),
+(9, '校团委'),
+(10, '体育部'),
+(11, '招生就业处'),
+(12, '教务处');
+
+INSERT INTO `major` (`id`, `college_id`, `name`) VALUES
+(1,  1, '计算机科学与技术'),
+(2,  1, '软件工程'),
+(3,  1, '人工智能'),
+(4,  1, '数据科学'),
+(5,  1, '网络安全'),
+(6,  2, '应用数学'),
+(7,  2, '信息与计算科学'),
+(8,  2, '统计学'),
+(9,  3, '物理学'),
+(10, 3, '应用物理学'),
+(11, 4, '通信工程'),
+(12, 4, '电子信息工程'),
+(13, 4, '自动化'),
+(14, 5, '机械工程'),
+(15, 5, '机械设计制造及其自动化'),
+(16, 6, '工商管理'),
+(17, 6, '会计学'),
+(18, 6, '国际经济与贸易'),
+(19, 7, '英语'),
+(20, 7, '日语'),
+(21, 7, '翻译');
+
 -- ===================== 1. 用户数据 =====================
-INSERT INTO `user` (`id`, `username`, `password`, `name`, `role`, `email`, `phone`, `college`, `major`, `class_name`, `status`) VALUES
-(1,  'admin',    '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '系统管理员', 1, 'admin@univ.edu.cn',     '13800000001', '教务处',         NULL,           NULL,      0),
-(2,  's2021001', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '张明',      0, 'zhangming@stu.edu.cn',  '13800000002', '计算机学院',     '计算机科学与技术', '计科2101', 0),
-(3,  's2021002', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '李华',      0, 'lihua@stu.edu.cn',      '13800000003', '计算机学院',     '软件工程',     '软工2102', 0),
-(4,  's2021003', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '王芳',      0, 'wangfang@stu.edu.cn',   '13800000004', '数学学院',       '应用数学',     '应数2101', 0),
-(5,  's2021004', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '赵雷',      0, 'zhaolei@stu.edu.cn',    '13800000005', '物理学院',       '物理学',       '物理2101', 0),
-(6,  's2021005', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '陈静',      0, 'chenjing@stu.edu.cn',   '13800000006', '计算机学院',     '人工智能',     'AI2101',   0),
-(7,  's2021006', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '刘洋',      0, 'liuyang@stu.edu.cn',    '13800000007', '电子信息学院',   '通信工程',     '通工2101', 0),
-(8,  's2021007', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '孙悦',      0, 'sunyue@stu.edu.cn',     '13800000008', '计算机学院',     '数据科学',     '数据2101', 0),
-(9,  's2021008', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '周杰',      0, 'zhoujie@stu.edu.cn',    '13800000009', '机械学院',       '机械工程',     '机械2101', 0),
-(10, 's2021009', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '吴婷',      0, 'wuting@stu.edu.cn',     '13800000010', '经济管理学院',   '工商管理',     '工商2101', 0),
-(11, 's2021010', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '郑凯',      0, 'zhengkai@stu.edu.cn',   '13800000011', '计算机学院',     '网络安全',     '网安2101', 0),
-(12, 'admin2',   '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '教务处李老师', 1, 'lilaoshi@univ.edu.cn',  '13800000012', '教务处',         NULL,           NULL,      0);
+INSERT INTO `user` (`id`, `username`, `password`, `name`, `role`, `email`, `phone`, `college_id`, `major_id`, `college`, `major`, `class_name`, `status`) VALUES
+(1,  'admin',    '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '系统管理员', 1, 'admin@univ.edu.cn',     '13800000001', 12,  NULL,  '教务处',         NULL,           NULL,      0),
+(2,  's2021001', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '张明',      0, 'zhangming@stu.edu.cn',  '13800000002', 1,  1,     '计算机学院',     '计算机科学与技术', '计科2101', 0),
+(3,  's2021002', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '李华',      0, 'lihua@stu.edu.cn',      '13800000003', 1,  2,     '计算机学院',     '软件工程',     '软工2102', 0),
+(4,  's2021003', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '王芳',      0, 'wangfang@stu.edu.cn',   '13800000004', 2,  6,     '数学学院',       '应用数学',     '应数2101', 0),
+(5,  's2021004', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '赵雷',      0, 'zhaolei@stu.edu.cn',    '13800000005', 3,  9,     '物理学院',       '物理学',       '物理2101', 0),
+(6,  's2021005', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '陈静',      0, 'chenjing@stu.edu.cn',   '13800000006', 1,  3,     '计算机学院',     '人工智能',     'AI2101',   0),
+(7,  's2021006', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '刘洋',      0, 'liuyang@stu.edu.cn',    '13800000007', 4,  11,    '电子信息学院',   '通信工程',     '通工2101', 0),
+(8,  's2021007', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '孙悦',      0, 'sunyue@stu.edu.cn',     '13800000008', 1,  4,     '计算机学院',     '数据科学',     '数据2101', 0),
+(9,  's2021008', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '周杰',      0, 'zhoujie@stu.edu.cn',    '13800000009', 5,  14,    '机械学院',       '机械工程',     '机械2101', 0),
+(10, 's2021009', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '吴婷',      0, 'wuting@stu.edu.cn',     '13800000010', 6,  16,    '经济管理学院',   '工商管理',     '工商2101', 0),
+(11, 's2021010', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '郑凯',      0, 'zhengkai@stu.edu.cn',   '13800000011', 1,  5,     '计算机学院',     '网络安全',     '网安2101', 0),
+(12, 'admin2',   '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '教务处李老师', 1, 'lilaoshi@univ.edu.cn',  '13800000012', 12,  NULL,  '教务处',         NULL,           NULL,      0),
+(13, 't2021001', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '王教授',      2, 'wangjiaoshou@univ.edu.cn', '13800000013', 1,  NULL,  '计算机学院',    NULL,           NULL,      0),
+(14, 't2021002', '$2a$10$DU1jr6rM8Z0CPfVw1dmW9ekVNf2zKX3V9n28BfaL475BqAEBKyBaK', '刘教授',      2, 'liujiaoshou@univ.edu.cn',  '13800000014', 2,  NULL,  '数学学院',      NULL,           NULL,      0);
+
+-- ===================== 1.5 权限数据 =====================
+INSERT INTO `permission` (`code`, `name`, `module`) VALUES
+('contest:create',   '创建竞赛',   '竞赛管理'),
+('contest:update',   '修改竞赛',   '竞赛管理'),
+('contest:delete',   '删除竞赛',   '竞赛管理'),
+('contest:publish',  '上架/下架',  '竞赛管理'),
+('user:list',        '用户列表',   '用户管理'),
+('user:freeze',      '冻结/解冻',  '用户管理'),
+('registration:approve', '审核报名',  '报名管理'),
+('registration:list',    '报名列表',  '报名管理'),
+('registration:cancel',  '取消报名',  '报名管理'),
+('team:approve',     '审核团队',   '团队管理'),
+('team:list',        '团队列表',   '团队管理'),
+('notification:send',     '发送通知',  '通知管理'),
+('notification:broadcast','广播通知',  '通知管理'),
+('cms:create',       '创建内容',   '内容管理'),
+('cms:update',       '修改内容',   '内容管理'),
+('cms:delete',       '删除内容',   '内容管理'),
+('log:list',         '查看日志',   '系统管理'),
+('file:upload',      '上传文件',   '系统管理'),
+('permission:assign','分配权限',   '系统管理');
+
+INSERT INTO `role_permission` (`role`, `permission_id`)
+SELECT 1, id FROM permission;
+
+INSERT INTO `role_permission` (`role`, `permission_id`)
+SELECT 2, id FROM permission WHERE code IN ('team:list', 'registration:list', 'notification:send', 'file:upload');
 
 -- ===================== 2. 竞赛数据 =====================
 INSERT INTO `contest` (`id`, `name`, `category`, `level`, `organizer`, `contest_time`, `register_start_time`, `register_end_time`, `location`, `description`, `contest_type`, `team_min_size`, `team_max_size`, `max_participants`, `status`, `current_count`, `create_time`) VALUES
@@ -83,13 +151,13 @@ INSERT INTO `contest` (`id`, `name`, `category`, `level`, `organizer`, `contest_
     0, 0, 0, 80, 1, 10, '2026-04-25 13:00:00');
 
 -- ===================== 3. 团队数据 =====================
-INSERT INTO `team` (`id`, `leader_id`, `team_name`, `team_no`, `invite_code`, `invite_code_expire`, `status`, `member_count`) VALUES
-(1, 2, '数学建模小分队',     'T20260501001', 'ABC123', '2026-08-10 23:59:59', 0, 3),
-(2, 3, '数模突击队',         'T20260501002', 'DEF456', '2026-08-10 23:59:59', 1, 2),
-(3, 5, '创新先锋队',         'T20260501003', 'GHI789', '2026-07-20 23:59:59', 0, 3),
-(4, 6, '智联未来团队',       'T20260501004', 'JKL012', '2026-07-20 23:59:59', 0, 2),
-(5, 7, '电子设计精英组',     'T20260501005', 'MNO345', '2026-08-10 23:59:59', 0, 2),
-(6, 8, '数模之星战队',       'T20260501006', 'PQR678', '2026-08-10 23:59:59', 0, 1);
+INSERT INTO `team` (`id`, `leader_id`, `teacher_id`, `team_name`, `team_no`, `invite_code`, `invite_code_expire`, `status`, `member_count`) VALUES
+(1, 2, 13, '数学建模小分队',     'T20260501001', 'ABC123', '2026-08-10 23:59:59', 0, 3),
+(2, 3, 14, '数模突击队',         'T20260501002', 'DEF456', '2026-08-10 23:59:59', 1, 2),
+(3, 5, 13, '创新先锋队',         'T20260501003', 'GHI789', '2026-07-20 23:59:59', 0, 3),
+(4, 6, NULL, '智联未来团队',       'T20260501004', 'JKL012', '2026-07-20 23:59:59', 0, 2),
+(5, 7, NULL, '电子设计精英组',     'T20260501005', 'MNO345', '2026-08-10 23:59:59', 0, 2),
+(6, 8, 14, '数模之星战队',       'T20260501006', 'PQR678', '2026-08-10 23:59:59', 0, 1);
 
 -- ===================== 4. 团队成员数据 =====================
 INSERT INTO `team_member` (`id`, `team_id`, `user_id`, `role`, `status`, `apply_time`, `handle_time`) VALUES

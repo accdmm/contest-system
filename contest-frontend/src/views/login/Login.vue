@@ -79,6 +79,16 @@
               <el-form-item label="手机号" prop="phone">
                 <el-input v-model="registerData.phone" placeholder="可选" />
               </el-form-item>
+              <el-form-item label="学院">
+                <el-select v-model="registerData.collegeId" placeholder="请选择学院" clearable style="width:100%">
+                  <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="专业">
+                <el-select v-model="registerData.majorId" placeholder="请先选择学院" :disabled="!registerData.collegeId" clearable style="width:100%">
+                  <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
+                </el-select>
+              </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="handleRegister" :loading="loading" class="login-btn">注册</el-button>
               </el-form-item>
@@ -91,10 +101,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { login, register } from '../../api/user'
+import { login, register, getColleges, getMajors } from '../../api/user'
 import { useUserStore } from '../../stores/user'
 
 const usernameRef = ref(null)
@@ -110,7 +120,26 @@ const loginForm = ref(null)
 const registerForm = ref(null)
 
 const loginData = reactive({ username: '', password: '' })
-const registerData = reactive({ username: '', name: '', password: '', email: '', phone: '' })
+const registerData = reactive({ username: '', name: '', password: '', email: '', phone: '', collegeId: '', majorId: '' })
+const colleges = ref([])
+const majors = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await getColleges()
+    colleges.value = res.data || []
+  } catch {}
+})
+
+watch(() => registerData.collegeId, async (val) => {
+  majors.value = []
+  registerData.majorId = ''
+  if (!val) return
+  try {
+    const res = await getMajors(val)
+    majors.value = res.data || []
+  } catch {}
+})
 
 const rules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }],

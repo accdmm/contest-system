@@ -7,6 +7,7 @@ public interface CommonConstants {
 
     int ROLE_STUDENT = 0;
     int ROLE_ADMIN = 1;
+    int ROLE_TEACHER = 2;
 
     int STATUS_NORMAL = 0;
     int STATUS_FROZEN = 1;

@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/contest_system?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: YOUR_DB_PASSWORD
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
     dashscope:
@@ -15,6 +15,6 @@ mybatis-plus:
 minio:
   # 云部署示例: http://minio:9000 (Docker内网) 或 http://公网IP:9000
   endpoint: http://localhost:9005
-  access-key: YOUR_MINIO_ACCESS_KEY
-  secret-key: YOUR_MINIO_SECRET_KEY
+  access-key: accdmm
+  secret-key: lmh050724
   bucket: contest-files

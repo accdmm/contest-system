@@ -4,17 +4,39 @@
 CREATE DATABASE IF NOT EXISTS contest_system DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE contest_system;
 
--- 1. user 用户表
+-- 1. college 学院表
+CREATE TABLE `college` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `name` VARCHAR(50) NOT NULL COMMENT '学院名称',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学院表';
+
+-- 2. major 专业表
+CREATE TABLE `major` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `college_id` INT NOT NULL COMMENT '所属学院ID',
+    `name` VARCHAR(50) NOT NULL COMMENT '专业名称',
+    `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_college_major` (`college_id`, `name`),
+    KEY `idx_college` (`college_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='专业表';
+
+-- 3. user 用户表
 CREATE TABLE `user` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
     `username` VARCHAR(20) NOT NULL COMMENT '学号或管理员登录账号',
     `password` VARCHAR(100) NOT NULL COMMENT 'BCrypt加密密码',
     `name` VARCHAR(50) NOT NULL COMMENT '真实姓名',
-    `role` TINYINT NOT NULL DEFAULT 0 COMMENT '用户角色 0=学生 1=管理员',
+    `role` TINYINT NOT NULL DEFAULT 0 COMMENT '用户角色 0=学生 1=管理员 2=教师',
     `email` VARCHAR(100) DEFAULT NULL COMMENT '绑定邮箱',
     `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-    `college` VARCHAR(50) DEFAULT NULL COMMENT '学院',
-    `major` VARCHAR(50) DEFAULT NULL COMMENT '专业',
+    `college_id` INT DEFAULT NULL COMMENT '学院ID',
+    `major_id` INT DEFAULT NULL COMMENT '专业ID',
+    `college` VARCHAR(50) DEFAULT NULL COMMENT '学院名称(冗余)',
+    `major` VARCHAR(50) DEFAULT NULL COMMENT '专业名称(冗余)',
     `class_name` VARCHAR(50) DEFAULT NULL COMMENT '班级',
     `avatar_url` VARCHAR(255) DEFAULT NULL COMMENT '头像MinIO访问地址',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '账号状态 0=正常 1=冻结',
@@ -60,6 +82,7 @@ CREATE TABLE `contest` (
 CREATE TABLE `team` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
     `leader_id` BIGINT UNSIGNED NOT NULL COMMENT '队长用户ID',
+    `teacher_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '指导教师用户ID',
     `team_name` VARCHAR(50) NOT NULL COMMENT '团队名称',
     `team_no` VARCHAR(20) NOT NULL COMMENT '唯一团队编号',
     `invite_code` VARCHAR(10) DEFAULT NULL COMMENT '6位邀请码',
@@ -168,6 +191,31 @@ CREATE TABLE `ai_conversation` (
     PRIMARY KEY (`id`),
     KEY `idx_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话会话表';
+
+-- 11. permission 权限表
+CREATE TABLE IF NOT EXISTS `permission` (
+    `id`       INT AUTO_INCREMENT PRIMARY KEY,
+    `code`     VARCHAR(50) NOT NULL COMMENT '权限编码',
+    `name`     VARCHAR(50) NOT NULL COMMENT '权限名称',
+    `module`   VARCHAR(50) NOT NULL COMMENT '所属模块',
+    UNIQUE KEY `uk_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限表';
+
+-- 12. role_permission 角色权限关联表
+CREATE TABLE IF NOT EXISTS `role_permission` (
+    `id`            INT AUTO_INCREMENT PRIMARY KEY,
+    `role`          TINYINT NOT NULL COMMENT '角色 0=学生 1=管理员 2=教师',
+    `permission_id` INT NOT NULL,
+    UNIQUE KEY `uk_role_perm` (`role`, `permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关联表';
+
+-- 13. user_permission 用户权限关联表
+CREATE TABLE IF NOT EXISTS `user_permission` (
+    `id`            INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id`       BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    `permission_id` INT NOT NULL COMMENT '权限ID',
+    UNIQUE KEY `uk_user_perm` (`user_id`, `permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户权限关联表';
 
 -- 10. ai_message AI对话消息表
 CREATE TABLE `ai_message` (

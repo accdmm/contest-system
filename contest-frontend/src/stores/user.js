@@ -9,6 +9,7 @@ export const useUserStore = defineStore('user', () => {
 
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 1)
+  const isTeacher = computed(() => user.value?.role === 2)
   const userId = computed(() => user.value?.id)
 
   function setUser(userData, tokenStr) {
@@ -26,5 +27,5 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('ai_messages')
   }
 
-  return { user, token, isLoggedIn, isAdmin, userId, setUser, logout }
+  return { user, token, isLoggedIn, isAdmin, isTeacher, userId, setUser, logout }
 })

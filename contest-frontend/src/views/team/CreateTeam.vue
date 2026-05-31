@@ -63,6 +63,26 @@
                   </el-input>
                 </el-form-item>
 
+                <el-form-item label="指导教师（选填）">
+                  <el-select
+                    v-model="form.teacherId"
+                    placeholder="请选择指导教师"
+                    class="styled-select"
+                    size="large"
+                    clearable
+                  >
+                    <el-option
+                      v-for="t in teacherList"
+                      :key="t.id"
+                      :label="t.name"
+                      :value="t.id"
+                    >
+                      <span>{{ t.name }}</span>
+                      <span class="option-extra">{{ t.college || '' }}</span>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+
                 <el-form-item>
                   <div class="form-actions">
                     <el-button
@@ -96,17 +116,26 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { createTeam } from '../../api/team'
+import { listTeachers } from '../../api/user'
 import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
 const store = useUserStore()
 const loading = ref(false)
-const form = reactive({ teamName: '' })
+const teacherList = ref([])
+const form = reactive({ teamName: '', teacherId: null })
+
+onMounted(async () => {
+  try {
+    const res = await listTeachers()
+    teacherList.value = res.data || []
+  } catch (e) { /* ignore */ }
+})
 
 async function handleCreate() {
   if (!form.teamName) {
@@ -115,7 +144,7 @@ async function handleCreate() {
   }
   loading.value = true
   try {
-    const res = await createTeam({ userId: store.userId, teamName: form.teamName })
+    const res = await createTeam({ userId: store.userId, teamName: form.teamName, teacherId: form.teacherId })
     ElMessage.success('创建成功')
     router.push(`/team/${res.data.id}`)
   } finally { loading.value = false }

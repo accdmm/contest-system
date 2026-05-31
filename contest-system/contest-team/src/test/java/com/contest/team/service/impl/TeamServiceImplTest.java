@@ -53,7 +53,7 @@ class TeamServiceImplTest {
         when(teamMapper.insert(any(Team.class))).thenReturn(1);
         when(teamMemberMapper.insert(any(TeamMember.class))).thenReturn(1);
 
-        Team result = teamService.createTeam(1L, "测试团队");
+        Team result = teamService.createTeam(1L, "测试团队", null);
 
         assertNotNull(result);
         assertEquals(1L, result.getLeaderId());

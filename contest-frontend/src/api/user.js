@@ -31,3 +31,15 @@ export function unfreezeUser(id) {
 export function pageUsers(params) {
   return request.get('/user/page', { params })
 }
+
+export function getColleges() {
+  return request.get('/user/colleges')
+}
+
+export function listTeachers() {
+  return request.get('/user/teachers')
+}
+
+export function getMajors(collegeId) {
+  return request.get('/user/majors', { params: { collegeId } })
+}

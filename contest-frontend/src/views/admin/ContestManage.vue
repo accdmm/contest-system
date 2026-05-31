@@ -1,6 +1,5 @@
 <template>
   <div class="cm-page">
-    <NavBar />
     <div class="cm-bg">
       <div class="container">
         <div class="cm-header">
@@ -156,7 +155,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import NavBar from '../../components/NavBar.vue'
 import FileUpload from '../../components/FileUpload.vue'
 import { pageContests, createContest, updateContest, publishContest, unpublishContest, deleteContest } from '../../api/contest'
 
@@ -263,10 +261,8 @@ onMounted(fetchData)
 
 <style scoped>
 .cm-page {
-  min-height: 100vh;
-  padding-top: 72px;
-  background: var(--c-bg);
-  font-family: 'DM Sans', sans-serif;
+	background: var(--c-bg);
+	font-family: 'DM Sans', sans-serif;
 }
 
 .cm-bg {

@@ -1,6 +1,5 @@
 <template>
   <div class="um-page">
-    <NavBar />
     <div class="um-bg">
       <div class="container">
         <div class="um-header">
@@ -60,10 +59,14 @@
           <el-input v-model="editForm.name" />
         </el-form-item>
         <el-form-item label="学院">
-          <el-input v-model="editForm.college" />
+          <el-select v-model="editForm.collegeId" placeholder="请选择学院" clearable style="width:100%">
+            <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
         </el-form-item>
         <el-form-item label="专业">
-          <el-input v-model="editForm.major" />
+          <el-select v-model="editForm.majorId" placeholder="请先选择学院" :disabled="!editForm.collegeId" clearable style="width:100%">
+            <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -75,10 +78,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import NavBar from '../../components/NavBar.vue'
-import { pageUsers, updateProfile, getUserById } from '../../api/user'
+import { pageUsers, updateProfile, getUserById, getColleges, getMajors } from '../../api/user'
 
 const list = ref([])
 const total = ref(0)
@@ -89,6 +91,18 @@ const keyword = ref('')
 const dialogVisible = ref(false)
 const saving = ref(false)
 const editForm = ref({})
+const colleges = ref([])
+const majors = ref([])
+
+watch(() => editForm.value.collegeId, async (val) => {
+  majors.value = []
+  editForm.value.majorId = ''
+  if (!val) return
+  try {
+    const res = await getMajors(val)
+    majors.value = res.data || []
+  } catch {}
+})
 
 async function fetchData() {
   loading.value = true
@@ -111,9 +125,17 @@ function pageChange(p) {
 
 async function editUser(row) {
   try {
-    const res = await getUserById(row.id)
-    editForm.value = { ...res.data }
+    const [userRes, collegeRes] = await Promise.all([
+      getUserById(row.id),
+      getColleges()
+    ])
+    editForm.value = { ...userRes.data }
+    colleges.value = collegeRes.data || []
     dialogVisible.value = true
+    if (editForm.value.collegeId) {
+      const majorRes = await getMajors(editForm.value.collegeId)
+      majors.value = majorRes.data || []
+    }
   } catch {
     ElMessage.error('获取用户信息失败')
   }
@@ -133,7 +155,7 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.um-page { min-height: 100vh; padding-top: 72px; background: var(--c-bg); font-family: 'DM Sans', sans-serif; }
+.um-page { background: var(--c-bg); font-family: 'DM Sans', sans-serif; }
 .um-bg { padding: 40px 0 60px; }
 .um-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; }
 .um-title { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--c-text); margin: 0 0 6px; }

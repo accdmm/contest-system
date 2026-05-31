@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -46,6 +47,12 @@ public class GlobalExceptionHandler {
     public Result<Void> handleMissingHeader(MissingRequestHeaderException e, HttpServletResponse response) {
         response.setStatus(401);
         return Result.error(401, "未登录");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<Void> handleAccessDenied(AccessDeniedException e, HttpServletResponse response) {
+        response.setStatus(403);
+        return Result.error(403, "无权限");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

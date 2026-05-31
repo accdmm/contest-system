@@ -269,7 +269,7 @@ public class ChatTools {
                 return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
             }
             try {
-                com.contest.team.entity.Team team = teamService.createTeam(userId, teamName);
+                com.contest.team.entity.Team team = teamService.createTeam(userId, teamName, null);
                 return "团队创建成功！\n团队名称: " + team.getTeamName()
                     + "\n团队编号: " + team.getTeamNo()
                     + "\n竞赛: " + contest.getName()

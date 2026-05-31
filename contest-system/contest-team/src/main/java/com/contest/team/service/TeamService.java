@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TeamService extends IService<Team> {
 
-    Team createTeam(Long userId, String teamName);
+    Team createTeam(Long userId, String teamName, Long teacherId);
 
     String generateInviteCode(Long teamId, Long userId);
 
@@ -40,4 +40,8 @@ public interface TeamService extends IService<Team> {
     void adminRejectTeam(Long teamId, String reason);
 
     List<Team> listUserTeams(Long userId);
+
+    void setTeacher(Long teamId, Long teacherId, Long userId);
+
+    List<Team> getTeamsByTeacher(Long teacherId);
 }

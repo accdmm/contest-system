@@ -11,6 +11,8 @@ public class Team {
 
     private Long leaderId;
 
+    private Long teacherId;
+
     private String teamName;
 
     private String teamNo;
@@ -38,6 +40,8 @@ public class Team {
     public void setId(Long id) { this.id = id; }
     public Long getLeaderId() { return leaderId; }
     public void setLeaderId(Long leaderId) { this.leaderId = leaderId; }
+    public Long getTeacherId() { return teacherId; }
+    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
     public String getTeamName() { return teamName; }
     public void setTeamName(String teamName) { this.teamName = teamName; }
     public String getTeamNo() { return teamNo; }

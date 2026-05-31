@@ -54,6 +54,11 @@
           <div class="drawer-link" @click="handleJoinTeam(); drawerOpen = false">加入团队</div>
           <router-link to="/profile" class="drawer-link" @click="drawerOpen = false">个人信息</router-link>
 
+          <template v-if="store.isTeacher">
+            <div class="drawer-divider" />
+            <div class="drawer-section-label">教师</div>
+            <router-link to="/teacher/teams" class="drawer-link" @click="drawerOpen = false">我指导的团队</router-link>
+          </template>
           <template v-if="store.isAdmin">
             <div class="drawer-divider" />
             <div class="drawer-section-label">管理后台</div>
@@ -110,6 +115,10 @@
                 <router-link v-if="store.isAdmin" to="/admin/users" class="navbar__dropdown-item" @click="dropdownOpen = false">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.7 1 2 3.7 2 7c0 2.2 1.2 4 3 5.5V15l3-2 3 2v-2.5c1.8-1.5 3-3.3 3-5.5 0-3.3-2.7-6-6-6z" fill="currentColor"/></svg>
                   用户管理
+                </router-link>
+                <router-link v-if="store.isTeacher" to="/teacher/teams" class="navbar__dropdown-item" @click="dropdownOpen = false">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 6a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm4.5 1a2 2 0 100-4 2 2 0 000 4zM6 8c-2.21 0-4 1.12-4 2.5V12h8v-1.5C10 9.12 8.21 8 6 8zm4.5 0c-.28 0-.55.02-.82.06.98.69 1.82 1.57 1.82 2.44V12h3v-1.5c0-1.38-1.79-2.5-4-2.5z" fill="currentColor"/></svg>
+                  我指导的团队
                 </router-link>
                 <div class="navbar__dropdown-divider" />
                 <div class="navbar__dropdown-item navbar__dropdown-item--danger" @click="handleLogout">

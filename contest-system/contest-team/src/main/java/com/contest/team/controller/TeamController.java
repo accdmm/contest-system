@@ -1,10 +1,12 @@
 package com.contest.team.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
 import com.contest.team.service.TeamService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,84 +23,98 @@ public class TeamController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public Result<Team> create(@RequestBody Map<String, Object> params) {
-        Object userIdObj = params.get("userId");
+        Long userId = SecurityUtil.getCurrentUserId();
         Object teamNameObj = params.get("teamName");
-        if (userIdObj == null || teamNameObj == null) {
+        if (teamNameObj == null) {
             return Result.error("缺少必要参数");
         }
-        Long userId = Long.valueOf(userIdObj.toString());
         String teamName = teamNameObj.toString();
-        return Result.success(teamService.createTeam(userId, teamName));
+        Long teacherId = params.get("teacherId") != null ? ((Number) params.get("teacherId")).longValue() : null;
+        return Result.success(teamService.createTeam(userId, teamName, teacherId));
     }
 
     @PostMapping("/{teamId}/invite")
-    public Result<String> generateInvite(@PathVariable Long teamId, @RequestBody Map<String, Long> params) {
-        Long userId = params.get("userId");
-        if (userId == null) {
-            return Result.error("缺少用户ID");
-        }
+    @PreAuthorize("isAuthenticated()")
+    public Result<String> generateInvite(@PathVariable Long teamId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         return Result.success(teamService.generateInviteCode(teamId, userId));
     }
 
     @PostMapping("/join")
+    @PreAuthorize("isAuthenticated()")
     public Result<Team> join(@RequestBody Map<String, String> params) {
-        String userIdStr = params.get("userId");
+        Long userId = SecurityUtil.getCurrentUserId();
         String code = params.get("inviteCode");
-        if (userIdStr == null || code == null) {
+        if (code == null) {
             return Result.error("缺少必要参数");
         }
-        Long userId = Long.valueOf(userIdStr);
         return Result.success(teamService.joinByInviteCode(userId, code));
     }
 
     @PutMapping("/{teamId}/members/{memberId}/approve")
-    public Result<Void> approveMember(@PathVariable Long teamId, @RequestParam Long userId, @PathVariable Long memberId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> approveMember(@PathVariable Long teamId, @PathVariable Long memberId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.approveMember(teamId, userId, memberId);
         return Result.success();
     }
 
     @PutMapping("/{teamId}/members/{memberId}/reject")
-    public Result<Void> rejectMember(@PathVariable Long teamId, @RequestParam Long userId, @PathVariable Long memberId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> rejectMember(@PathVariable Long teamId, @PathVariable Long memberId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.rejectMember(teamId, userId, memberId);
         return Result.success();
     }
 
     @DeleteMapping("/{teamId}/members/{memberId}")
-    public Result<Void> removeMember(@PathVariable Long teamId, @RequestParam Long userId, @PathVariable Long memberId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> removeMember(@PathVariable Long teamId, @PathVariable Long memberId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.removeMember(teamId, userId, memberId);
         return Result.success();
     }
 
     @PutMapping("/{teamId}/dissolve")
-    public Result<Void> dissolve(@PathVariable Long teamId, @RequestParam Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> dissolve(@PathVariable Long teamId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.dissolveTeam(teamId, userId);
         return Result.success();
     }
 
     @PutMapping("/{teamId}/leave")
-    public Result<Void> leave(@PathVariable Long teamId, @RequestParam Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> leave(@PathVariable Long teamId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.leaveTeam(teamId, userId);
         return Result.success();
     }
 
     @PutMapping("/{teamId}/submit")
-    public Result<Void> submitReview(@PathVariable Long teamId, @RequestParam Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> submitReview(@PathVariable Long teamId) {
+        Long userId = SecurityUtil.getCurrentUserId();
         teamService.submitForReview(teamId, userId);
         return Result.success();
     }
 
     @GetMapping("/{teamId}/members")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<TeamMember>> members(@PathVariable Long teamId) {
         return Result.success(teamService.listMembers(teamId));
     }
 
     @GetMapping("/{teamId}/pending")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<TeamMember>> pendingMembers(@PathVariable Long teamId) {
         return Result.success(teamService.listPendingMembers(teamId));
     }
 
     @GetMapping("/{id}/detail")
+    @PreAuthorize("isAuthenticated()")
     public Result<Team> getById(@PathVariable Long id) {
         Team team = teamService.getById(id);
         if (team == null) {
@@ -108,11 +124,14 @@ public class TeamController {
     }
 
     @GetMapping("/leader")
-    public Result<List<Team>> getByLeader(@RequestParam Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<List<Team>> getByLeader() {
+        Long userId = SecurityUtil.getCurrentUserId();
         return Result.success(teamService.getTeamsByLeader(userId));
     }
 
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('team:list')")
     public Result<IPage<Team>> page(@RequestParam(required = false) Integer status,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
@@ -120,19 +139,37 @@ public class TeamController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public Result<List<Team>> userTeams(@PathVariable Long userId) {
         return Result.success(teamService.listUserTeams(userId));
     }
 
     @PutMapping("/{teamId}/admin-approve")
+    @PreAuthorize("hasAuthority('team:approve')")
     public Result<Void> adminApprove(@PathVariable Long teamId) {
         teamService.adminApproveTeam(teamId);
         return Result.success();
     }
 
     @PutMapping("/{teamId}/admin-reject")
+    @PreAuthorize("hasAuthority('team:approve')")
     public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody Map<String, String> params) {
         teamService.adminRejectTeam(teamId, params.get("reason"));
         return Result.success();
+    }
+
+    @PutMapping("/{teamId}/teacher")
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> setTeacher(@PathVariable Long teamId, @RequestBody Map<String, Long> params) {
+        Long userId = SecurityUtil.getCurrentUserId();
+        teamService.setTeacher(teamId, params.get("teacherId"), userId);
+        return Result.success();
+    }
+
+    @GetMapping("/teacher")
+    @PreAuthorize("isAuthenticated()")
+    public Result<List<Team>> getTeacherTeams() {
+        Long userId = SecurityUtil.getCurrentUserId();
+        return Result.success(teamService.getTeamsByTeacher(userId));
     }
 }

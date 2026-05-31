@@ -1,14 +1,23 @@
 package com.contest.user.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.common.util.JwtUtil;
+import com.contest.user.dto.LoginRequest;
+import com.contest.user.dto.RegisterRequest;
+import com.contest.user.entity.College;
+import com.contest.user.entity.Major;
 import com.contest.user.entity.User;
+import com.contest.user.service.CollegeService;
+import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,15 +26,20 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final CollegeService collegeService;
+    private final MajorService majorService;
 
-    public UserController(UserService userService, JwtUtil jwtUtil) {
+    public UserController(UserService userService, JwtUtil jwtUtil,
+                          CollegeService collegeService, MajorService majorService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.collegeService = collegeService;
+        this.majorService = majorService;
     }
 
     @PostMapping("/login")
-    public Result<Map<String, Object>> login(@RequestBody @Valid Map<String, String> params) {
-        User user = userService.login(params.get("username"), params.get("password"));
+    public Result<Map<String, Object>> login(@RequestBody @Valid LoginRequest req) {
+        User user = userService.login(req.getUsername(), req.getPassword());
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         user.setPassword(null);
         Map<String, Object> data = new HashMap<>();
@@ -35,19 +49,36 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Result<Map<String, Object>> register(@RequestBody @Valid Map<String, String> params) {
+    public Result<Map<String, Object>> register(@RequestBody @Valid RegisterRequest req) {
         User user = new User();
-        user.setUsername(params.get("username"));
-        user.setName(params.get("name"));
-        user.setEmail(params.get("email"));
-        user.setPhone(params.get("phone"));
-        User saved = userService.register(user, params.get("password"));
+        user.setUsername(req.getUsername());
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setCollegeId(req.getCollegeId());
+        user.setMajorId(req.getMajorId());
+        User saved = userService.register(user, req.getPassword());
         String token = jwtUtil.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         saved.setPassword(null);
         Map<String, Object> data = new HashMap<>();
         data.put("user", saved);
         data.put("token", token);
         return Result.success(data);
+    }
+
+    @GetMapping("/colleges")
+    public Result<List<College>> listColleges() {
+        return Result.success(collegeService.list());
+    }
+
+    @GetMapping("/majors")
+    public Result<List<Major>> listMajors(@RequestParam Integer collegeId) {
+        return Result.success(majorService.getByCollegeId(collegeId));
+    }
+
+    @GetMapping("/teachers")
+    public Result<List<User>> listTeachers() {
+        return Result.success(userService.listTeachers());
     }
 
     @GetMapping("/{id}")
@@ -61,6 +92,7 @@ public class UserController {
     }
 
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('user:list')")
     public Result<IPage<User>> page(@RequestParam(required = false) String keyword,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
@@ -68,24 +100,30 @@ public class UserController {
     }
 
     @PutMapping("/{id}/profile")
+    @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody User user) {
+        SecurityUtil.getCurrentUserId(); // ensure authenticated
         userService.updateProfile(id, user);
         return Result.success();
     }
 
     @PutMapping("/{id}/password")
+    @PreAuthorize("isAuthenticated()")
     public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
+        SecurityUtil.getCurrentUserId(); // ensure authenticated
         userService.changePassword(id, params.get("oldPassword"), params.get("newPassword"));
         return Result.success();
     }
 
     @PutMapping("/{id}/freeze")
+    @PreAuthorize("hasAuthority('user:freeze')")
     public Result<Void> freeze(@PathVariable Long id) {
         userService.freezeUser(id);
         return Result.success();
     }
 
     @PutMapping("/{id}/unfreeze")
+    @PreAuthorize("hasAuthority('user:freeze')")
     public Result<Void> unfreeze(@PathVariable Long id) {
         userService.unfreezeUser(id);
         return Result.success();

@@ -1,6 +1,5 @@
 <template>
   <div class="cms-page">
-    <NavBar />
     <div class="cms-bg">
       <div class="container">
         <div class="cms-header">
@@ -127,7 +126,6 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import NavBar from '../../components/NavBar.vue'
 import FileUpload from '../../components/FileUpload.vue'
 import { listBanners, listAnnouncements, createCmsContent, updateCmsContent, deleteCmsContent } from '../../api/cms'
 
@@ -201,10 +199,8 @@ onMounted(() => { loadBanners(); loadAnnouncements() })
 
 <style scoped>
 .cms-page {
-  min-height: 100vh;
-  padding-top: 72px;
-  background: var(--c-bg);
-  font-family: 'DM Sans', sans-serif;
+	background: var(--c-bg);
+	font-family: 'DM Sans', sans-serif;
 }
 
 .cms-bg {

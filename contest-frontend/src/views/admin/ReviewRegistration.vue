@@ -1,6 +1,5 @@
 <template>
   <div class="rr-page">
-    <NavBar />
     <div class="rr-body">
       <div class="rr-header">
         <div>
@@ -162,7 +161,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import NavBar from '../../components/NavBar.vue'
 import { pageContests } from '../../api/contest'
 import { pageRegistration, approveRegistration, rejectRegistration } from '../../api/registration'
 import { pageTeams, adminApproveTeam, adminRejectTeam } from '../../api/team'
@@ -292,7 +290,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.rr-page { height: 100vh; display: flex; flex-direction: column; background: #f5f3ef; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+.rr-page { display: flex; flex-direction: column; background: #f5f3ef; font-family: 'DM Sans', sans-serif; overflow: hidden; }
 .rr-body { flex: 1; display: flex; flex-direction: column; padding: 24px 32px 16px; padding-top: calc(72px + 20px); max-width: 1400px; width: 100%; margin: 0 auto; min-height: 0; }
 .rr-header { margin-bottom: 12px; flex-shrink: 0; }
 .rr-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: #1a2332; margin: 0 0 4px; }

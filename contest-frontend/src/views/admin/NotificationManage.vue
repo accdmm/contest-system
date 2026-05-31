@@ -1,6 +1,5 @@
 <template>
   <div class="nm-page">
-    <NavBar />
     <div class="nm-bg">
       <div class="container">
         <div class="nm-header">
@@ -66,7 +65,6 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import NavBar from '../../components/NavBar.vue'
 import { sendNotification, sendBroadcast } from '../../api/notification'
 
 const sending = ref(false)
@@ -103,7 +101,7 @@ async function handleBroadcast() {
 </script>
 
 <style scoped>
-.nm-page { min-height: 100vh; padding-top: 72px; background: #f5f3ef; font-family: 'DM Sans', sans-serif; }
+.nm-page { background: #f5f3ef; font-family: 'DM Sans', sans-serif; }
 .nm-bg { padding: 40px 0 60px; }
 .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
 .nm-header { margin-bottom: 32px; }

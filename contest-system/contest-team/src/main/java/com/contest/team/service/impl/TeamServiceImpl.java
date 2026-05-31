@@ -48,10 +48,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
     @Override
     @Transactional
-    public Team createTeam(Long userId, String teamName) {
+    public Team createTeam(Long userId, String teamName, Long teacherId) {
         Team team = new Team();
         team.setLeaderId(userId);
         team.setTeamName(teamName);
+        team.setTeacherId(teacherId);
         team.setTeamNo("T" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
         team.setStatus(CommonConstants.TEAM_FORMING);
         team.setMemberCount(1);
@@ -455,5 +456,34 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (members.isEmpty()) return List.of();
         List<Long> teamIds = members.stream().map(TeamMember::getTeamId).collect(Collectors.toList());
         return listByIds(teamIds);
+    }
+
+    @Override
+    @Transactional
+    public void setTeacher(Long teamId, Long teacherId, Long userId) {
+        Team team = getById(teamId);
+        if (team == null) {
+            throw new BusinessException("团队不存在");
+        }
+        if (!team.getLeaderId().equals(userId)) {
+            throw new BusinessException("仅队长可设置指导教师");
+        }
+        if (teacherId != null) {
+            User teacher = userService.getById(teacherId);
+            if (teacher == null) {
+                throw new BusinessException("教师用户不存在");
+            }
+            if (teacher.getRole() != CommonConstants.ROLE_TEACHER) {
+                throw new BusinessException("选择的用户不是教师角色");
+            }
+        }
+        team.setTeacherId(teacherId);
+        updateById(team);
+    }
+
+    @Override
+    public List<Team> getTeamsByTeacher(Long teacherId) {
+        return list(new LambdaQueryWrapper<Team>()
+                .eq(Team::getTeacherId, teacherId));
     }
 }

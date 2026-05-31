@@ -21,16 +21,27 @@ const routes = [
   // Registration
   { path: '/my-registration', name: 'MyRegistration', component: () => import('../views/registration/MyRegistration.vue'), meta: { requiresAuth: true } },
 
+  // Teacher
+  { path: '/teacher/teams', name: 'TeacherTeams', component: () => import('../views/teacher/TeacherTeams.vue'), meta: { requiresAuth: true, role: 2 } },
+
   // Notification
   { path: '/notification', name: 'Notification', component: () => import('../views/notification/NotificationList.vue'), meta: { requiresAuth: true } },
 
-  // Admin
-  { path: '/admin', name: 'AdminDashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { requiresAuth: true, role: 1 } },
-  { path: '/admin/contest', name: 'AdminContest', component: () => import('../views/admin/ContestManage.vue'), meta: { requiresAuth: true, role: 1 } },
-  { path: '/admin/review', name: 'AdminReview', component: () => import('../views/admin/ReviewRegistration.vue'), meta: { requiresAuth: true, role: 1 } },
-  { path: '/admin/cms', name: 'AdminCms', component: () => import('../views/admin/CmsManage.vue'), meta: { requiresAuth: true, role: 1 } },
-  { path: '/admin/notification', name: 'AdminNotification', component: () => import('../views/admin/NotificationManage.vue'), meta: { requiresAuth: true, role: 1 } },
-  { path: '/admin/users', name: 'AdminUsers', component: () => import('../views/admin/UserManage.vue'), meta: { requiresAuth: true, role: 1 } },
+  // Admin (with layout)
+  {
+    path: '/admin',
+    component: () => import('../layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, role: 1 },
+    children: [
+      { path: '', name: 'AdminDashboard', component: () => import('../views/admin/Dashboard.vue') },
+      { path: 'contest', name: 'AdminContest', component: () => import('../views/admin/ContestManage.vue') },
+      { path: 'review', name: 'AdminReview', component: () => import('../views/admin/ReviewRegistration.vue') },
+      { path: 'cms', name: 'AdminCms', component: () => import('../views/admin/CmsManage.vue') },
+      { path: 'notification', name: 'AdminNotification', component: () => import('../views/admin/NotificationManage.vue') },
+      { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/UserManage.vue') },
+      { path: 'permissions', name: 'AdminPermissions', component: () => import('../views/admin/PermissionManage.vue') },
+    ],
+  },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFound.vue') },
 ]
 

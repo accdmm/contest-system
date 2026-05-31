@@ -1,9 +1,11 @@
 package com.contest.message.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.message.entity.Notification;
 import com.contest.message.service.NotificationService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +19,7 @@ public class NotificationController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public Result<IPage<Notification>> byUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size) {
@@ -24,23 +27,28 @@ public class NotificationController {
     }
 
     @GetMapping("/unread/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public Result<Long> unreadCount(@PathVariable Long userId) {
         return Result.success(notificationService.countUnread(userId));
     }
 
     @PutMapping("/{id}/read")
-    public Result<Void> markRead(@PathVariable Long id, @RequestParam Long userId) {
+    @PreAuthorize("isAuthenticated()")
+    public Result<Void> markRead(@PathVariable Long id) {
+        Long userId = SecurityUtil.getCurrentUserId();
         notificationService.markAsRead(id, userId);
         return Result.success();
     }
 
     @PutMapping("/read-all/{userId}")
+    @PreAuthorize("isAuthenticated()")
     public Result<Void> markAllRead(@PathVariable Long userId) {
         notificationService.markAllAsRead(userId);
         return Result.success();
     }
 
     @PostMapping("/send")
+    @PreAuthorize("hasAuthority('notification:send')")
     public Result<Void> send(@RequestParam Long userId, @RequestParam Integer type,
                              @RequestParam String title, @RequestParam String content) {
         notificationService.sendNotification(userId, type, title, content, null, null);
@@ -48,6 +56,7 @@ public class NotificationController {
     }
 
     @PostMapping("/broadcast")
+    @PreAuthorize("hasAuthority('notification:broadcast')")
     public Result<Void> broadcast(@RequestParam Integer type, @RequestParam String title,
                                   @RequestParam String content) {
         notificationService.sendBroadcast(type, title, content);

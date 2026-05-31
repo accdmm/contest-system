@@ -5,6 +5,7 @@ import com.contest.ai.entity.ChatRequest;
 import com.contest.ai.service.AiChatService;
 import com.contest.common.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -22,6 +23,7 @@ public class AiChatController {
     }
 
     @PostMapping("/chat")
+    @PreAuthorize("isAuthenticated()")
     public Flux<ChatEventVO> chat(@RequestBody ChatRequest request, HttpServletRequest servletRequest) {
         Long userId = resolveUserId(servletRequest);
         if (userId == null) {
@@ -31,6 +33,7 @@ public class AiChatController {
     }
 
     @PostMapping("/stop/{sessionId}")
+    @PreAuthorize("isAuthenticated()")
     public void stop(@PathVariable Long sessionId) {
         aiChatService.stop(sessionId);
     }

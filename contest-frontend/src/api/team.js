@@ -67,3 +67,11 @@ export function adminRejectTeam(teamId, reason) {
 export function listUserTeams(userId) {
   return request.get(`/team/user/${userId}`)
 }
+
+export function setTeamTeacher(teamId, teacherId) {
+  return request.put(`/team/${teamId}/teacher`, { teacherId })
+}
+
+export function getTeacherTeams() {
+  return request.get('/team/teacher')
+}

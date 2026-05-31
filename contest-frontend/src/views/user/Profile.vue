@@ -33,10 +33,14 @@
               <el-input v-model="form.phone" placeholder="请输入手机号" />
             </el-form-item>
             <el-form-item label="学院">
-              <el-input v-model="form.college" disabled />
+              <el-select v-model="form.collegeId" placeholder="请选择学院" clearable style="width:100%">
+                <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
+              </el-select>
             </el-form-item>
             <el-form-item label="专业">
-              <el-input v-model="form.major" disabled />
+              <el-select v-model="form.majorId" placeholder="请先选择学院" :disabled="!form.collegeId" clearable style="width:100%">
+                <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
+              </el-select>
             </el-form-item>
             <el-form-item>
               <button class="btn-save" @click.prevent="handleUpdate">保存修改</button>
@@ -77,17 +81,44 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
-import { getUserById, updateProfile, changePassword } from '../../api/user'
+import { getUserById, updateProfile, changePassword, getColleges, getMajors } from '../../api/user'
 import { useUserStore } from '../../stores/user'
 import request from '../../api/request'
 
 const store = useUserStore()
-const form = reactive({ username: '', name: '', email: '', phone: '', college: '', major: '', avatarUrl: '' })
+const form = reactive({ username: '', name: '', email: '', phone: '', college: '', major: '', collegeId: '', majorId: '', avatarUrl: '' })
 const pwdForm = reactive({ oldPassword: '', newPassword: '' })
 const avatarInput = ref(null)
+const colleges = ref([])
+const majors = ref([])
+
+onMounted(async () => {
+  try {
+    const [userRes, collegeRes] = await Promise.all([
+      getUserById(store.userId),
+      getColleges()
+    ])
+    Object.assign(form, userRes.data)
+    colleges.value = collegeRes.data || []
+    if (form.collegeId) {
+      const majorRes = await getMajors(form.collegeId)
+      majors.value = majorRes.data || []
+    }
+  } catch {}
+})
+
+watch(() => form.collegeId, async (val) => {
+  majors.value = []
+  form.majorId = ''
+  if (!val) return
+  try {
+    const res = await getMajors(val)
+    majors.value = res.data || []
+  } catch {}
+})
 
 const initials = computed(() => {
   if (!form.name) return '?'

@@ -1,6 +1,5 @@
 <template>
   <div class="dashboard-page">
-    <NavBar />
     <div class="dashboard-bg">
       <div class="container">
         <div class="dashboard-header">
@@ -47,6 +46,19 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </div>
           </div>
+
+          <div class="stat-card" @click="router.push('/admin/permissions')">
+            <div class="stat-icon stat-icon--blue">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-title">权限管理</h3>
+              <p class="stat-desc">角色权限分配</p>
+            </div>
+            <div class="stat-arrow">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -61,15 +73,12 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import NavBar from '../../components/NavBar.vue'
 
 const router = useRouter()
 </script>
 
 <style scoped>
 .dashboard-page {
-  min-height: 100vh;
-  padding-top: 72px;
 }
 
 .dashboard-bg {
@@ -110,8 +119,8 @@ const router = useRouter()
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }
 
 .stat-card {

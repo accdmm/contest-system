@@ -12,6 +12,10 @@
     <name>contest-admin</name>
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.contest</groupId>
             <artifactId>contest-common</artifactId>
             <version>${project.version}</version>

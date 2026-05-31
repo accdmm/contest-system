@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -38,11 +39,11 @@ class TeamControllerTest {
         Team team = new Team();
         team.setId(1L);
         team.setTeamName("测试团队");
-        when(teamService.createTeam(anyLong(), anyString())).thenReturn(team);
+        lenient().when(teamService.createTeam(any(), anyString(), any())).thenReturn(team);
 
         mockMvc.perform(post("/api/team")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\": 1, \"teamName\": \"测试团队\"}"))
+                        .content("{\"teamName\": \"测试团队\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.teamName").value("测试团队"));
     }
@@ -61,9 +62,9 @@ class TeamControllerTest {
         Team team = new Team();
         team.setId(1L);
         team.setLeaderId(1L);
-        when(teamService.getTeamsByLeader(1L)).thenReturn(List.of(team));
+        lenient().when(teamService.getTeamsByLeader(any())).thenReturn(List.of(team));
 
-        mockMvc.perform(get("/api/team/leader").param("userId", "1"))
+        mockMvc.perform(get("/api/team/leader"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1));
     }
@@ -91,33 +92,34 @@ class TeamControllerTest {
 
     @Test
     void generateInvite_shouldReturnCode() throws Exception {
-        when(teamService.generateInviteCode(1L, 1L)).thenReturn("ABC123");
+        lenient().when(teamService.generateInviteCode(any(), any())).thenReturn("ABC123");
 
         mockMvc.perform(post("/api/team/1/invite")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\": 1}"))
+                        .content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").value("ABC123"));
     }
 
     @Test
-    void generateInvite_shouldReturnErrorWhenMissingUserId() throws Exception {
+    void generateInvite_shouldSucceedWithoutUserId() throws Exception {
+        lenient().when(teamService.generateInviteCode(any(), any())).thenReturn("CODE123");
         mockMvc.perform(post("/api/team/1/invite")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(400));
+                .andExpect(jsonPath("$.code").value(200));
     }
 
     @Test
     void join_shouldReturnTeam() throws Exception {
         Team team = new Team();
         team.setId(1L);
-        when(teamService.joinByInviteCode(anyLong(), anyString())).thenReturn(team);
+        lenient().when(teamService.joinByInviteCode(any(), anyString())).thenReturn(team);
 
         mockMvc.perform(post("/api/team/join")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\": 1, \"inviteCode\": \"ABC123\"}"))
+                        .content("{\"inviteCode\": \"ABC123\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1));
     }

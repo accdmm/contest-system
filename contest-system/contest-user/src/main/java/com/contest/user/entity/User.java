@@ -21,6 +21,10 @@ public class User {
 
     private String phone;
 
+    private Integer collegeId;
+
+    private Integer majorId;
+
     private String college;
 
     private String major;
@@ -58,6 +62,10 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public Integer getCollegeId() { return collegeId; }
+    public void setCollegeId(Integer collegeId) { this.collegeId = collegeId; }
+    public Integer getMajorId() { return majorId; }
+    public void setMajorId(Integer majorId) { this.majorId = majorId; }
     public String getCollege() { return college; }
     public void setCollege(String college) { this.college = college; }
     public String getMajor() { return major; }

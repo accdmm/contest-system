@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.dto.Result;
 import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,28 +20,33 @@ public class ContestController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('contest:create')")
     public Result<Contest> create(@RequestBody Contest contest) {
         return Result.success(contestService.createContest(contest));
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('contest:update')")
     public Result<Contest> update(@RequestBody Contest contest) {
         return Result.success(contestService.updateContest(contest));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('contest:delete')")
     public Result<Void> delete(@PathVariable Long id) {
         contestService.deleteContest(id);
         return Result.success();
     }
 
     @PutMapping("/{id}/publish")
+    @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> publish(@PathVariable Long id) {
         contestService.publishContest(id);
         return Result.success();
     }
 
     @PutMapping("/{id}/unpublish")
+    @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> unpublish(@PathVariable Long id) {
         contestService.unpublishContest(id);
         return Result.success();
