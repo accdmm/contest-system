@@ -112,7 +112,17 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
             wrapper.eq(Contest::getCategory, category);
         }
         if (status != null) {
-            wrapper.eq(Contest::getStatus, status);
+            LocalDateTime now = LocalDateTime.now();
+            if (status == 0) {
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_DRAFT);
+            } else if (status == 1) {
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(Contest::getRegisterStartTime, now)
+                        .gt(Contest::getRegisterEndTime, now);
+            } else if (status == 2) {
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(Contest::getRegisterEndTime, now);
+            }
         }
         if (contestType != null) {
             wrapper.eq(Contest::getContestType, contestType);
