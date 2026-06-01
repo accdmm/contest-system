@@ -183,7 +183,7 @@ onMounted(async () => {
     hotContests.value = hotRes.data || []
     latestContests.value = latestRes.data || []
   } catch (e) {
-    // ignore
+    banners.value = []; announcements.value = []; hotContests.value = []; latestContests.value = []
   }
 })
 </script>

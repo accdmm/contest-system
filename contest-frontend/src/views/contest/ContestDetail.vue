@@ -251,7 +251,7 @@ async function loadRegistrations() {
   try {
     const res = await pageRegistrationByContest(route.params.id, { page: 1, size: 50 })
     registrations.value = res.data.records || []
-  } catch (e) { /* ignore */ }
+  } catch (e) { registrations.value = [] }
 }
 
 async function handleApprove(id) {
@@ -259,7 +259,7 @@ async function handleApprove(id) {
     await approveRegistration(id)
     ElMessage.success('已通过')
     await loadRegistrations()
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('审批操作失败') }
 }
 
 async function handleReject(id) {
@@ -268,8 +268,7 @@ async function handleReject(id) {
     await rejectRegistration(id, value)
     ElMessage.success('已拒绝')
     await loadRegistrations()
-  } catch (e) {
-  }
+  } catch (e) { /* user cancelled prompt or error handled by interceptor */ }
 }
 
 async function loadMyRegistration() {
@@ -306,7 +305,7 @@ onMounted(async () => {
     const res = await getContestById(route.params.id)
     contest.value = res.data
     await Promise.all([loadRegistrations(), loadMyTeams(), loadMyRegistration()])
-  } catch (e) { /* ignore */ } finally { loading.value = false }
+  } catch (e) { contest.value = null } finally { loading.value = false }
 })
 </script>
 

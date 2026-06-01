@@ -85,7 +85,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="专业">
-                <el-select v-model="registerData.majorId" placeholder="请先选择学院" :disabled="!registerData.collegeId" clearable style="width:100%">
+                <el-select v-model="registerData.majorId" :placeholder="registerData.collegeId ? '请选择专业' : '请先选择学院'" :disabled="!registerData.collegeId" clearable style="width:100%">
                   <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
                 </el-select>
               </el-form-item>
@@ -128,7 +128,7 @@ onMounted(async () => {
   try {
     const res = await getColleges()
     colleges.value = res.data || []
-  } catch {}
+  } catch { colleges.value = [] }
 })
 
 watch(() => registerData.collegeId, async (val) => {
@@ -138,7 +138,7 @@ watch(() => registerData.collegeId, async (val) => {
   try {
     const res = await getMajors(val)
     majors.value = res.data || []
-  } catch {}
+  } catch { majors.value = [] }
 })
 
 const rules = {

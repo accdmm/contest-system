@@ -117,6 +117,7 @@ async function fetchData() {
     const res = await listUserTeams(store.userId)
     list.value = res.data || []
   } catch (e) {
+    list.value = []
   } finally {
     loading.value = false
   }

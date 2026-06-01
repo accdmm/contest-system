@@ -39,28 +39,29 @@
                         </svg>
                         {{ approvedCount }} 名成员
                       </span>
-                      <span class="meta-divider" />
-                      <span class="meta-item">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
-                          <path d="M5 4H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                          <path d="M5 6H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                          <path d="M5 8H7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                        </svg>
-                        指导教师：{{ teacherName }}
-                      </span>
-                      <span v-if="isLeader && team.status === 0" class="meta-divider" />
-                      <el-button v-if="isLeader && team.status === 0" size="small" type="primary" link @click="showTeacherDialog">更换</el-button>
                     </div>
-                    <el-dialog v-model="teacherDialogVisible" title="设置指导教师" width="400px">
-                      <el-select v-model="selectedTeacherId" placeholder="请选择指导教师" clearable style="width:100%">
-                        <el-option v-for="t in teachers" :key="t.id" :label="t.name + ' (' + (t.college || '') + ')'" :value="t.id" />
-                      </el-select>
-                      <template #footer>
-                        <el-button @click="teacherDialogVisible = false">取消</el-button>
-                        <el-button type="primary" @click="saveTeacher" :loading="savingTeacher">保存</el-button>
-                      </template>
-                    </el-dialog>
+                  </div>
+                </div>
+
+                <div class="teacher-row">
+                  <div class="teacher-row__inner">
+                    <div class="teacher-row__icon">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                        <path d="M6 4H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M6 7H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M6 10H8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div class="teacher-row__label">指导教师</div>
+                    <div class="teacher-row__name">{{ teacherName }}</div>
+                    <div class="teacher-row__spacer" />
+                    <button v-if="isLeader && team.status === 0" class="teacher-row__btn" @click="showTeacherDialog">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 1V15M1 8H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                      </svg>
+                      设置
+                    </button>
                   </div>
                 </div>
               </div>
@@ -276,6 +277,16 @@
       </div>
     </div>
   </div>
+
+  <el-dialog v-model="teacherDialogVisible" title="设置指导教师" width="420px" class="teacher-dialog" :close-on-click-modal="false">
+    <el-select v-model="selectedTeacherId" placeholder="请选择指导教师" clearable style="width:100%">
+      <el-option v-for="t in teachers" :key="t.id" :label="t.name + ' (' + (t.college || '') + ')'" :value="t.id" />
+    </el-select>
+    <template #footer>
+      <button class="dialog-btn dialog-btn--cancel" @click="teacherDialogVisible = false">取消</button>
+      <button class="dialog-btn dialog-btn--confirm" :disabled="savingTeacher" @click="saveTeacher">保存</button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -853,5 +864,130 @@ onMounted(fetchData)
   .content-section {
     padding: 20px;
   }
+}
+
+/* ===== Teacher Row ===== */
+.teacher-row {
+  padding: 16px 36px 0;
+}
+
+.teacher-row__inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-light);
+}
+
+.teacher-row__icon {
+  color: var(--c-text-light);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.teacher-row__label {
+  font-size: 0.82rem;
+  color: var(--c-text-muted);
+  flex-shrink: 0;
+}
+
+.teacher-row__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--c-primary);
+}
+
+.teacher-row__spacer {
+  flex: 1;
+}
+
+.teacher-row__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--c-primary);
+  background: transparent;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.teacher-row__btn:hover {
+  border-color: var(--c-primary-light);
+  color: var(--c-primary);
+  background: rgba(26, 35, 50, 0.03);
+}
+
+/* ===== Teacher Dialog ===== */
+.teacher-dialog :deep(.el-dialog) {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.teacher-dialog :deep(.el-dialog__header) {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.1rem;
+  color: var(--c-primary);
+  padding: 24px 24px 0;
+}
+
+.teacher-dialog :deep(.el-dialog__body) {
+  padding: 20px 24px;
+}
+
+.teacher-dialog :deep(.el-dialog__footer) {
+  padding: 0 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 8px 22px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1.5px solid transparent;
+}
+
+.dialog-btn--cancel {
+  background: transparent;
+  color: var(--c-text-muted);
+  border-color: var(--c-border);
+}
+
+.dialog-btn--cancel:hover {
+  border-color: var(--c-text-light);
+  color: var(--c-text-primary);
+}
+
+.dialog-btn--confirm {
+  background: var(--c-primary);
+  color: #fff;
+}
+
+.dialog-btn--confirm:hover {
+  background: var(--c-primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-btn--confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 </style>
