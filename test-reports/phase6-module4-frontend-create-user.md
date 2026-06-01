@@ -53,3 +53,7 @@ Verify the "新建用户" (Create User) feature in `UserManage.vue` works correc
 | TC4 | ✅ |
 | TC5 | ✅ |
 | TC6 | ✅ |
+
+## Bugs Found
+- **BUG-UM-01**: 教师角色在表格中显示为"学生" — UserManage.vue 三元表达式未处理 role=2 ✅ 已修复
+- **BUG-UM-05**: 连续编辑两个用户时专业 select 不回显 — watch 异步清空 majorId ✅ 已修复

@@ -39,3 +39,8 @@ SELECT id, username, name, role FROM user WHERE username LIKE 'e2e%';
 
 ## Conclusion
 All modules (M1–M5) function correctly end-to-end.
+
+## Bugs Found
+- **BUG-UM-02**: 管理员编辑其他用户返回"无权修改其他用户的资料" — UserController 缺少 admin 豁免 ✅ 已修复
+- **BUG-UM-03**: `updateProfile` 中 `user.setRole(null)` 导致角色无法保存 ✅ 已修复
+- **BUG-UM-06**: 权限管理"按用户分配"首次进入无数据 — onMounted 未调用 searchUser() ✅ 已修复
