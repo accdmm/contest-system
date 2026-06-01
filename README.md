@@ -995,45 +995,16 @@ AI 助手可调用以下工具：
 
 ## 测试
 
-### 测试命令
+完整的测试报告（包含环境、测试用例执行统计、场景覆盖、各阶段测试详情等）见 [`测试报告.md`](./测试报告.md) 及 [`test-reports/`](./test-reports/) 目录。
 
 ```bash
-# 运行后端团队模块测试
+# 运行后端测试
 mvn test -pl contest-team -Dtest="TeamServiceImplTest,TeamControllerTest"
-
-# 运行后端报名模块测试
 mvn test -pl contest-register -Dtest="RegistrationServiceImplTest"
 
 # 运行前端测试
 cd contest-frontend && npm test
-
-# 一键运行全部测试
-bash test-and-report.sh all "变更说明"
 ```
-
-### 测试覆盖
-
-| 层级 | 文件数 | 用例数 | 通过率 |
-|------|--------|--------|--------|
-| 后端 | 9 | 148 | 100% |
-| 前端 | 21 | 120 | 100% |
-| **总计** | **30** | **268** | **100%** |
-
-### 测试模块说明
-
-**TeamServiceImplTest（41 用例）** — 覆盖团队 CRUD、邀请码、成员审批/拒绝、解散、退出、提交审核、管理员审批/驳回、全部查询场景。
-
-**TeamControllerTest（21 用例）** — 覆盖 HTTP 方法/路径映射、参数校验、所有团队接口的响应处理。
-
-**RegistrationServiceImplTest（22 用例）** — 覆盖个人/团队报名校验、重复检测、人数上限、审批/拒绝生命周期、取消报名。
-
-**前端测试（30 用例）** — 覆盖 API 层 HTTP 契约（17 用例）和组件渲染（13 用例，涉及 ContestDetail、TeamDetail、CreateTeam）。
-
-### 已知问题
-
-| ID | 缺陷 | 模块 | 状态 |
-|----|------|------|------|
-| BUG-API-01 | `maxParticipants` 未统计 pending 状态的报名数 — 若全部通过审核将超额 | contest-register | ✅ 已修复 |
 
 ---
 
@@ -1043,9 +1014,8 @@ bash test-and-report.sh all "变更说明"
 .
 ├── README.md                          # 本文件
 ├── AGENTS.md                          # Agent 工作流指南
-├── 测试报告.md                         # 测试报告
-├── test-and-report.sh                 # 测试执行脚本
-├── run-tests.sh / run-tests.cmd       # 运行辅助脚本
+├── 测试报告.md                         # 完整测试报告（含测试用例列表）
+├── test-reports/                      # 各阶段测试报告
 │
 ├── contest-system/                    # 后端（Java Spring Boot）
 │   ├── pom.xml                        # 父 POM
