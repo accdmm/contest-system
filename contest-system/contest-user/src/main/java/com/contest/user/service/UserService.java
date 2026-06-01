@@ -22,4 +22,6 @@ public interface UserService extends IService<User> {
     IPage<User> pageUsers(String keyword, Integer page, Integer size);
 
     List<User> listTeachers();
+
+    User adminCreateUser(User user, String rawPassword);
 }

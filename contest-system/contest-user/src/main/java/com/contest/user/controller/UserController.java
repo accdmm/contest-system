@@ -6,6 +6,7 @@ import com.contest.common.dto.Result;
 import com.contest.common.util.JwtUtil;
 import com.contest.user.dto.LoginRequest;
 import com.contest.user.dto.RegisterRequest;
+import com.contest.user.dto.AdminCreateUserRequest;
 import com.contest.user.entity.College;
 import com.contest.user.entity.Major;
 import com.contest.user.entity.User;
@@ -13,6 +14,8 @@ import com.contest.user.service.CollegeService;
 import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -66,6 +69,22 @@ public class UserController {
         return Result.success(data);
     }
 
+    @PostMapping("/admin/create")
+    @PreAuthorize("hasAuthority('user:create')")
+    public Result<User> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
+        User user = new User();
+        user.setUsername(req.getUsername());
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setCollegeId(req.getCollegeId());
+        user.setMajorId(req.getMajorId());
+        user.setRole(req.getRole());
+        User saved = userService.adminCreateUser(user, req.getPassword());
+        saved.setPassword(null);
+        return Result.success(saved);
+    }
+
     @GetMapping("/colleges")
     public Result<List<College>> listColleges() {
         return Result.success(collegeService.list());
@@ -104,7 +123,10 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody User user) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
-        if (!currentUserId.equals(id)) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!currentUserId.equals(id) && !isAdmin) {
             return Result.error("无权修改其他用户的资料");
         }
         userService.updateProfile(id, user);

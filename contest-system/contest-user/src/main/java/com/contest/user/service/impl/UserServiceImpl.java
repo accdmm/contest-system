@@ -84,6 +84,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    public User adminCreateUser(User user, String rawPassword) {
+        validatePassword(rawPassword);
+        long count = count(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, user.getUsername()));
+        if (count > 0) {
+            throw new BusinessException("用户名已存在");
+        }
+        if (user.getCollegeId() != null) {
+            College college = collegeMapper.selectById(user.getCollegeId());
+            if (college != null) {
+                user.setCollege(college.getName());
+            }
+        }
+        if (user.getMajorId() != null) {
+            Major major = majorMapper.selectById(user.getMajorId());
+            if (major != null) {
+                user.setMajor(major.getName());
+            }
+        }
+        if (user.getRole() == null ||
+                (user.getRole() != CommonConstants.ROLE_STUDENT
+                && user.getRole() != CommonConstants.ROLE_TEACHER
+                && user.getRole() != CommonConstants.ROLE_ADMIN)) {
+            throw new BusinessException("无效的角色值");
+        }
+        user.setPassword(DigestUtil.bcrypt(rawPassword));
+        user.setStatus(CommonConstants.STATUS_NORMAL);
+        save(user);
+        return user;
+    }
+
+    @Override
     public void updateProfile(Long userId, User user) {
         User existing = getById(userId);
         if (existing == null) {
@@ -108,7 +140,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setId(userId);
         user.setPassword(null);
         user.setUsername(null);
-        user.setRole(null);
         user.setStatus(null);
         updateById(user);
     }

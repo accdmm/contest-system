@@ -43,3 +43,7 @@ export function listTeachers() {
 export function getMajors(collegeId) {
   return request.get('/user/majors', { params: { collegeId } })
 }
+
+export function adminCreateUser(data) {
+  return request.post('/user/admin/create', data)
+}

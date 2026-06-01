@@ -14,6 +14,7 @@
               </template>
             </el-input>
             <el-button class="um-search-btn" @click="search">搜索</el-button>
+            <el-button class="um-add-btn" @click="openCreate">新建用户</el-button>
           </div>
         </div>
 
@@ -26,7 +27,7 @@
             <el-table-column prop="major" label="专业" min-width="160" />
             <el-table-column prop="role" label="角色" width="80" align="center">
               <template #default="{ row }">
-                <span class="um-role" :class="row.role === 1 ? 'um-role--admin' : 'um-role--user'">{{ row.role === 1 ? '管理员' : '学生' }}</span>
+                <span class="um-role" :class="'um-role--' + ['user','admin','teacher'][row.role]">{{ ['学生','管理员','教师'][row.role] }}</span>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="160" align="right">
@@ -50,16 +51,26 @@
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" title="编辑用户" width="480px" class="um-dialog" :close-on-click-modal="false">
+    <el-dialog v-model="dialogVisible" :title="isCreate ? '新建用户' : '编辑用户'" width="480px" class="um-dialog" :close-on-click-modal="false">
       <el-form :model="editForm" label-position="top" class="um-form">
         <el-form-item label="学号">
-          <el-input :model-value="editForm.username" disabled />
+          <el-input v-model="editForm.username" :disabled="!isCreate" />
+        </el-form-item>
+        <el-form-item v-if="isCreate" label="密码">
+          <el-input v-model="editForm.password" type="password" show-password />
         </el-form-item>
         <el-form-item label="姓名">
           <el-input v-model="editForm.name" />
         </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="editForm.role" placeholder="选择角色" style="width:100%">
+            <el-option :value="0" label="学生" />
+            <el-option :value="2" label="教师" />
+            <el-option :value="1" label="管理员" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="学院">
-          <el-select v-model="editForm.collegeId" placeholder="请选择学院" clearable style="width:100%">
+          <el-select v-model="editForm.collegeId" placeholder="请选择学院" clearable style="width:100%" @change="onCollegeChange">
             <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
@@ -71,16 +82,16 @@
       </el-form>
       <template #footer>
         <el-button class="um-dialog-cancel" @click="dialogVisible = false">取消</el-button>
-        <el-button class="um-dialog-save" @click="handleSave" :loading="saving">保存</el-button>
+        <el-button class="um-dialog-save" @click="handleSave" :loading="saving">{{ isCreate ? '创建' : '保存' }}</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { pageUsers, updateProfile, getUserById, getColleges, getMajors } from '../../api/user'
+import { pageUsers, updateProfile, getUserById, getColleges, getMajors, adminCreateUser } from '../../api/user'
 
 const list = ref([])
 const total = ref(0)
@@ -89,20 +100,11 @@ const size = 10
 const loading = ref(true)
 const keyword = ref('')
 const dialogVisible = ref(false)
+const isCreate = ref(false)
 const saving = ref(false)
 const editForm = ref({})
 const colleges = ref([])
 const majors = ref([])
-
-watch(() => editForm.value.collegeId, async (val) => {
-  majors.value = []
-  editForm.value.majorId = ''
-  if (!val) return
-  try {
-    const res = await getMajors(val)
-    majors.value = res.data || []
-  } catch {}
-})
 
 async function fetchData() {
   loading.value = true
@@ -123,7 +125,19 @@ function pageChange(p) {
   fetchData()
 }
 
+async function openCreate() {
+  isCreate.value = true
+  editForm.value = { username: '', password: '123456', name: '', role: 0, collegeId: null, majorId: null }
+  try {
+    const res = await getColleges()
+    colleges.value = res.data || []
+  } catch {}
+  majors.value = []
+  dialogVisible.value = true
+}
+
 async function editUser(row) {
+  isCreate.value = false
   try {
     const [userRes, collegeRes] = await Promise.all([
       getUserById(row.id),
@@ -141,13 +155,29 @@ async function editUser(row) {
   }
 }
 
+function onCollegeChange() {
+  majors.value = []
+  editForm.value.majorId = ''
+  if (!editForm.value.collegeId) return
+  getMajors(editForm.value.collegeId).then(res => {
+    majors.value = res.data || []
+  }).catch(() => {})
+}
+
 async function handleSave() {
   saving.value = true
   try {
-    await updateProfile(editForm.value.id, editForm.value)
-    ElMessage.success('保存成功')
+    if (isCreate.value) {
+      await adminCreateUser(editForm.value)
+      ElMessage.success('创建成功')
+    } else {
+      await updateProfile(editForm.value.id, editForm.value)
+      ElMessage.success('保存成功')
+    }
     dialogVisible.value = false
     fetchData()
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '操作失败')
   } finally { saving.value = false }
 }
 
@@ -167,6 +197,8 @@ onMounted(fetchData)
 .um-search-input :deep(.el-input__wrapper.is-focus) { border-color: var(--c-primary); }
 .um-search-btn { height: 36px; padding: 0 20px; border: none; border-radius: 10px; background: var(--c-primary); color: #fff; font-weight: 500; }
 .um-search-btn:hover { background: var(--c-primary-light); }
+.um-add-btn { height: 36px; padding: 0 20px; border: none; border-radius: 10px; background: var(--c-accent); color: #fff; font-weight: 500; }
+.um-add-btn:hover { opacity: 0.85; }
 .um-card { background: var(--c-surface); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); }
 .um-card :deep(.el-table) { border: none; }
 .um-card :deep(.el-table th.el-table__cell) { background: var(--c-bg); color: var(--c-primary); font-weight: 600; font-size: 12px; letter-spacing: 0.02em; border-bottom: none; }
@@ -176,6 +208,7 @@ onMounted(fetchData)
 .um-role { display: inline-block; padding: 2px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
 .um-role--admin { background: rgba(232,93,74,0.1); color: var(--c-accent); }
 .um-role--user { background: rgba(26,35,50,0.06); color: var(--c-primary); }
+.um-role--teacher { background: rgba(64,158,255,0.1); color: #409eff; }
 .um-action-btn { height: 30px; padding: 0 14px; border: 1px solid var(--c-border); border-radius: 8px; background: var(--c-surface); color: var(--c-primary); font-size: 12px; font-weight: 500; }
 .um-action-btn:hover { border-color: var(--c-primary); background: var(--c-primary); color: #fff; }
 .um-pagination { margin-top: 20px; display: flex; justify-content: center; }

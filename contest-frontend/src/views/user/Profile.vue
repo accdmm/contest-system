@@ -33,14 +33,15 @@
               <el-input v-model="form.phone" placeholder="请输入手机号" />
             </el-form-item>
             <el-form-item label="学院">
-              <el-select v-model="form.collegeId" placeholder="请选择学院" clearable style="width:100%">
+              <el-select v-model="form.collegeId" placeholder="请选择学院" :disabled="!store.isAdmin" clearable style="width:100%" @change="onCollegeChange">
                 <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
               </el-select>
             </el-form-item>
             <el-form-item label="专业">
-              <el-select v-model="form.majorId" :placeholder="form.collegeId ? '请选择专业' : '请先选择学院'" :disabled="!form.collegeId" clearable style="width:100%">
+              <el-select v-model="form.majorId" :placeholder="form.collegeId ? '请选择专业' : '请先选择学院'" :disabled="!store.isAdmin || !form.collegeId" clearable style="width:100%">
                 <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
               </el-select>
+              <p v-if="!store.isAdmin" class="field-hint">学院/专业信息仅管理员可修改</p>
             </el-form-item>
             <el-form-item>
               <button class="btn-save" @click.prevent="handleUpdate">保存修改</button>
@@ -81,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { getUserById, updateProfile, changePassword, getColleges, getMajors } from '../../api/user'
@@ -110,15 +111,14 @@ onMounted(async () => {
   } catch {}
 })
 
-watch(() => form.collegeId, async (val) => {
+function onCollegeChange() {
   majors.value = []
   form.majorId = ''
-  if (!val) return
-  try {
-    const res = await getMajors(val)
+  if (!form.collegeId) return
+  getMajors(form.collegeId).then(res => {
     majors.value = res.data || []
-  } catch {}
-})
+  }).catch(() => {})
+}
 
 const initials = computed(() => {
   if (!form.name) return '?'
@@ -264,6 +264,12 @@ async function handleChangePwd() {
   font-weight: 500;
   color: var(--c-text-muted);
   padding-bottom: 4px;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--c-text-muted);
+  margin: 6px 0 0;
 }
 
 .btn-save {

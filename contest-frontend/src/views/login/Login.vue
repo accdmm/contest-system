@@ -79,7 +79,7 @@
               <el-form-item label="手机号" prop="phone">
                 <el-input v-model="registerData.phone" placeholder="可选" />
               </el-form-item>
-              <el-form-item label="学院">
+              <el-form-item label="学院" prop="collegeId">
                 <el-select v-model="registerData.collegeId" placeholder="请选择学院" clearable style="width:100%">
                   <el-option v-for="c in colleges" :key="c.id" :label="c.name" :value="c.id" />
                 </el-select>
@@ -153,7 +153,8 @@ const registerRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 8, max: 20, message: '密码长度8-20位', trigger: 'blur' }
   ],
-  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }]
+  email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }],
+  collegeId: [{ required: true, message: '请选择学院', trigger: 'change' }]
 }
 
 async function handleLogin() {
