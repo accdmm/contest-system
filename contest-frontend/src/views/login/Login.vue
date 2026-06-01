@@ -175,7 +175,12 @@ async function handleRegister() {
   if (!valid) return
   loading.value = true
   try {
-    const res = await register(registerData)
+    const payload = { ...registerData }
+    if (!payload.email) payload.email = null
+    if (!payload.phone) payload.phone = null
+    if (!payload.collegeId) payload.collegeId = null
+    if (!payload.majorId) payload.majorId = null
+    const res = await register(payload)
     store.setUser(res.data.user, res.data.token)
     ElMessage.success('注册成功')
     router.push('/home')
