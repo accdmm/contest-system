@@ -5,7 +5,9 @@ export function listBanners() {
 }
 
 export function listAnnouncements(position) {
-  return request.get('/cms/announcements', { params: { position } })
+  const params = {}
+  if (position !== undefined && position !== null) params.position = position
+  return request.get('/cms/announcements', { params })
 }
 
 export function createCmsContent(data) {

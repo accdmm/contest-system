@@ -9,7 +9,7 @@ export function register(data) {
 }
 
 export function getUserById(id) {
-  return request.get(`/user/${id}`)
+  return request.get(`/user/detail/${id}`)
 }
 
 export function updateProfile(id, data) {

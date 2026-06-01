@@ -171,7 +171,7 @@ const initialForm = () => ({
   id: undefined,
   name: '', category: '', level: '', organizer: '', location: '',
   contestTime: undefined, registerStartTime: undefined, registerEndTime: undefined,
-  contestType: 0, maxParticipants: 0, teamMinSize: 1, teamMaxSize: 10,
+  contestType: 0, teamMinSize: 1, teamMaxSize: 10,
   coverImageUrl: '', description: ''
 })
 

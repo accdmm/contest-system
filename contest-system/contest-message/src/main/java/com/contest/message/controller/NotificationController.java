@@ -23,12 +23,20 @@ public class NotificationController {
     public Result<IPage<Notification>> byUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!currentUserId.equals(userId)) {
+            return Result.error("无权查看其他用户的通知");
+        }
         return Result.success(notificationService.pageByUser(userId, page, size));
     }
 
     @GetMapping("/unread/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Long> unreadCount(@PathVariable Long userId) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!currentUserId.equals(userId)) {
+            return Result.error("无权查看其他用户的通知");
+        }
         return Result.success(notificationService.countUnread(userId));
     }
 
@@ -43,6 +51,10 @@ public class NotificationController {
     @PutMapping("/read-all/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> markAllRead(@PathVariable Long userId) {
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!currentUserId.equals(userId)) {
+            return Result.error("无权操作其他用户的通知");
+        }
         notificationService.markAllAsRead(userId);
         return Result.success();
     }

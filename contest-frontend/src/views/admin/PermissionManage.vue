@@ -9,11 +9,12 @@
             <el-radio-group v-model="currentRole" @change="loadRolePerms">
               <el-radio-button :value="1">管理员</el-radio-button>
               <el-radio-button :value="0">学生</el-radio-button>
+              <el-radio-button :value="2">教师</el-radio-button>
             </el-radio-group>
           </div>
           <el-card class="perm-card">
             <template #header>
-              <span>角色权限 — {{ currentRole === 1 ? '管理员' : '学生' }}</span>
+              <span>角色权限 — {{ roleLabel }}</span>
               <el-button type="primary" size="small" style="float:right" @click="saveRole">保存</el-button>
             </template>
             <div v-loading="roleLoading">
@@ -87,6 +88,8 @@ const currentUser = ref(null)
 const userSelectedPerms = ref([])
 const userPermLoading = ref(false)
 
+const roleLabel = computed(() => ({ 0: '学生', 1: '管理员', 2: '教师' }[currentRole.value] || '未知'))
+
 const permissionGroups = computed(() => {
   const map = {}
   allPermissions.value.forEach(p => {
@@ -100,7 +103,9 @@ async function loadAllPerms() {
   try {
     const res = await request.get('/permission/list')
     allPermissions.value = res.data || []
-  } catch {}
+  } catch {
+    ElMessage.error('加载权限列表失败')
+  }
 }
 
 async function loadRolePerms() {
@@ -117,7 +122,9 @@ async function saveRole() {
   try {
     await request.put(`/permission/role/${currentRole.value}`, { permissionIds: selectedPerms.value })
     ElMessage.success('保存成功')
-  } catch {}
+  } catch {
+    ElMessage.error('保存失败')
+  }
 }
 
 async function searchUser() {
@@ -147,7 +154,9 @@ async function saveUserPerms() {
     await request.put(`/permission/user/${currentUser.value.id}`, { permissionIds: userSelectedPerms.value })
     ElMessage.success('保存成功')
     permDialog.value = false
-  } catch {}
+  } catch {
+    ElMessage.error('保存权限失败')
+  }
 }
 
 onMounted(() => {

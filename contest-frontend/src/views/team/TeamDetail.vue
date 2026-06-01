@@ -39,7 +39,28 @@
                         </svg>
                         {{ approvedCount }} 名成员
                       </span>
+                      <span class="meta-divider" />
+                      <span class="meta-item">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+                          <path d="M5 4H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                          <path d="M5 6H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                          <path d="M5 8H7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                        </svg>
+                        指导教师：{{ teacherName }}
+                      </span>
+                      <span v-if="isLeader && team.status === 0" class="meta-divider" />
+                      <el-button v-if="isLeader && team.status === 0" size="small" type="primary" link @click="showTeacherDialog">更换</el-button>
                     </div>
+                    <el-dialog v-model="teacherDialogVisible" title="设置指导教师" width="400px">
+                      <el-select v-model="selectedTeacherId" placeholder="请选择指导教师" clearable style="width:100%">
+                        <el-option v-for="t in teachers" :key="t.id" :label="t.name + ' (' + (t.college || '') + ')'" :value="t.id" />
+                      </el-select>
+                      <template #footer>
+                        <el-button @click="teacherDialogVisible = false">取消</el-button>
+                        <el-button type="primary" @click="saveTeacher" :loading="savingTeacher">保存</el-button>
+                      </template>
+                    </el-dialog>
                   </div>
                 </div>
               </div>
@@ -262,7 +283,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
-import { getTeamById, listTeamMembers, listPendingMembers, generateInviteCode, approveMember, rejectMember, removeMember, dissolveTeam, submitTeamReview, joinByInviteCode, leaveTeam } from '../../api/team'
+import { getTeamById, listTeamMembers, listPendingMembers, generateInviteCode, approveMember, rejectMember, removeMember, dissolveTeam, submitTeamReview, joinByInviteCode, leaveTeam, setTeamTeacher } from '../../api/team'
+import { listTeachers } from '../../api/user'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
@@ -272,6 +294,16 @@ const loading = ref(true)
 const team = ref(null)
 const members = ref([])
 const inviteCode = ref('')
+const teachers = ref([])
+const teacherDialogVisible = ref(false)
+const selectedTeacherId = ref(null)
+const savingTeacher = ref(false)
+
+const teacherName = computed(() => {
+  if (!team.value?.teacherId) return '未指定'
+  const t = teachers.value.find(t => t.id === team.value.teacherId)
+  return t ? t.name : '教师(' + team.value.teacherId + ')'
+})
 
 const teamStatusMap = { 0: '组建中', 1: '待审核', 2: '已通过', 3: '已驳回', 4: '已解散' }
 const teamStatusTypeMap = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'danger', 4: 'info' }
@@ -285,13 +317,15 @@ const pendingCount = computed(() => members.value.filter(m => m.status === 0).le
 
 async function fetchData() {
   try {
-    const [teamRes, memberRes, pendingRes] = await Promise.all([
+    const [teamRes, memberRes, pendingRes, teacherRes] = await Promise.all([
       getTeamById(route.params.id),
       listTeamMembers(route.params.id),
-      listPendingMembers(route.params.id)
+      listPendingMembers(route.params.id),
+      listTeachers()
     ])
     team.value = teamRes.data
     members.value = [...(memberRes.data || []), ...(pendingRes.data || [])]
+    teachers.value = teacherRes.data || []
   } catch (e) { /* ignore */ } finally { loading.value = false }
 }
 
@@ -348,6 +382,21 @@ async function joinTeam() {
     inviteCode.value = ''
     fetchData()
   } catch (e) { /* handled by axios interceptor */ }
+}
+
+function showTeacherDialog() {
+  selectedTeacherId.value = team.value?.teacherId || null
+  teacherDialogVisible.value = true
+}
+
+async function saveTeacher() {
+  savingTeacher.value = true
+  try {
+    await setTeamTeacher(team.value.id, selectedTeacherId.value)
+    ElMessage.success('指导教师已更新')
+    teacherDialogVisible.value = false
+    fetchData()
+  } catch (e) { /* handled by axios interceptor */ } finally { savingTeacher.value = false }
 }
 
 onMounted(fetchData)

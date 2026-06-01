@@ -81,7 +81,8 @@ public class UserController {
         return Result.success(userService.listTeachers());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
+    @PreAuthorize("isAuthenticated()")
     public Result<User> getById(@PathVariable Long id) {
         User user = userService.getById(id);
         if (user == null) {
@@ -102,7 +103,10 @@ public class UserController {
     @PutMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody User user) {
-        SecurityUtil.getCurrentUserId(); // ensure authenticated
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!currentUserId.equals(id)) {
+            return Result.error("无权修改其他用户的资料");
+        }
         userService.updateProfile(id, user);
         return Result.success();
     }
@@ -110,7 +114,10 @@ public class UserController {
     @PutMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
-        SecurityUtil.getCurrentUserId(); // ensure authenticated
+        Long currentUserId = SecurityUtil.getCurrentUserId();
+        if (!currentUserId.equals(id)) {
+            return Result.error("无权修改其他用户的密码");
+        }
         userService.changePassword(id, params.get("oldPassword"), params.get("newPassword"));
         return Result.success();
     }

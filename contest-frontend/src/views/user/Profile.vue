@@ -127,14 +127,6 @@ const initials = computed(() => {
   return form.name.slice(0, 2).toUpperCase()
 })
 
-onMounted(async () => {
-  try {
-    const res = await getUserById(store.userId)
-    Object.assign(form, res.data)
-  } catch (e) {
-  }
-})
-
 async function handleAvatarUpload(e) {
   const file = e.target.files?.[0]
   if (!file) return
