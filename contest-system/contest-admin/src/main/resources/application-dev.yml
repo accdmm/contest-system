@@ -16,5 +16,5 @@ minio:
   # 云部署示例: http://minio:9000 (Docker内网) 或 http://公网IP:9000
   endpoint: http://localhost:9005
   access-key: accdmm
-  secret-key: lmh050724
+  secret-key: 123456
   bucket: contest-files
