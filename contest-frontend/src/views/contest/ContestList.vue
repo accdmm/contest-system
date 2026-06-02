@@ -47,7 +47,7 @@
               <option value="">全部状态</option>
               <option value="1">报名中</option>
               <option value="2">已截止</option>
-              <option value="0">草稿</option>
+              <option v-if="store.isLoggedIn && store.user?.role === 1" value="0">草稿</option>
             </select>
           </div>
           <div class="filter-group">
