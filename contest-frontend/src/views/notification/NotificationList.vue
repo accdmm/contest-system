@@ -88,6 +88,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import NavBar from '../../components/NavBar.vue'
 import { formatTime } from '../../utils/format'
+import { sanitizeHtml } from '../../utils/sanitize'
 import { pageNotificationByUser, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '../../api/notification'
 import { useUserStore } from '../../stores/user'
 
@@ -114,7 +115,9 @@ async function fetchData() {
       pageNotificationByUser(store.userId, { page: page.value, size }),
       getUnreadCount(store.userId)
     ])
-    list.value = notifRes.data.records || []
+    const records = notifRes.data.records || []
+    records.forEach(n => { if (n.content) n.content = sanitizeHtml(n.content) })
+    list.value = records
     total.value = notifRes.data.total || 0
     unreadCount.value = unreadRes.data || 0
   } catch (e) {
@@ -127,9 +130,9 @@ async function handleClick(n) {
       await markNotificationRead(n.id, store.userId)
       n.isRead = 1
       unreadCount.value = Math.max(0, unreadCount.value - 1)
-    } catch (e) {
-    }
+  } catch (e) { ElMessage.error('加载通知失败')
   }
+}
   if (n.relatedType === 'contest') {
     router.push(`/contest/${n.relatedId}`)
   } else if (n.relatedType === 'team') {

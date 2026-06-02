@@ -317,7 +317,7 @@ const teacherName = computed(() => {
 })
 
 const teamStatusMap = { 0: '组建中', 1: '待审核', 2: '已通过', 3: '已驳回', 4: '已解散' }
-const teamStatusTypeMap = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'danger', 4: 'info' }
+const teamStatusTypeMap = { 0: 'warning', 1: 'pending', 2: 'success', 3: 'danger', 4: 'info' }
 const memberStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝' }
 
 const isLeader = computed(() => team.value?.leaderId === store.userId)
@@ -327,17 +327,13 @@ const approvedCount = computed(() => members.value.filter(m => m.status === 1).l
 const pendingCount = computed(() => members.value.filter(m => m.status === 0).length)
 
 async function fetchData() {
-  try {
-    const [teamRes, memberRes, pendingRes, teacherRes] = await Promise.all([
-      getTeamById(route.params.id),
-      listTeamMembers(route.params.id),
-      listPendingMembers(route.params.id),
-      listTeachers()
-    ])
-    team.value = teamRes.data
-    members.value = [...(memberRes.data || []), ...(pendingRes.data || [])]
-    teachers.value = teacherRes.data || []
-  } catch (e) { /* ignore */ } finally { loading.value = false }
+  try { const r = await getTeamById(route.params.id); team.value = r.data } catch (e) { team.value = null }
+  let approved = [], pending = []
+  try { const r = await listTeamMembers(route.params.id); approved = r.data || [] } catch (e) {}
+  try { const r = await listPendingMembers(route.params.id); pending = r.data || [] } catch (e) {}
+  members.value = [...approved, ...pending]
+  try { const r = await listTeachers(); teachers.value = r.data || [] } catch (e) { teachers.value = [] }
+  loading.value = false
 }
 
 async function generateCode() {

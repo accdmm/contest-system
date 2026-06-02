@@ -63,7 +63,7 @@
             <div class="detail-main">
               <section class="content-section anim-fade-up anim-delay-1">
                 <h2 class="section-title">竞赛详情</h2>
-                <div class="description" v-html="contest.description"></div>
+                <div class="description" v-html="safeDescription"></div>
               </section>
 
               <section v-if="registrations.length > 0 && store.isAdmin" class="content-section anim-fade-up anim-delay-3">
@@ -193,6 +193,7 @@ import { getContestById } from '../../api/contest'
 import { registerPersonal as apiRegisterPersonal, registerTeam as apiRegisterTeam, approveRegistration, rejectRegistration, cancelRegistration, pageRegistrationByUser, pageRegistrationByContest } from '../../api/registration'
 import { listUserTeams, getTeamById } from '../../api/team'
 import { formatTime } from '../../utils/format'
+import { sanitizeHtml } from '../../utils/sanitize'
 import { useUserStore } from '../../stores/user'
 
 const route = useRoute()
@@ -210,6 +211,7 @@ const typeMap = { 0: '仅个人赛', 1: '仅团队赛', 2: '个人赛/团队赛�
 const statusLabel = computed(() => statusMap[contest.value?.status]?.label || '')
 const statusType = computed(() => statusMap[contest.value?.status]?.type || 'info')
 const typeLabel = computed(() => typeMap[contest.value?.contestType] || '')
+const safeDescription = computed(() => sanitizeHtml(contest.value?.description || ''))
 
 const categoryGradients = {
   '理工类': 'linear-gradient(160deg, #0f1923 0%, #1a2a3a 40%, #0f1923 100%)',
@@ -222,7 +224,7 @@ const heroBg = computed(() => ({
   background: categoryGradients[contest.value?.category] || 'linear-gradient(160deg, #0a1018 0%, #12102a 40%, #0a1018 100%)'
 }))
 
-const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已取消' }
+const regStatusMap = { 0: '待审核', 1: '已通过', 2: '已驳回', 3: '已取消' }
 
 const personalReg = computed(() => myRegistrations.value.find(r => !r.teamId && r.status !== 3))
 const teamReg = computed(() => myRegistrations.value.find(r => r.teamId && r.status !== 3))
@@ -301,11 +303,13 @@ async function loadMyTeams() {
 }
 
 onMounted(async () => {
-  try {
-    const res = await getContestById(route.params.id)
-    contest.value = res.data
-    await Promise.all([loadRegistrations(), loadMyTeams(), loadMyRegistration()])
-  } catch (e) { contest.value = null } finally { loading.value = false }
+  try { const r = await getContestById(route.params.id); contest.value = r.data } catch (e) { contest.value = null }
+  await Promise.all([
+    loadRegistrations().catch(() => {}),
+    loadMyTeams().catch(() => {}),
+    loadMyRegistration().catch(() => {})
+  ])
+  loading.value = false
 })
 </script>
 

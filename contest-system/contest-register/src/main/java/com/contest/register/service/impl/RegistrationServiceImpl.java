@@ -88,12 +88,19 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         Contest contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
 
-        long count = count(new LambdaQueryWrapper<Registration>()
+        long dupCount = count(new LambdaQueryWrapper<Registration>()
                 .eq(Registration::getUserId, userId)
                 .eq(Registration::getContestId, contestId)
                 .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
-        if (count > 0) {
+        if (dupCount > 0) {
             throw new BusinessException("您已报名该竞赛");
+        }
+
+        long activeCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
+        if (activeCount >= 3) {
+            throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
         Registration reg = new Registration();
@@ -115,15 +122,23 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Transactional
     public Registration registerTeam(Long userId, Long contestId, Long teamId) {
         teamValidator.validateForRegistration(teamId);
+        teamValidator.validateTeamLeader(teamId, userId);
         Contest contest = validateContest(contestId, CommonConstants.REG_TEAM);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
 
-        long count = count(new LambdaQueryWrapper<Registration>()
-                .eq(Registration::getUserId, userId)
+        long dupCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getTeamId, teamId)
                 .eq(Registration::getContestId, contestId)
                 .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
-        if (count > 0) {
-            throw new BusinessException("您已报名该竞赛");
+        if (dupCount > 0) {
+            throw new BusinessException("该团队已报名该竞赛");
+        }
+
+        long activeCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
+        if (activeCount >= 3) {
+            throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
         Registration reg = new Registration();
@@ -148,6 +163,9 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         if (reg == null) {
             throw new BusinessException("报名记录不存在");
         }
+        if (reg.getStatus() != CommonConstants.REG_PENDING) {
+            throw new BusinessException("仅待审核状态的报名可批准");
+        }
         Contest contest = contestService.getById(reg.getContestId());
         if (contest != null) {
             checkMaxParticipantsForApproval(contest);
@@ -171,6 +189,9 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         Registration reg = getById(id);
         if (reg == null) {
             throw new BusinessException("报名记录不存在");
+        }
+        if (reg.getStatus() != CommonConstants.REG_PENDING && reg.getStatus() != CommonConstants.REG_APPROVED) {
+            throw new BusinessException("该报名记录当前状态不允许驳回");
         }
         boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
         reg.setStatus(CommonConstants.REG_REJECTED);
@@ -199,6 +220,9 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
         if (!reg.getUserId().equals(userId)) {
             throw new BusinessException("只能取消自己的报名");
+        }
+        if (reg.getStatus() != CommonConstants.REG_PENDING && reg.getStatus() != CommonConstants.REG_APPROVED) {
+            throw new BusinessException("该报名记录当前状态不允许取消");
         }
 
         boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;

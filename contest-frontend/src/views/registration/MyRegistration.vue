@@ -87,7 +87,7 @@ async function fetchData() {
     const res = await pageRegistrationByUser(store.userId, { page: page.value, size })
     list.value = res.data.records || []
     total.value = res.data.total || 0
-  } catch (e) {
+  } catch (e) { ElMessage.error('加载报名记录失败')
   } finally {
     loading.value = false
   }

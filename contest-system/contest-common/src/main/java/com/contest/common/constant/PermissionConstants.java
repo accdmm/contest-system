@@ -8,6 +8,7 @@ public interface PermissionConstants {
     String CONTEST_PUBLISH  = "contest:publish";
 
     String USER_LIST        = "user:list";
+    String USER_CREATE      = "user:create";
     String USER_FREEZE      = "user:freeze";
 
     String REG_APPROVE      = "registration:approve";

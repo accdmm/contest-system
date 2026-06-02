@@ -47,8 +47,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     private void validatePassword(String password) {
-        if (password == null || password.length() < 6 || password.length() > 20) {
-            throw new BusinessException("密码长度需为6-20位");
+        if (password == null || password.length() < 8 || password.length() > 20) {
+            throw new BusinessException("密码长度需为8-20位");
         }
         if (!Pattern.compile("[a-zA-Z]").matcher(password).find()
                 && !Pattern.compile("[0-9]").matcher(password).find()) {
@@ -63,6 +63,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
+        }
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            long emailCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, user.getEmail()));
+            if (emailCount > 0) {
+                throw new BusinessException("邮箱已被其他用户使用");
+            }
+        }
+        if (user.getPhone() != null && !user.getPhone().isBlank()) {
+            long phoneCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getPhone, user.getPhone()));
+            if (phoneCount > 0) {
+                throw new BusinessException("手机号已被其他用户使用");
+            }
         }
         if (user.getCollegeId() != null) {
             College college = collegeMapper.selectById(user.getCollegeId());
@@ -90,6 +104,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
+        }
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            long emailCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, user.getEmail()));
+            if (emailCount > 0) {
+                throw new BusinessException("邮箱已被其他用户使用");
+            }
+        }
+        if (user.getPhone() != null && !user.getPhone().isBlank()) {
+            long phoneCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getPhone, user.getPhone()));
+            if (phoneCount > 0) {
+                throw new BusinessException("手机号已被其他用户使用");
+            }
         }
         if (user.getCollegeId() != null) {
             College college = collegeMapper.selectById(user.getCollegeId());

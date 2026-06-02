@@ -108,7 +108,7 @@ onMounted(async () => {
       const majorRes = await getMajors(form.collegeId)
       majors.value = majorRes.data || []
     }
-  } catch {}
+  } catch { ElMessage.error('加载个人信息失败') }
 })
 
 function onCollegeChange() {

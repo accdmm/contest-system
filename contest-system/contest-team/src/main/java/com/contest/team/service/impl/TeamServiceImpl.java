@@ -150,6 +150,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if (member == null || !member.getTeamId().equals(teamId)) {
             throw new BusinessException("成员申请不存在");
         }
+        if (member.getStatus() != CommonConstants.MEMBER_PENDING) {
+            throw new BusinessException("仅待处理的申请可批准");
+        }
         member.setStatus(CommonConstants.MEMBER_APPROVED);
         member.setHandleTime(LocalDateTime.now());
         teamMemberMapper.updateById(member);
@@ -170,6 +173,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         TeamMember member = teamMemberMapper.selectById(memberId);
         if (member == null || !member.getTeamId().equals(teamId)) {
             throw new BusinessException("成员申请不存在");
+        }
+        if (member.getStatus() != CommonConstants.MEMBER_PENDING && member.getStatus() != CommonConstants.MEMBER_APPROVED) {
+            throw new BusinessException("该成员当前状态不允许此操作");
         }
         boolean wasApproved = member.getStatus() == CommonConstants.MEMBER_APPROVED;
         member.setStatus(CommonConstants.MEMBER_REJECTED);
@@ -277,6 +283,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                     "成员退出", userName + " 退出了团队「" + team.getTeamName() + "」。",
                     teamId, "team");
         }
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
+                .list();
+        for (Registration reg : regs) {
+            reg.setStatus(CommonConstants.REG_CANCELLED);
+            registrationService.updateById(reg);
+        }
     }
 
     @Override
@@ -287,10 +302,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             throw new BusinessException("仅队长可提交报名");
         }
         Integer minSize = resolveTeamMinSize(teamId);
-        int effectiveMin = (minSize != null && minSize > 0) ? minSize : 2;
+        if (minSize == null) {
+            throw new BusinessException("团队尚未关联竞赛，无法确定最少人数要求");
+        }
         int currentCount = team.getMemberCount() != null ? team.getMemberCount() : 0;
-        if (currentCount < effectiveMin) {
-            throw new BusinessException("团队人数不足最低要求（至少" + effectiveMin + "人），无法提交审核");
+        if (currentCount < minSize) {
+            throw new BusinessException("团队人数不足最低要求（至少" + minSize + "人），无法提交审核");
         }
         long approvedNonLeaderCount = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMember>()
                 .eq(TeamMember::getTeamId, teamId)

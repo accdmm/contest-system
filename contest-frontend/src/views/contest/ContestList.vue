@@ -100,6 +100,7 @@ import { ref, reactive, onMounted } from 'vue'
 import NavBar from '../../components/NavBar.vue'
 import ContestCard from '../../components/ContestCard.vue'
 import BasePagination from '../../components/BasePagination.vue'
+import { ElMessage } from 'element-plus'
 import { pageContests } from '../../api/contest'
 
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
@@ -118,7 +119,7 @@ async function fetchData() {
     const res = await pageContests(params)
     list.value = res.data.records || []
     total.value = res.data.total || 0
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('搜索失败，请重试') }
 }
 
 function search() { query.page = 1; fetchData() }

@@ -48,8 +48,8 @@ const router = useRouter()
 const loading = ref(true)
 const teams = ref([])
 
-const teamStatusMap = { 0: '组建中', 1: '待审核', 2: '已通过', 3: '已驳回' }
-const teamStatusTypeMap = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'danger' }
+const teamStatusMap = { 0: '组建中', 1: '待审核', 2: '已通过', 3: '已驳回', 4: '已解散' }
+const teamStatusTypeMap = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'danger', 4: 'info' }
 
 function teamStatusLabel(status) { return teamStatusMap[status] || '' }
 function teamStatusType(status) { return teamStatusTypeMap[status] || 'info' }

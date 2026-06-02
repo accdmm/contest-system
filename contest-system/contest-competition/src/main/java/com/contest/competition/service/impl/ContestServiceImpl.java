@@ -30,6 +30,14 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         if (contest.getContestTime() != null && contest.getContestTime().isBefore(now)) {
             throw new BusinessException("竞赛时间不能早于当前时间");
         }
+        if (contest.getRegisterStartTime() != null && contest.getRegisterEndTime() != null
+                && contest.getRegisterEndTime().isBefore(contest.getRegisterStartTime())) {
+            throw new BusinessException("报名截止时间不能早于开始时间");
+        }
+        if (contest.getRegisterEndTime() != null && contest.getContestTime() != null
+                && contest.getContestTime().isBefore(contest.getRegisterEndTime())) {
+            throw new BusinessException("竞赛时间不能早于报名截止时间");
+        }
         contest.setStatus(CommonConstants.CONTEST_DRAFT);
         contest.setCurrentCount(0);
         save(contest);
@@ -76,6 +84,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         Contest contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
+        }
+        if (contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
+            throw new BusinessException("已有报名的竞赛不可下架");
         }
         contest.setStatus(CommonConstants.CONTEST_DRAFT);
         updateById(contest);

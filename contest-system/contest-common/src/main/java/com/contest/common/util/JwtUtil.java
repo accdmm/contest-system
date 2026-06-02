@@ -20,10 +20,11 @@ public class JwtUtil {
     @Value("${contest.jwt.expire-days:7}")
     private long expireDays;
 
-    private static final String SECRET = "contest-system-jwt-secret-key-2024-2025-2026";
+    @Value("${contest.jwt.secret:contest-system-jwt-secret-key-2024-2025-2026}")
+    private String secret;
 
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(Long userId, String username, Integer role) {

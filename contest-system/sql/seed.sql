@@ -67,6 +67,7 @@ INSERT INTO `permission` (`code`, `name`, `module`) VALUES
 ('contest:delete',   '删除竞赛',   '竞赛管理'),
 ('contest:publish',  '上架/下架',  '竞赛管理'),
 ('user:list',        '用户列表',   '用户管理'),
+('user:create',      '创建用户',   '用户管理'),
 ('user:freeze',      '冻结/解冻',  '用户管理'),
 ('registration:approve', '审核报名',  '报名管理'),
 ('registration:list',    '报名列表',  '报名管理'),
@@ -86,7 +87,7 @@ INSERT INTO `role_permission` (`role`, `permission_id`)
 SELECT 1, id FROM permission;
 
 INSERT INTO `role_permission` (`role`, `permission_id`)
-SELECT 2, id FROM permission WHERE code IN ('team:list', 'registration:list', 'notification:send', 'file:upload');
+SELECT 2, id FROM permission WHERE code IN ('team:list', 'team:approve', 'registration:list', 'registration:approve', 'notification:send', 'file:upload');
 
 -- ===================== 2. 竞赛数据 =====================
 INSERT INTO `contest` (`id`, `name`, `category`, `level`, `organizer`, `contest_time`, `register_start_time`, `register_end_time`, `location`, `description`, `contest_type`, `team_min_size`, `team_max_size`, `max_participants`, `status`, `current_count`, `create_time`) VALUES

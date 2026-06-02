@@ -209,7 +209,7 @@ async function loadContests() {
   try {
     const res = await pageContests({ page: 1, size: 200 })
     contests.value = res.data.records || []
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('操作失败') }
 }
 
 // Registration
@@ -219,7 +219,7 @@ async function fetchReg() {
     const res = await pageRegistration({ contestId: contestId.value, status: regStatus.value, page: regPage.value, size })
     regList.value = res.data.records || []
     regTotal.value = res.data.total || 0
-  } catch (e) { /* ignore */ } finally { regLoading.value = false }
+  } catch (e) { ElMessage.error('操作失败') } finally { regLoading.value = false }
 }
 
 async function approveReg(id) {
@@ -266,7 +266,7 @@ async function fetchTeam() {
     const res = await pageTeams({ status: teamStatus.value, page: teamPage.value, size })
     teamList.value = res.data.records || []
     teamTotal.value = res.data.total || 0
-  } catch (e) { /* ignore */ } finally { teamLoading.value = false }
+  } catch (e) { ElMessage.error('操作失败') } finally { teamLoading.value = false }
 }
 
 async function approveTeam(id) {

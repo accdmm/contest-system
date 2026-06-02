@@ -134,7 +134,7 @@ onMounted(async () => {
   try {
     const res = await listTeachers()
     teacherList.value = res.data || []
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('加载教师列表失败') }
 })
 
 async function handleCreate() {

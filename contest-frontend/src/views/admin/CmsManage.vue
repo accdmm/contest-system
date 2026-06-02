@@ -140,14 +140,14 @@ async function loadBanners() {
   try {
     const res = await listBanners()
     banners.value = res.data || []
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('加载内容失败') }
 }
 
 async function loadAnnouncements() {
   try {
     const res = await listAnnouncements()
     announcements.value = res.data || []
-  } catch (e) { /* ignore */ }
+  } catch (e) { ElMessage.error('加载内容失败') }
 }
 
 function showAdd(type) {

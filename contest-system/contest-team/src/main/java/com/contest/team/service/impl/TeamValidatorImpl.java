@@ -26,4 +26,15 @@ public class TeamValidatorImpl implements TeamValidator {
             throw new BusinessException("团队审核未通过，无法报名竞赛");
         }
     }
+
+    @Override
+    public void validateTeamLeader(Long teamId, Long userId) {
+        Team team = teamMapper.selectById(teamId);
+        if (team == null) {
+            throw new BusinessException("团队不存在或已解散");
+        }
+        if (!team.getLeaderId().equals(userId)) {
+            throw new BusinessException("仅队长可进行此操作");
+        }
+    }
 }

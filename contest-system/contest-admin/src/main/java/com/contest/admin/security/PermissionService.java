@@ -99,6 +99,7 @@ public class PermissionService {
         perms.add(PermissionConstants.CONTEST_DELETE);
         perms.add(PermissionConstants.CONTEST_PUBLISH);
         perms.add(PermissionConstants.USER_LIST);
+        perms.add(PermissionConstants.USER_CREATE);
         perms.add(PermissionConstants.USER_FREEZE);
         perms.add(PermissionConstants.REG_APPROVE);
         perms.add(PermissionConstants.REG_LIST);
@@ -112,6 +113,7 @@ public class PermissionService {
         perms.add(PermissionConstants.CMS_DELETE);
         perms.add(PermissionConstants.LOG_LIST);
         perms.add(PermissionConstants.FILE_UPLOAD);
+        perms.add(PermissionConstants.PERMISSION_ASSIGN);
         return perms;
     }
 }

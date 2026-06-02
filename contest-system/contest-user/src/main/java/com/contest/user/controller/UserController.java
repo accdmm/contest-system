@@ -72,6 +72,12 @@ public class UserController {
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('user:create')")
     public Result<User> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean callerIsAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (req.getRole() != null && req.getRole() == 1 && !callerIsAdmin) {
+            return Result.error("仅管理员可创建管理员账号");
+        }
         User user = new User();
         user.setUsername(req.getUsername());
         user.setName(req.getName());

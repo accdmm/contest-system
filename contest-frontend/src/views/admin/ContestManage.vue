@@ -198,7 +198,7 @@ async function fetchData() {
     const res = await pageContests({ page: page.value, size })
     list.value = res.data.records || []
     total.value = res.data.total || 0
-  } catch (e) { /* ignore */ } finally { loading.value = false }
+  } catch (e) { ElMessage.error('加载竞赛列表失败') } finally { loading.value = false }
 }
 
 function edit(row) {

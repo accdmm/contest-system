@@ -152,6 +152,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { formatTime } from '../../utils/format'
+import { sanitizeHtml } from '../../utils/sanitize'
 import NavBar from '../../components/NavBar.vue'
 import ContestCard from '../../components/ContestCard.vue'
 import { listBanners, listAnnouncements } from '../../api/cms'
@@ -171,20 +172,15 @@ function handleJoin() {
 }
 
 onMounted(async () => {
+  try { const r = await listBanners(); banners.value = r.data || [] } catch (e) { banners.value = [] }
   try {
-    const [bRes, aRes, hotRes, latestRes] = await Promise.all([
-      listBanners(),
-      listAnnouncements('message_center'),
-      getHotContests(4),
-      getLatestContests(4)
-    ])
-    banners.value = bRes.data || []
-    announcements.value = aRes.data || []
-    hotContests.value = hotRes.data || []
-    latestContests.value = latestRes.data || []
-  } catch (e) {
-    banners.value = []; announcements.value = []; hotContests.value = []; latestContests.value = []
-  }
+    const r = await listAnnouncements('message_center')
+    const raw = r.data || []
+    raw.forEach(a => { if (a.content) a.content = sanitizeHtml(a.content) })
+    announcements.value = raw
+  } catch (e) { announcements.value = [] }
+  try { const r = await getHotContests(4); hotContests.value = r.data || [] } catch (e) { hotContests.value = [] }
+  try { const r = await getLatestContests(4); latestContests.value = r.data || [] } catch (e) { latestContests.value = [] }
 })
 </script>
 

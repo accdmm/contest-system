@@ -5,6 +5,8 @@ import com.contest.common.dto.Result;
 import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,6 +71,14 @@ public class ContestController {
                                        @RequestParam(required = false) Integer status,
                                        @RequestParam(required = false) Integer contestType,
                                        @RequestParam(required = false) String sortBy) {
+        if (status != null && status == 0) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = auth != null && auth.isAuthenticated()
+                    && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                status = null;
+            }
+        }
         return Result.success(contestService.pageContests(page, size, keyword, category, status, contestType, sortBy));
     }
 
