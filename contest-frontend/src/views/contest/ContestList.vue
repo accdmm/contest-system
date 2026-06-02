@@ -102,6 +102,9 @@ import ContestCard from '../../components/ContestCard.vue'
 import BasePagination from '../../components/BasePagination.vue'
 import { ElMessage } from 'element-plus'
 import { pageContests } from '../../api/contest'
+import { useUserStore } from '../../stores/user'
+
+const store = useUserStore()
 
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])
