@@ -34,16 +34,17 @@
               class="filter-input"
               placeholder="搜索竞赛名称..."
               @keyup.enter="search"
+              @input="onKeywordInput"
             />
           </div>
           <div class="filter-group">
-            <select v-model="query.category" class="filter-select">
+            <select v-model="query.category" class="filter-select" @change="search">
               <option value="">全部类别</option>
               <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
             </select>
           </div>
           <div class="filter-group">
-            <select v-model="query.status" class="filter-select">
+            <select v-model="query.status" class="filter-select" @change="search">
               <option value="">全部状态</option>
               <option value="1">报名中</option>
               <option value="2">已截止</option>
@@ -51,7 +52,7 @@
             </select>
           </div>
           <div class="filter-group">
-            <select v-model="query.contestType" class="filter-select">
+            <select v-model="query.contestType" class="filter-select" @change="search">
               <option value="">全部形式</option>
               <option value="0">个人赛</option>
               <option value="1">团队赛</option>
@@ -59,7 +60,7 @@
             </select>
           </div>
           <div class="filter-group filter-group--sort">
-            <select v-model="query.sortBy" class="filter-select">
+            <select v-model="query.sortBy" class="filter-select" @change="search">
               <option value="">按更新时间</option>
               <option value="hot">按热门程度</option>
               <option value="deadline">按报名截止</option>
@@ -127,6 +128,12 @@ async function fetchData() {
 
 function search() { query.page = 1; fetchData() }
 function pageChange(p) { query.page = p; fetchData() }
+
+let keywordTimer
+function onKeywordInput() {
+  clearTimeout(keywordTimer)
+  keywordTimer = setTimeout(() => { query.page = 1; fetchData() }, 300)
+}
 
 onMounted(fetchData)
 </script>
