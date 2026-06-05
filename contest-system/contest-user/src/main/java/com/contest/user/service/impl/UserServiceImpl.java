@@ -51,8 +51,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException("密码长度需为8-20位");
         }
         if (!Pattern.compile("[a-zA-Z]").matcher(password).find()
-                && !Pattern.compile("[0-9]").matcher(password).find()) {
-            throw new BusinessException("密码需包含字母或数字");
+                || !Pattern.compile("[0-9]").matcher(password).find()) {
+            throw new BusinessException("密码需同时包含字母和数字");
         }
     }
 
@@ -153,16 +153,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user.getAvatarUrl() != null && user.getAvatarUrl().isBlank()) {
             user.setAvatarUrl(null);
         }
+        // 同步冗余字段：collegeId → college（文字），仅当查找成功时才更新
         if (user.getCollegeId() != null) {
             College college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
+            } else {
+                // 若 collegeId 无效则跳过该字段的更新
+                user.setCollegeId(null);
             }
         }
         if (user.getMajorId() != null) {
             Major major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
+            } else {
+                user.setMajorId(null);
             }
         }
         user.setId(userId);

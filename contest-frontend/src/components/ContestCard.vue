@@ -59,8 +59,21 @@ const statusMap = {
   2: { label: '已截止', type: 'warning' },
 }
 
-const statusLabel = computed(() => statusMap[props.contest.status]?.label || '未知')
-const statusType = computed(() => statusMap[props.contest.status]?.type || 'info')
+const statusLabel = computed(() => {
+  // 兜底：状态为"报名中"但报名截止时间已过 → 显示"已截止"
+  if (props.contest.status === 1 && props.contest.registerEndTime) {
+    const end = new Date(props.contest.registerEndTime.replace(' ', 'T'))
+    if (end < new Date()) return '已截止'
+  }
+  return statusMap[props.contest.status]?.label || '未知'
+})
+const statusType = computed(() => {
+  if (props.contest.status === 1 && props.contest.registerEndTime) {
+    const end = new Date(props.contest.registerEndTime.replace(' ', 'T'))
+    if (end < new Date()) return 'warning'
+  }
+  return statusMap[props.contest.status]?.type || 'info'
+})
 
 const levelMap = { '校级': '校级', '市级': '市级', '省级': '省级', '国家级': '国家级' }
 const levelLabel = computed(() => levelMap[props.contest.level] || '—')

@@ -137,6 +137,8 @@ async function handleClick(n) {
     router.push(`/contest/${n.relatedId}`)
   } else if (n.relatedType === 'team') {
     router.push(`/team/${n.relatedId}`)
+  } else if (n.relatedType === 'registration') {
+    router.push('/my-registration')
   }
 }
 

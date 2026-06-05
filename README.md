@@ -759,12 +759,11 @@ server: {
 |---------|------|------|
 | 竞赛管理 | `/admin/contest` | 创建、编辑、发布、下架、删除竞赛 |
 | 审核报名 | `/admin/review` | 按竞赛查看并审核报名申请 |
-| 团队审核 | `/admin/team-review` | 审核已提交的团队 |
+| 团队管理 | `/admin/users` | 在用户管理中管理团队，或通过竞赛报名审核流程处理团队 |
 | 用户管理 | `/admin/users` | 查看/创建/编辑/冻结/解冻用户 |
 | 权限管理 | `/admin/permission` | 按角色或用户分配权限 |
 | 内容管理 | `/admin/cms` | 管理轮播图和公告 |
 | 通知管理 | `/admin/notification` | 发送通知和系统广播 |
-| 操作日志 | `/admin/log` | 查看管理员操作记录 |
 
 ---
 
@@ -846,7 +845,7 @@ server: {
 
 #### 3. 团队审核
 
-> 路径：管理后台 → **团队审核** (`/admin/team-review`)
+> 路径：管理后台 → **用户管理** (`/admin/users`) — 团队审核通过 API 接口进行（`POST /api/team/{teamId}/admin-approve`）
 
 ##### 操作流程
 
@@ -929,7 +928,7 @@ server: {
 
 #### 8. 操作日志
 
-> 路径：管理后台 → **操作日志** (`/admin/log`)
+> 路径：API 接口 `GET /api/log/page`（后端支持，无前端页面，可通过 Swagger/API 工具查看）
 
 | 信息 | 说明 |
 |------|------|

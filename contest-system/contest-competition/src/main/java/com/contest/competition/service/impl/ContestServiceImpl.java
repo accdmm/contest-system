@@ -122,8 +122,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         if (category != null && !category.isEmpty()) {
             wrapper.eq(Contest::getCategory, category);
         }
+        LocalDateTime now = LocalDateTime.now();
         if (status != null) {
-            LocalDateTime now = LocalDateTime.now();
             if (status == 0) {
                 wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_DRAFT);
             } else if (status == 1) {
@@ -134,6 +134,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
                 wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
                         .le(Contest::getRegisterEndTime, now);
             }
+        } else {
+            // 默认只展示报名未截止的上架竞赛，排除草稿和已过期的
+            wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                    .gt(Contest::getRegisterEndTime, now);
         }
         if (contestType != null) {
             wrapper.eq(Contest::getContestType, contestType);
@@ -151,7 +155,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     public List<Contest> listHotContests(int limit) {
         LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN);
+        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
         wrapper.orderByDesc(Contest::getCurrentCount);
         return page(new Page<>(1, limit), wrapper).getRecords();
     }
@@ -159,7 +164,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     public List<Contest> listLatestContests(int limit) {
         LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN);
+        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
         wrapper.orderByDesc(Contest::getCreateTime);
         return page(new Page<>(1, limit), wrapper).getRecords();
     }
