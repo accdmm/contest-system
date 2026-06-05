@@ -234,6 +234,6 @@ public class AiChatServiceImpl implements AiChatService {
         List<Long> validIds = list.stream().map(AiConversation::getId).collect(Collectors.toList());
         messageMapper.delete(new LambdaQueryWrapper<AiMessage>()
                 .in(AiMessage::getConversationId, validIds));
-        conversationMapper.deleteByIds(validIds);
+        conversationMapper.deleteBatchIds(validIds);
     }
 }

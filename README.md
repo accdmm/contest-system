@@ -761,7 +761,7 @@ server: {
 | 审核报名 | `/admin/review` | 按竞赛查看并审核报名申请 |
 | 团队管理 | `/admin/users` | 在用户管理中管理团队，或通过竞赛报名审核流程处理团队 |
 | 用户管理 | `/admin/users` | 查看/创建/编辑/冻结/解冻用户 |
-| 权限管理 | `/admin/permission` | 按角色或用户分配权限 |
+| 权限管理 | `/admin/permissions` | 按角色或用户分配权限 |
 | 内容管理 | `/admin/cms` | 管理轮播图和公告 |
 | 通知管理 | `/admin/notification` | 发送通知和系统广播 |
 
@@ -914,7 +914,7 @@ server: {
 
 #### 7. 权限管理（New）
 
-> 路径：管理后台 → **权限管理** (`/admin/permission`)
+> 路径：管理后台 → **权限管理** (`/admin/permissions`)
 
 支持按角色和按用户两种维度的权限分配：
 
@@ -1106,7 +1106,7 @@ bash test-and-report.sh all "变更说明"
 | `/admin/cms` | 内容管理 | 是 | 是 |
 | `/admin/notification` | 通知管理 | 是 | 是 |
 | `/admin/users` | 用户管理 | 是 | 是 |
-| `/admin/permission` | 权限管理 | 是 | 是 |
+| `/admin/permissions` | 权限管理 | 是 | 是 |
 | *404* | 页面未找到 | - | - |
 
 ---

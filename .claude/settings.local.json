@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["bash:taskkill"]
+    "allow": [
+      "bash:taskkill",
+      "bash:netstat",
+      "bash:awk",
+      "bash:grep",
+      "bash:findstr",
+      "bash:curl",
+      "bash:ps"
+    ]
   }
 }

@@ -292,10 +292,14 @@ function stop() {
   }
 }
 
-/** 图片加载失败时显示首字符占位 */
+/** 图片加载失败时隐藏整个头像容器 */
 function onImgError(e) {
   const el = e.target
-  if (el) el.style.display = 'none'
+  if (el) {
+    el.style.display = 'none'
+    const container = el.closest('.msg-avatar')
+    if (container) container.style.display = 'none'
+  }
 }
 </script>
 
