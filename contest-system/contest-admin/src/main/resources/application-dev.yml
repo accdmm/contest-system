@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
     dashscope:
-      api-key: YOUR_DASHSCOPE_API_KEY
+      api-key: sk-f50116a359024c01aabf0dc0f3af4de3
 
 mybatis-plus:
   configuration:

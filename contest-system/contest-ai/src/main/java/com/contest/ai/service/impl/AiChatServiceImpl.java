@@ -184,4 +184,56 @@ public class AiChatServiceImpl implements AiChatService {
             conversationMapper.updateById(conversation);
         }
     }
+
+    @Override
+    public List<AiMessage> listMessages(Long conversationId, Long userId) {
+        AiConversation conversation = conversationMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new com.contest.common.exception.BusinessException("会话不存在");
+        }
+        if (!conversation.getUserId().equals(userId)) {
+            throw new com.contest.common.exception.BusinessException("无权查看其他用户的会话");
+        }
+        return messageMapper.selectList(
+                new LambdaQueryWrapper<AiMessage>()
+                        .eq(AiMessage::getConversationId, conversationId)
+                        .orderByAsc(AiMessage::getCreateTime));
+    }
+
+    @Override
+    public List<AiConversation> listConversations(Long userId) {
+        return conversationMapper.selectList(
+                new LambdaQueryWrapper<AiConversation>()
+                        .eq(AiConversation::getUserId, userId)
+                        .orderByDesc(AiConversation::getUpdateTime));
+    }
+
+    @Override
+    public void deleteConversation(Long conversationId, Long userId) {
+        AiConversation conversation = conversationMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new com.contest.common.exception.BusinessException("会话不存在");
+        }
+        if (!conversation.getUserId().equals(userId)) {
+            throw new com.contest.common.exception.BusinessException("无权删除其他用户的会话");
+        }
+        // 先删关联消息，再删会话（无级联外键）
+        messageMapper.delete(new LambdaQueryWrapper<AiMessage>()
+                .eq(AiMessage::getConversationId, conversationId));
+        conversationMapper.deleteById(conversationId);
+    }
+
+    @Override
+    public void deleteConversations(List<Long> ids, Long userId) {
+        if (ids == null || ids.isEmpty()) return;
+        List<AiConversation> list = conversationMapper.selectList(
+                new LambdaQueryWrapper<AiConversation>()
+                        .in(AiConversation::getId, ids)
+                        .eq(AiConversation::getUserId, userId));
+        if (list.isEmpty()) return;
+        List<Long> validIds = list.stream().map(AiConversation::getId).collect(Collectors.toList());
+        messageMapper.delete(new LambdaQueryWrapper<AiMessage>()
+                .in(AiMessage::getConversationId, validIds));
+        conversationMapper.deleteByIds(validIds);
+    }
 }
