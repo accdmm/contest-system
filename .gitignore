@@ -13,3 +13,4 @@ Thumbs.db
 out/
 *.class
 .env
+CLAUDE.md
