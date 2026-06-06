@@ -55,9 +55,17 @@
                 取消
               </button>
             </div>
-            <div v-if="selectMode && selectedIds.length > 0" class="batch-bar">
-              <span class="batch-count">已选 {{ selectedIds.length }}</span>
-              <button class="batch-del-btn" @click="batchDelete">删除选中</button>
+            <div v-if="selectMode" class="batch-bar">
+              <label class="batch-select-all">
+                <input type="checkbox" class="sidebar-checkbox"
+                       :checked="isAllSelected"
+                       @change="toggleSelectAll" />
+                <span>全选</span>
+              </label>
+              <div class="batch-right">
+                <span class="batch-count">已选 {{ selectedIds.length }}</span>
+                <button v-if="selectedIds.length > 0" class="batch-del-btn" @click="batchDelete">删除</button>
+              </div>
             </div>
             <div class="sidebar-list">
               <div v-for="c in conversations" :key="c.id"
@@ -121,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { createChatStream, stopChatStream, listConversations, deleteConversation, getConversationMessages, batchDeleteConversations } from '../api/ai'
@@ -145,6 +153,18 @@ function toggleSelect(c) {
   const idx = selectedIds.value.indexOf(c.id)
   if (idx >= 0) selectedIds.value.splice(idx, 1)
   else selectedIds.value.push(c.id)
+}
+
+const isAllSelected = computed(() =>
+  conversations.value.length > 0 && selectedIds.value.length === conversations.value.length
+)
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIds.value = []
+  } else {
+    selectedIds.value = conversations.value.map(c => c.id)
+  }
 }
 
 async function batchDelete() {
@@ -612,6 +632,23 @@ function onImgError(e) {
   padding: 4px 8px;
   background: rgba(239, 68, 68, 0.08);
   border-radius: 6px;
+}
+.batch-select-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #1a2332;
+  cursor: pointer;
+}
+.batch-select-all .sidebar-checkbox {
+  width: 13px;
+  height: 13px;
+}
+.batch-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .batch-count {
   font-size: 0.72rem;
