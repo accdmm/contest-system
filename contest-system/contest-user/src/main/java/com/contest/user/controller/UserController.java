@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.common.util.JwtUtil;
-import com.contest.user.dto.LoginRequest;
-import com.contest.user.dto.RegisterRequest;
-import com.contest.user.dto.AdminCreateUserRequest;
+import com.contest.user.param.LoginRequest;
+import com.contest.user.param.RegisterRequest;
+import com.contest.user.param.AdminCreateUserRequest;
+import com.contest.user.param.UserProfileParam;
 import com.contest.user.entity.College;
 import com.contest.user.entity.Major;
 import com.contest.user.entity.User;
@@ -127,7 +128,7 @@ public class UserController {
 
     @PutMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> updateProfile(@PathVariable Long id, @RequestBody User user) {
+    public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileParam param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream()
@@ -135,6 +136,14 @@ public class UserController {
         if (!currentUserId.equals(id) && !isAdmin) {
             return Result.error("无权修改其他用户的资料");
         }
+        User user = new User();
+        user.setName(param.getName());
+        user.setEmail(param.getEmail());
+        user.setPhone(param.getPhone());
+        user.setCollegeId(param.getCollegeId());
+        user.setMajorId(param.getMajorId());
+        user.setClassName(param.getClassName());
+        user.setAvatarUrl(param.getAvatarUrl());
         userService.updateProfile(id, user);
         return Result.success();
     }

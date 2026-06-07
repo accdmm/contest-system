@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.register.entity.Registration;
+import com.contest.register.param.RegPersonalParam;
+import com.contest.register.param.RegTeamParam;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.contest.register.service.RegistrationService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.Map;
 
 @RestController
@@ -24,29 +27,16 @@ public class RegistrationController {
 
     @PostMapping("/personal")
     @PreAuthorize("isAuthenticated()")
-    public Result<Registration> registerPersonal(@RequestBody Map<String, Object> params) {
+    public Result<Registration> registerPersonal(@RequestBody @Valid RegPersonalParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
-        Object contestIdObj = params.get("contestId");
-        if (contestIdObj == null) {
-            return Result.error("缺少必要参数");
-        }
-        Long contestId = Long.valueOf(contestIdObj.toString());
-        String remark = (String) params.getOrDefault("remark", "");
-        return Result.success(registrationService.registerPersonal(userId, contestId, remark));
+        return Result.success(registrationService.registerPersonal(userId, param.getContestId(), param.getRemark()));
     }
 
     @PostMapping("/team")
     @PreAuthorize("isAuthenticated()")
-    public Result<Registration> registerTeam(@RequestBody Map<String, Object> params) {
+    public Result<Registration> registerTeam(@RequestBody @Valid RegTeamParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
-        Object contestIdObj = params.get("contestId");
-        Object teamIdObj = params.get("teamId");
-        if (contestIdObj == null || teamIdObj == null) {
-            return Result.error("缺少必要参数");
-        }
-        Long contestId = Long.valueOf(contestIdObj.toString());
-        Long teamId = Long.valueOf(teamIdObj.toString());
-        return Result.success(registrationService.registerTeam(userId, contestId, teamId));
+        return Result.success(registrationService.registerTeam(userId, param.getContestId(), param.getTeamId()));
     }
 
     @PutMapping("/{id}/approve")

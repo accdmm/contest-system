@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.message.entity.Notification;
+import com.contest.message.param.NotificationSendParam;
 import com.contest.message.service.NotificationService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/notification")
@@ -61,9 +64,8 @@ public class NotificationController {
 
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('notification:send')")
-    public Result<Void> send(@RequestParam Long userId, @RequestParam Integer type,
-                             @RequestParam String title, @RequestParam String content) {
-        notificationService.sendNotification(userId, type, title, content, null, null);
+    public Result<Void> send(@RequestBody @Valid NotificationSendParam param) {
+        notificationService.sendNotification(param.getUserId(), param.getType(), param.getTitle(), param.getContent(), param.getRelatedId(), param.getRelatedType());
         return Result.success();
     }
 

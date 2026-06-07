@@ -1,26 +1,29 @@
-package com.contest.competition.entity;
+package com.contest.competition.param;
 
-import com.baomidou.mybatisplus.annotation.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-@TableName("contest")
-public class Contest {
+public class ContestCreateParam {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
-
+    @NotBlank(message = "竞赛名称不能为空")
     private String name;
 
+    @NotBlank(message = "竞赛类别不能为空")
     private String category;
 
+    @NotBlank(message = "竞赛级别不能为空")
     private String level;
 
     private String organizer;
 
+    @NotNull(message = "竞赛时间不能为空")
     private LocalDateTime contestTime;
 
+    @NotNull(message = "报名开始时间不能为空")
     private LocalDateTime registerStartTime;
 
+    @NotNull(message = "报名结束时间不能为空")
     private LocalDateTime registerEndTime;
 
     private String location;
@@ -31,6 +34,7 @@ public class Contest {
 
     private String attachmentUrls;
 
+    @NotNull(message = "竞赛类型不能为空")
     private Integer contestType;
 
     private Integer teamMinSize;
@@ -39,20 +43,6 @@ public class Contest {
 
     private Integer maxParticipants;
 
-    private Long createBy;
-
-    private Integer status;
-
-    private Integer currentCount;
-
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getCategory() { return category; }
@@ -83,14 +73,4 @@ public class Contest {
     public void setTeamMaxSize(Integer teamMaxSize) { this.teamMaxSize = teamMaxSize; }
     public Integer getMaxParticipants() { return maxParticipants; }
     public void setMaxParticipants(Integer maxParticipants) { this.maxParticipants = maxParticipants; }
-    public Long getCreateBy() { return createBy; }
-    public void setCreateBy(Long createBy) { this.createBy = createBy; }
-    public Integer getStatus() { return status; }
-    public void setStatus(Integer status) { this.status = status; }
-    public Integer getCurrentCount() { return currentCount; }
-    public void setCurrentCount(Integer currentCount) { this.currentCount = currentCount; }
-    public LocalDateTime getCreateTime() { return createTime; }
-    public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
-    public LocalDateTime getUpdateTime() { return updateTime; }
-    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
 }

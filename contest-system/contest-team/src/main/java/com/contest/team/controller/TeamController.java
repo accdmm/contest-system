@@ -5,10 +5,13 @@ import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.team.entity.Team;
 import com.contest.team.entity.TeamMember;
+import com.contest.team.param.TeamCreateParam;
+import com.contest.team.param.TeamJoinParam;
 import com.contest.team.service.TeamService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -24,15 +27,9 @@ public class TeamController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Result<Team> create(@RequestBody Map<String, Object> params) {
+    public Result<Team> create(@RequestBody @Valid TeamCreateParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
-        Object teamNameObj = params.get("teamName");
-        if (teamNameObj == null) {
-            return Result.error("缺少必要参数");
-        }
-        String teamName = teamNameObj.toString();
-        Long teacherId = params.get("teacherId") != null ? ((Number) params.get("teacherId")).longValue() : null;
-        return Result.success(teamService.createTeam(userId, teamName, teacherId));
+        return Result.success(teamService.createTeam(userId, param.getTeamName(), param.getTeacherId()));
     }
 
     @PostMapping("/{teamId}/invite")
@@ -44,13 +41,9 @@ public class TeamController {
 
     @PostMapping("/join")
     @PreAuthorize("isAuthenticated()")
-    public Result<Team> join(@RequestBody Map<String, String> params) {
+    public Result<Team> join(@RequestBody @Valid TeamJoinParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
-        String code = params.get("inviteCode");
-        if (code == null) {
-            return Result.error("缺少必要参数");
-        }
-        return Result.success(teamService.joinByInviteCode(userId, code));
+        return Result.success(teamService.joinByInviteCode(userId, param.getInviteCode()));
     }
 
     @PutMapping("/{teamId}/members/{memberId}/approve")

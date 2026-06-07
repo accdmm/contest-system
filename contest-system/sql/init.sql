@@ -69,6 +69,7 @@ CREATE TABLE `contest` (
     `team_min_size` INT NOT NULL DEFAULT 0 COMMENT '团队最少人数',
     `team_max_size` INT NOT NULL DEFAULT 0 COMMENT '团队最多人数',
     `max_participants` INT NOT NULL DEFAULT 0 COMMENT '人数/队伍上限 0=不限',
+    `create_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人用户ID',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '竞赛状态 0=草稿/下架 1=上架报名中 2=报名结束',
     `current_count` INT NOT NULL DEFAULT 0 COMMENT '当前已报名人数/队伍数',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

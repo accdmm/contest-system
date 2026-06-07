@@ -1,12 +1,16 @@
 package com.contest.competition.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
 import com.contest.competition.entity.Contest;
+import com.contest.competition.param.ContestCreateParam;
+import com.contest.competition.param.ContestUpdateParam;
 import com.contest.competition.service.ContestService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -21,13 +25,48 @@ public class ContestController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('contest:create')")
-    public Result<Contest> create(@RequestBody Contest contest) {
+    public Result<Contest> create(@RequestBody @Valid ContestCreateParam param) {
+        Contest contest = new Contest();
+        contest.setName(param.getName());
+        contest.setCategory(param.getCategory());
+        contest.setLevel(param.getLevel());
+        contest.setOrganizer(param.getOrganizer());
+        contest.setContestTime(param.getContestTime());
+        contest.setRegisterStartTime(param.getRegisterStartTime());
+        contest.setRegisterEndTime(param.getRegisterEndTime());
+        contest.setLocation(param.getLocation());
+        contest.setCoverImageUrl(param.getCoverImageUrl());
+        contest.setDescription(param.getDescription());
+        contest.setAttachmentUrls(param.getAttachmentUrls());
+        contest.setContestType(param.getContestType());
+        contest.setTeamMinSize(param.getTeamMinSize());
+        contest.setTeamMaxSize(param.getTeamMaxSize());
+        contest.setMaxParticipants(param.getMaxParticipants());
+        Long userId = SecurityUtil.getCurrentUserId();
+        contest.setCreateBy(userId);
         return Result.success(contestService.createContest(contest));
     }
 
     @PutMapping
     @PreAuthorize("hasAuthority('contest:update')")
-    public Result<Contest> update(@RequestBody Contest contest) {
+    public Result<Contest> update(@RequestBody @Valid ContestUpdateParam param) {
+        Contest contest = new Contest();
+        contest.setId(param.getId());
+        contest.setName(param.getName());
+        contest.setCategory(param.getCategory());
+        contest.setLevel(param.getLevel());
+        contest.setOrganizer(param.getOrganizer());
+        contest.setContestTime(param.getContestTime());
+        contest.setRegisterStartTime(param.getRegisterStartTime());
+        contest.setRegisterEndTime(param.getRegisterEndTime());
+        contest.setLocation(param.getLocation());
+        contest.setCoverImageUrl(param.getCoverImageUrl());
+        contest.setDescription(param.getDescription());
+        contest.setAttachmentUrls(param.getAttachmentUrls());
+        contest.setContestType(param.getContestType());
+        contest.setTeamMinSize(param.getTeamMinSize());
+        contest.setTeamMaxSize(param.getTeamMaxSize());
+        contest.setMaxParticipants(param.getMaxParticipants());
         return Result.success(contestService.updateContest(contest));
     }
 
