@@ -1,6 +1,7 @@
 package com.contest.common.exception;
 
 import com.contest.common.dto.Result;
+import com.contest.common.enums.ResultCodeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,7 +24,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e, HttpServletResponse response) {
-        response.setStatus(e.getCode() >= 100 && e.getCode() < 600 ? e.getCode() : 400);
+        int httpStatus = e.getCode() >= 100 && e.getCode() < 600 ? e.getCode() : HttpStatus.BAD_REQUEST.value();
+        response.setStatus(httpStatus);
         return Result.error(e.getCode(), e.getMessage());
     }
 
@@ -32,7 +34,7 @@ public class GlobalExceptionHandler {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-        return Result.error(400, msg);
+        return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), msg);
     }
 
     @ExceptionHandler(BindException.class)
@@ -40,31 +42,31 @@ public class GlobalExceptionHandler {
         String msg = e.getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-        return Result.error(400, msg);
+        return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), msg);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public Result<Void> handleMissingHeader(MissingRequestHeaderException e, HttpServletResponse response) {
-        response.setStatus(401);
-        return Result.error(401, "未登录");
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        return Result.error(ResultCodeEnum.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public Result<Void> handleAccessDenied(AccessDeniedException e, HttpServletResponse response) {
-        response.setStatus(403);
-        return Result.error(403, "无权限");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        return Result.error(ResultCodeEnum.FORBIDDEN);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Result<Void> handleDataIntegrityViolation(DataIntegrityViolationException e) {
         log.warn("Data integrity violation", e);
-        return Result.error(400, "操作冲突，请刷新后重试");
+        return Result.error(ResultCodeEnum.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e, HttpServletResponse response) {
         log.error("Unhandled exception", e);
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return Result.error(500, "服务器内部错误");
+        return Result.error(ResultCodeEnum.SERVER_ERROR);
     }
 }

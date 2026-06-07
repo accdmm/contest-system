@@ -1,5 +1,7 @@
 package com.contest.common.dto;
 
+import com.contest.common.enums.ResultCodeEnum;
+
 public class Result<T> {
 
     private int code;
@@ -14,12 +16,22 @@ public class Result<T> {
         this.data = data;
     }
 
+    private Result(ResultCodeEnum resultCodeEnum, T data) {
+        this.code = resultCodeEnum.getCode();
+        this.message = resultCodeEnum.getMessage();
+        this.data = data;
+    }
+
     public static <T> Result<T> success(T data) {
-        return new Result<>(200, "success", data);
+        return new Result<>(ResultCodeEnum.SUCCESS, data);
     }
 
     public static <T> Result<T> success() {
-        return new Result<>(200, "success", null);
+        return new Result<>(ResultCodeEnum.SUCCESS, null);
+    }
+
+    public static <T> Result<T> error(ResultCodeEnum resultCodeEnum) {
+        return new Result<>(resultCodeEnum, null);
     }
 
     public static <T> Result<T> error(int code, String message) {
@@ -27,7 +39,7 @@ public class Result<T> {
     }
 
     public static <T> Result<T> error(String message) {
-        return new Result<>(400, message, null);
+        return new Result<>(ResultCodeEnum.FAIL.getCode(), message, null);
     }
 
     public int getCode() { return code; }

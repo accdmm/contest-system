@@ -6,6 +6,7 @@ import com.contest.ai.entity.ChatEventVO;
 import com.contest.ai.entity.ChatRequest;
 import com.contest.ai.service.AiChatService;
 import com.contest.common.dto.Result;
+import com.contest.common.enums.ResultCodeEnum;
 import com.contest.common.security.SecurityUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,7 @@ public class AiChatController {
     public Result<List<AiConversation>> listConversations() {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            return Result.error(401, "未登录");
+            return Result.error(ResultCodeEnum.UNAUTHORIZED);
         }
         return Result.success(aiChatService.listConversations(userId));
     }
@@ -54,7 +55,7 @@ public class AiChatController {
     public Result<List<AiMessage>> listMessages(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            return Result.error(401, "未登录");
+            return Result.error(ResultCodeEnum.UNAUTHORIZED);
         }
         return Result.success(aiChatService.listMessages(id, userId));
     }
@@ -64,7 +65,7 @@ public class AiChatController {
     public Result<Void> deleteConversation(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            return Result.error(401, "未登录");
+            return Result.error(ResultCodeEnum.UNAUTHORIZED);
         }
         aiChatService.deleteConversation(id, userId);
         return Result.success();
@@ -75,7 +76,7 @@ public class AiChatController {
     public Result<Void> deleteConversations(@RequestBody List<Long> ids) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            return Result.error(401, "未登录");
+            return Result.error(ResultCodeEnum.UNAUTHORIZED);
         }
         aiChatService.deleteConversations(ids, userId);
         return Result.success();
