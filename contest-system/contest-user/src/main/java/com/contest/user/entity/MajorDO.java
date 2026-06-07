@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("major")
-public class Major {
+public class MajorDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;

@@ -1,6 +1,6 @@
 package com.contest.admin.controller;
 
-import com.contest.admin.entity.Permission;
+import com.contest.admin.entity.PermissionDO;
 import com.contest.admin.security.PermissionService;
 import com.contest.common.dto.Result;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +21,7 @@ public class PermissionController {
 
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('user:list')")
-    public Result<List<Permission>> list() {
+    public Result<List<PermissionDO>> list() {
         return Result.success(permissionService.getAllPermissions());
     }
 
@@ -31,7 +31,7 @@ public class PermissionController {
         return Result.success(permissionService.getPermissionIdsByRole(role));
     }
 
-    @PutMapping("/role/{role}")
+    @PostMapping("/role/{role}")
     @PreAuthorize("hasAuthority('user:list')")
     public Result<Void> saveRolePermissions(@PathVariable Integer role, @RequestBody Map<String, List<Integer>> body) {
         permissionService.saveRolePermissions(role, body.get("permissionIds"));
@@ -44,7 +44,7 @@ public class PermissionController {
         return Result.success(permissionService.getPermissionIdsByUser(userId));
     }
 
-    @PutMapping("/user/{userId}")
+    @PostMapping("/user/{userId}")
     @PreAuthorize("hasAuthority('permission:assign')")
     public Result<Void> saveUserPermissions(@PathVariable Long userId, @RequestBody Map<String, List<Integer>> body) {
         permissionService.saveUserPermissions(userId, body.get("permissionIds"));

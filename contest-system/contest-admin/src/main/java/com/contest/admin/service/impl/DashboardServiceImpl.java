@@ -2,14 +2,14 @@ package com.contest.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.contest.admin.service.DashboardService;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 import com.contest.competition.mapper.ContestMapper;
 import com.contest.competition.service.ContestService;
-import com.contest.register.entity.Registration;
+import com.contest.register.entity.RegistrationDO;
 import com.contest.register.mapper.RegistrationMapper;
 import com.contest.register.service.RegistrationService;
 import com.contest.team.service.TeamService;
-import com.contest.user.entity.User;
+import com.contest.user.entity.UserDO;
 import com.contest.user.mapper.UserMapper;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
@@ -55,7 +55,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 竞赛类别分布（饼图） */
     public List<Map<String, Object>> getContestCategoryDistribution() {
-        QueryWrapper<Contest> wrapper = new QueryWrapper<>();
+        QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("category, COUNT(*) as count")
                .isNotNull("category")
                .groupBy("category");
@@ -64,7 +64,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 竞赛级别分布（柱状图） */
     public List<Map<String, Object>> getContestLevelDistribution() {
-        QueryWrapper<Contest> wrapper = new QueryWrapper<>();
+        QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("level, COUNT(*) as count")
                .isNotNull("level")
                .groupBy("level");
@@ -73,7 +73,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 报名趋势（折线图） */
     public List<Map<String, Object>> getRegistrationTrend(int days) {
-        QueryWrapper<Registration> wrapper = new QueryWrapper<>();
+        QueryWrapper<RegistrationDO> wrapper = new QueryWrapper<>();
         wrapper.select("DATE(create_time) as date, COUNT(*) as count")
                .ge("create_time", LocalDateTime.now().minusDays(days))
                .groupBy("DATE(create_time)")
@@ -83,7 +83,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 报名状态分布（环图） */
     public List<Map<String, Object>> getRegistrationStatusDistribution() {
-        QueryWrapper<Registration> wrapper = new QueryWrapper<>();
+        QueryWrapper<RegistrationDO> wrapper = new QueryWrapper<>();
         wrapper.select("status, COUNT(*) as count")
                .groupBy("status");
         return registrationMapper.selectMaps(wrapper);
@@ -91,7 +91,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 用户增长趋势（折线图） */
     public List<Map<String, Object>> getUserGrowth(int days) {
-        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        QueryWrapper<UserDO> wrapper = new QueryWrapper<>();
         wrapper.select("DATE(create_time) as date, COUNT(*) as count")
                .ge("create_time", LocalDateTime.now().minusDays(days))
                .groupBy("DATE(create_time)")
@@ -101,7 +101,7 @@ public class DashboardServiceImpl implements DashboardService {
 
     /** 热门竞赛 Top N（横向柱状图） */
     public List<Map<String, Object>> getTopContests(int limit) {
-        QueryWrapper<Contest> wrapper = new QueryWrapper<>();
+        QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("id, name, current_count")
                .orderByDesc("current_count")
                .last("LIMIT " + limit);

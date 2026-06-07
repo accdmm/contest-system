@@ -3,7 +3,7 @@ package com.contest.competition.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 import com.contest.competition.param.ContestCreateParam;
 import com.contest.competition.param.ContestUpdateParam;
 import com.contest.competition.service.ContestService;
@@ -28,8 +28,8 @@ public class ContestController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('contest:create')")
-    public Result<Contest> create(@RequestBody @Valid ContestCreateParam param) {
-        Contest contest = new Contest();
+    public Result<ContestDO> create(@RequestBody @Valid ContestCreateParam param) {
+        ContestDO contest = new ContestDO();
         contest.setName(param.getName());
         contest.setCategory(param.getCategory());
         contest.setLevel(param.getLevel());
@@ -51,10 +51,10 @@ public class ContestController {
         return Result.success(contestService.createContest(contest));
     }
 
-    @PutMapping
+    @PostMapping
     @PreAuthorize("hasAuthority('contest:update')")
-    public Result<Contest> update(@RequestBody @Valid ContestUpdateParam param) {
-        Contest contest = new Contest();
+    public Result<ContestDO> update(@RequestBody @Valid ContestUpdateParam param) {
+        ContestDO contest = new ContestDO();
         contest.setId(param.getId());
         contest.setName(param.getName());
         contest.setCategory(param.getCategory());
@@ -74,7 +74,7 @@ public class ContestController {
         return Result.success(contestService.updateContest(contest));
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/{id}")
     @PreAuthorize("hasAuthority('contest:delete')")
     public Result<Void> delete(@PathVariable Long id) {
         log.info("删除竞赛: {}", id);
@@ -82,7 +82,7 @@ public class ContestController {
         return Result.success();
     }
 
-    @PutMapping("/{id}/publish")
+    @PostMapping("/{id}/publish")
     @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> publish(@PathVariable Long id) {
         log.info("上架竞赛: {}", id);
@@ -90,7 +90,7 @@ public class ContestController {
         return Result.success();
     }
 
-    @PutMapping("/{id}/unpublish")
+    @PostMapping("/{id}/unpublish")
     @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> unpublish(@PathVariable Long id) {
         log.info("下架竞赛: {}", id);
@@ -99,8 +99,8 @@ public class ContestController {
     }
 
     @GetMapping("/{id}")
-    public Result<Contest> getById(@PathVariable Long id) {
-        Contest contest = contestService.getById(id);
+    public Result<ContestDO> getById(@PathVariable Long id) {
+        ContestDO contest = contestService.getById(id);
         if (contest == null) {
             return Result.error("竞赛不存在");
         }
@@ -108,7 +108,7 @@ public class ContestController {
     }
 
     @GetMapping("/page")
-    public Result<IPage<Contest>> page(@RequestParam(defaultValue = "1") Integer page,
+    public Result<IPage<ContestDO>> page(@RequestParam(defaultValue = "1") Integer page,
                                        @RequestParam(defaultValue = "10") Integer size,
                                        @RequestParam(required = false) String keyword,
                                        @RequestParam(required = false) String category,
@@ -119,12 +119,12 @@ public class ContestController {
     }
 
     @GetMapping("/hot")
-    public Result<List<Contest>> hot(@RequestParam(defaultValue = "5") int limit) {
+    public Result<List<ContestDO>> hot(@RequestParam(defaultValue = "5") int limit) {
         return Result.success(contestService.listHotContests(limit));
     }
 
     @GetMapping("/latest")
-    public Result<List<Contest>> latest(@RequestParam(defaultValue = "5") int limit) {
+    public Result<List<ContestDO>> latest(@RequestParam(defaultValue = "5") int limit) {
         return Result.success(contestService.listLatestContests(limit));
     }
 }

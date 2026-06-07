@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.common.service.TeamValidator;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
-import com.contest.register.entity.Registration;
+import com.contest.register.entity.RegistrationDO;
 import com.contest.register.mapper.RegistrationMapper;
 import com.contest.register.service.AdminNotifyService;
-import com.contest.user.entity.User;
+import com.contest.user.entity.UserDO;
 import com.contest.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,8 +41,8 @@ class RegistrationServiceImplTest {
         ReflectionTestUtils.setField(registrationService, "baseMapper", registrationMapper);
     }
 
-    private Contest makeOpenContest(int contestType) {
-        Contest c = new Contest();
+    private ContestDO makeOpenContest(int contestType) {
+        ContestDO c = new ContestDO();
         c.setId(1L);
         c.setName("测试竞赛");
         c.setStatus(CommonConstants.CONTEST_OPEN);
@@ -61,7 +61,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerPersonal_shouldThrowWhenContestNotOpen() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         c.setStatus(CommonConstants.CONTEST_DRAFT);
         when(contestService.getById(1L)).thenReturn(c);
 
@@ -77,7 +77,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerPersonal_shouldThrowWhenAlreadyRegistered() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         when(contestService.getById(1L)).thenReturn(c);
         when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
@@ -86,7 +86,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerPersonal_shouldThrowWhenMaxParticipantsReached() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         c.setMaxParticipants(1);
         when(contestService.getById(1L)).thenReturn(c);
         when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
@@ -96,15 +96,15 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerPersonal_shouldSucceed() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         when(contestService.getById(1L)).thenReturn(c);
         when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        User user = new User();
+        UserDO user = new UserDO();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
-        when(registrationMapper.insert(any(Registration.class))).thenReturn(1);
+        when(registrationMapper.insert(any(RegistrationDO.class))).thenReturn(1);
 
-        Registration result = registrationService.registerPersonal(1L, 1L, "参赛");
+        RegistrationDO result = registrationService.registerPersonal(1L, 1L, "参赛");
 
         assertNotNull(result);
         assertEquals(1L, result.getContestId());
@@ -116,7 +116,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerTeam_shouldThrowWhenContestNotOpen() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_TEAM);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
         c.setStatus(CommonConstants.CONTEST_CLOSED);
         when(contestService.getById(1L)).thenReturn(c);
 
@@ -132,15 +132,15 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerTeam_shouldSucceed() {
-        Contest c = makeOpenContest(CommonConstants.CONTEST_TEAM);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
         when(contestService.getById(1L)).thenReturn(c);
         when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        User user = new User();
+        UserDO user = new UserDO();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
-        when(registrationMapper.insert(any(Registration.class))).thenReturn(1);
+        when(registrationMapper.insert(any(RegistrationDO.class))).thenReturn(1);
 
-        Registration result = registrationService.registerTeam(1L, 1L, 1L);
+        RegistrationDO result = registrationService.registerTeam(1L, 1L, 1L);
 
         assertNotNull(result);
         assertEquals(CommonConstants.REG_TEAM, result.getRegType());
@@ -156,7 +156,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void cancelRegistration_shouldThrowWhenNotOwner() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
@@ -166,17 +166,17 @@ class RegistrationServiceImplTest {
 
     @Test
     void cancelRegistration_shouldNotTouchTeamStatus() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setStatus(CommonConstants.REG_APPROVED);
         reg.setContestId(1L);
         reg.setTeamId(1L);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
-        Contest c = makeOpenContest(CommonConstants.CONTEST_TEAM);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
         c.setCurrentCount(1);
         when(contestService.getById(1L)).thenReturn(c);
-        User user = new User();
+        UserDO user = new UserDO();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
 
@@ -190,15 +190,15 @@ class RegistrationServiceImplTest {
 
     @Test
     void cancelRegistration_shouldNotDecrementWhenWasPending() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setStatus(CommonConstants.REG_PENDING);
         reg.setContestId(1L);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         when(contestService.getById(1L)).thenReturn(c);
-        User user = new User();
+        UserDO user = new UserDO();
         user.setName("张三");
         when(userService.getById(1L)).thenReturn(user);
 
@@ -217,13 +217,13 @@ class RegistrationServiceImplTest {
 
     @Test
     void approveRegistration_shouldIncrementCount() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
         reg.setStatus(CommonConstants.REG_PENDING);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         c.setCurrentCount(5);
         when(contestService.getById(1L)).thenReturn(c);
 
@@ -237,13 +237,13 @@ class RegistrationServiceImplTest {
 
     @Test
     void approveRegistration_shouldHandleNullCurrentCount() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
         reg.setStatus(CommonConstants.REG_PENDING);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         c.setCurrentCount(null);
         when(contestService.getById(1L)).thenReturn(c);
 
@@ -264,7 +264,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void rejectRegistration_shouldSucceed() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
@@ -280,13 +280,13 @@ class RegistrationServiceImplTest {
 
     @Test
     void rejectRegistration_shouldDecrementCountWhenWasApproved() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
         reg.setStatus(CommonConstants.REG_APPROVED);
         when(registrationMapper.selectById(1L)).thenReturn(reg);
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         c.setCurrentCount(5);
         when(contestService.getById(1L)).thenReturn(c);
 
@@ -298,7 +298,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void rejectRegistration_shouldNotDecrementWhenWasPending() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
@@ -312,17 +312,17 @@ class RegistrationServiceImplTest {
 
     @Test
     void pageByUser_shouldReturnPagedResult() {
-        Registration reg = new Registration();
+        RegistrationDO reg = new RegistrationDO();
         reg.setId(1L);
         reg.setUserId(1L);
         reg.setContestId(1L);
         when(registrationMapper.selectPage(any(), any(LambdaQueryWrapper.class))).thenReturn(
-                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<Registration>() {{
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<RegistrationDO>() {{
                     setRecords(java.util.List.of(reg));
                     setTotal(1);
                 }}
         );
-        Contest c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
+        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
         when(contestService.listByIds(anyList())).thenReturn(java.util.List.of(c));
 
         var page = registrationService.pageByUser(1L, 1, 10);

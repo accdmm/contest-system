@@ -1,7 +1,7 @@
 package com.contest.team.controller;
 
-import com.contest.team.entity.Team;
-import com.contest.team.entity.TeamMember;
+import com.contest.team.entity.TeamDO;
+import com.contest.team.entity.TeamMemberDO;
 import com.contest.team.service.TeamService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class TeamControllerTest {
 
     @Test
     void create_shouldReturnTeam() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         team.setTeamName("测试团队");
         lenient().when(teamService.createTeam(any(), anyString(), any())).thenReturn(team);
@@ -59,7 +59,7 @@ class TeamControllerTest {
 
     @Test
     void getByLeader_shouldReturnTeams() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         team.setLeaderId(1L);
         lenient().when(teamService.getTeamsByLeader(any())).thenReturn(List.of(team));
@@ -71,7 +71,7 @@ class TeamControllerTest {
 
     @Test
     void getById_shouldReturnTeam() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         team.setTeamName("测试团队");
         when(teamService.getById(1L)).thenReturn(team);
@@ -113,7 +113,7 @@ class TeamControllerTest {
 
     @Test
     void join_shouldReturnTeam() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         lenient().when(teamService.joinByInviteCode(any(), anyString())).thenReturn(team);
 
@@ -177,7 +177,7 @@ class TeamControllerTest {
 
     @Test
     void members_shouldReturnList() throws Exception {
-        TeamMember member = new TeamMember();
+        TeamMemberDO member = new TeamMemberDO();
         member.setId(1L);
         member.setUserId(2L);
         when(teamService.listMembers(1L)).thenReturn(List.of(member));
@@ -189,7 +189,7 @@ class TeamControllerTest {
 
     @Test
     void pendingMembers_shouldReturnList() throws Exception {
-        TeamMember member = new TeamMember();
+        TeamMemberDO member = new TeamMemberDO();
         member.setId(1L);
         member.setStatus(0);
         when(teamService.listPendingMembers(1L)).thenReturn(List.of(member));
@@ -217,7 +217,7 @@ class TeamControllerTest {
 
     @Test
     void userTeams_shouldReturnList() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         when(teamService.listUserTeams(1L)).thenReturn(List.of(team));
 
@@ -228,10 +228,10 @@ class TeamControllerTest {
 
     @Test
     void page_shouldReturnPagedResult() throws Exception {
-        Team team = new Team();
+        TeamDO team = new TeamDO();
         team.setId(1L);
         when(teamService.pageTeams(any(), anyInt(), anyInt())).thenReturn(
-                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<Team>() {{
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<TeamDO>() {{
                     setRecords(List.of(team));
                     setTotal(1);
                 }}

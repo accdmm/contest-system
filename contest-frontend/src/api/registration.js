@@ -9,15 +9,15 @@ export function registerTeam(data) {
 }
 
 export function approveRegistration(id) {
-  return request.put(`/registration/${id}/approve`)
+  return request.post(`/registration/${id}/approve`)
 }
 
 export function rejectRegistration(id, reason) {
-  return request.put(`/registration/${id}/reject`, { reason })
+  return request.post(`/registration/${id}/reject`, { reason })
 }
 
 export function cancelRegistration(id, userId) {
-  return request.put(`/registration/${id}/cancel`, null, { params: { userId } })
+  return request.post(`/registration/${id}/cancel`, null, { params: { userId } })
 }
 
 export function getRegistrationById(id) {

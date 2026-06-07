@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("ai_message")
-public class AiMessage {
+public class AiMessageDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;

@@ -1,21 +1,21 @@
 package com.contest.admin.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 
-@TableName("user_permission")
-public class UserPermission {
+@TableName("role_permission")
+public class RolePermissionDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
-
-    private Long userId;
-
+    private Integer role;
     private Integer permissionId;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public Integer getRole() { return role; }
+    public void setRole(Integer role) { this.role = role; }
     public Integer getPermissionId() { return permissionId; }
     public void setPermissionId(Integer permissionId) { this.permissionId = permissionId; }
 }

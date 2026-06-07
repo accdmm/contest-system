@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 @TableName("permission")
-public class Permission {
+public class PermissionDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;

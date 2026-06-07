@@ -82,7 +82,7 @@ export function listConversations() {
 }
 
 export function deleteConversation(id) {
-  return request.delete(`/ai/conversations/${id}`)
+  return request.post(`/ai/conversations/${id}`)
 }
 
 export function getConversationMessages(id) {

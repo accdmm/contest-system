@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("contest")
-public class Contest {
+public class ContestDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;

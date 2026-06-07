@@ -2,16 +2,16 @@ package com.contest.user.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.user.entity.User;
+import com.contest.user.entity.UserDO;
 import java.util.List;
 
-public interface UserService extends IService<User> {
+public interface UserService extends IService<UserDO> {
 
-    User login(String username, String password);
+    UserDO login(String username, String password);
 
-    User register(User user, String rawPassword);
+    UserDO register(UserDO user, String rawPassword);
 
-    void updateProfile(Long userId, User user);
+    void updateProfile(Long userId, UserDO user);
 
     void changePassword(Long userId, String oldPassword, String newPassword);
 
@@ -19,9 +19,9 @@ public interface UserService extends IService<User> {
 
     void unfreezeUser(Long userId);
 
-    IPage<User> pageUsers(String keyword, Integer page, Integer size);
+    IPage<UserDO> pageUsers(String keyword, Integer page, Integer size);
 
-    List<User> listTeachers();
+    List<UserDO> listTeachers();
 
-    User adminCreateUser(User user, String rawPassword);
+    UserDO adminCreateUser(UserDO user, String rawPassword);
 }

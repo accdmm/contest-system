@@ -1,7 +1,7 @@
 package com.contest.ai.service;
 
-import com.contest.ai.entity.AiConversation;
-import com.contest.ai.entity.AiMessage;
+import com.contest.ai.entity.AiConversationDO;
+import com.contest.ai.entity.AiMessageDO;
 import com.contest.ai.dto.ChatEventVO;
 import com.contest.ai.dto.ChatRequest;
 import reactor.core.publisher.Flux;
@@ -15,10 +15,10 @@ public interface AiChatService {
     void stop(Long sessionId);
 
     /** 获取当前用户的所有会话列表，按更新时间倒序 */
-    List<AiConversation> listConversations(Long userId);
+    List<AiConversationDO> listConversations(Long userId);
 
     /** 获取指定会话的消息列表 */
-    List<AiMessage> listMessages(Long conversationId, Long userId);
+    List<AiMessageDO> listMessages(Long conversationId, Long userId);
 
     /** 删除会话及其所有消息（校验归属） */
     void deleteConversation(Long conversationId, Long userId);

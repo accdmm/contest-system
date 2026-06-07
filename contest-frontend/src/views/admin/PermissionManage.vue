@@ -120,7 +120,7 @@ async function loadRolePerms() {
 
 async function saveRole() {
   try {
-    await request.put(`/permission/role/${currentRole.value}`, { permissionIds: selectedPerms.value })
+    await request.post(`/permission/role/${currentRole.value}`, { permissionIds: selectedPerms.value })
     ElMessage.success('保存成功')
   } catch {
     ElMessage.error('保存失败')
@@ -151,7 +151,7 @@ async function editUserPerms(row) {
 
 async function saveUserPerms() {
   try {
-    await request.put(`/permission/user/${currentUser.value.id}`, { permissionIds: userSelectedPerms.value })
+    await request.post(`/permission/user/${currentUser.value.id}`, { permissionIds: userSelectedPerms.value })
     ElMessage.success('保存成功')
     permDialog.value = false
   } catch {

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 import com.contest.competition.mapper.ContestMapper;
 import com.contest.competition.service.ContestService;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> implements ContestService {
+public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> implements ContestService {
 
     @Override
-    public Contest createContest(Contest contest) {
+    public ContestDO createContest(ContestDO contest) {
         LocalDateTime now = LocalDateTime.now();
         if (contest.getRegisterStartTime() != null && contest.getRegisterStartTime().isBefore(now)) {
             throw new BusinessException("报名开始时间不能早于当前时间");
@@ -46,8 +46,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
 
     @Override
     @Transactional
-    public Contest updateContest(Contest contest) {
-        Contest existing = getById(contest.getId());
+    public ContestDO updateContest(ContestDO contest) {
+        ContestDO existing = getById(contest.getId());
         if (existing == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -71,7 +71,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
 
     @Override
     public void publishContest(Long id) {
-        Contest contest = getById(id);
+        ContestDO contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -81,7 +81,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
 
     @Override
     public void unpublishContest(Long id) {
-        Contest contest = getById(id);
+        ContestDO contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -95,7 +95,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional
     public void deleteContest(Long id) {
-        Contest contest = getById(id);
+        ContestDO contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -109,64 +109,64 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     }
 
     @Override
-    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy) {
+    public IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy) {
         return pageContests(page, size, keyword, category, status, null, sortBy);
     }
 
     @Override
-    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
-        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
+    public IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
+        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(Contest::getName, keyword);
+            wrapper.like(ContestDO::getName, keyword);
         }
         if (category != null && !category.isEmpty()) {
-            wrapper.eq(Contest::getCategory, category);
+            wrapper.eq(ContestDO::getCategory, category);
         }
         LocalDateTime now = LocalDateTime.now();
         if (status != null) {
             if (status == 0) {
-                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_DRAFT);
+                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_DRAFT);
             } else if (status == 1) {
-                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
-                        .le(Contest::getRegisterStartTime, now)
-                        .gt(Contest::getRegisterEndTime, now);
+                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(ContestDO::getRegisterStartTime, now)
+                        .gt(ContestDO::getRegisterEndTime, now);
             } else if (status == 2) {
-                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
-                        .le(Contest::getRegisterEndTime, now);
+                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(ContestDO::getRegisterEndTime, now);
             }
         } else {
             // 默认只展示报名未截止的上架竞赛，排除草稿和已过期的
-            wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
-                    .gt(Contest::getRegisterEndTime, now);
+            wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
+                    .gt(ContestDO::getRegisterEndTime, now);
         }
         if (contestType != null) {
-            wrapper.eq(Contest::getContestType, contestType);
+            wrapper.eq(ContestDO::getContestType, contestType);
         }
         if ("hot".equals(sortBy)) {
-            wrapper.orderByDesc(Contest::getCurrentCount);
+            wrapper.orderByDesc(ContestDO::getCurrentCount);
         } else if ("deadline".equals(sortBy)) {
-            wrapper.orderByAsc(Contest::getRegisterEndTime);
+            wrapper.orderByAsc(ContestDO::getRegisterEndTime);
         } else {
-            wrapper.orderByDesc(Contest::getUpdateTime);
+            wrapper.orderByDesc(ContestDO::getUpdateTime);
         }
         return page(new Page<>(page, size), wrapper);
     }
 
     @Override
-    public List<Contest> listHotContests(int limit) {
-        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
-               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
-        wrapper.orderByDesc(Contest::getCurrentCount);
+    public List<ContestDO> listHotContests(int limit) {
+        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
+        wrapper.orderByDesc(ContestDO::getCurrentCount);
         return page(new Page<>(1, limit), wrapper).getRecords();
     }
 
     @Override
-    public List<Contest> listLatestContests(int limit) {
-        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
-               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
-        wrapper.orderByDesc(Contest::getCreateTime);
+    public List<ContestDO> listLatestContests(int limit) {
+        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
+        wrapper.orderByDesc(ContestDO::getCreateTime);
         return page(new Page<>(1, limit), wrapper).getRecords();
     }
 }

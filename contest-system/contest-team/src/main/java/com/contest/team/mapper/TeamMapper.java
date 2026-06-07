@@ -1,7 +1,7 @@
 package com.contest.team.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.contest.team.entity.Team;
+import com.contest.team.entity.TeamDO;
 
-public interface TeamMapper extends BaseMapper<Team> {
+public interface TeamMapper extends BaseMapper<TeamDO> {
 }

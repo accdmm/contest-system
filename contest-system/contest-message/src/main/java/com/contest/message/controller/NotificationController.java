@@ -3,7 +3,7 @@ package com.contest.message.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.dto.Result;
-import com.contest.message.entity.Notification;
+import com.contest.message.entity.NotificationDO;
 import com.contest.message.param.NotificationSendParam;
 import com.contest.message.service.NotificationService;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class NotificationController {
 
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
-    public Result<IPage<Notification>> byUser(@PathVariable Long userId,
+    public Result<IPage<NotificationDO>> byUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
@@ -46,7 +46,7 @@ public class NotificationController {
         return Result.success(notificationService.countUnread(userId));
     }
 
-    @PutMapping("/{id}/read")
+    @PostMapping("/{id}/read")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> markRead(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
@@ -54,7 +54,7 @@ public class NotificationController {
         return Result.success();
     }
 
-    @PutMapping("/read-all/{userId}")
+    @PostMapping("/read-all/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> markAllRead(@PathVariable Long userId) {
         Long currentUserId = SecurityUtil.getCurrentUserId();

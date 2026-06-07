@@ -1,7 +1,7 @@
 package com.contest.user.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.contest.user.entity.Major;
+import com.contest.user.entity.MajorDO;
 
-public interface MajorMapper extends BaseMapper<Major> {
+public interface MajorMapper extends BaseMapper<MajorDO> {
 }

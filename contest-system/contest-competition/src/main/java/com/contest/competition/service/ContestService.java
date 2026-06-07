@@ -2,15 +2,15 @@ package com.contest.competition.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 
 import java.util.List;
 
-public interface ContestService extends IService<Contest> {
+public interface ContestService extends IService<ContestDO> {
 
-    Contest createContest(Contest contest);
+    ContestDO createContest(ContestDO contest);
 
-    Contest updateContest(Contest contest);
+    ContestDO updateContest(ContestDO contest);
 
     void publishContest(Long id);
 
@@ -18,11 +18,11 @@ public interface ContestService extends IService<Contest> {
 
     void deleteContest(Long id);
 
-    IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy);
+    IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy);
 
-    IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy);
+    IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy);
 
-    List<Contest> listHotContests(int limit);
+    List<ContestDO> listHotContests(int limit);
 
-    List<Contest> listLatestContests(int limit);
+    List<ContestDO> listLatestContests(int limit);
 }

@@ -13,19 +13,19 @@ export function getUserById(id) {
 }
 
 export function updateProfile(id, data) {
-  return request.put(`/user/${id}/profile`, data)
+  return request.post(`/user/${id}/profile`, data)
 }
 
 export function changePassword(id, data) {
-  return request.put(`/user/${id}/password`, data)
+  return request.post(`/user/${id}/password`, data)
 }
 
 export function freezeUser(id) {
-  return request.put(`/user/${id}/freeze`)
+  return request.post(`/user/${id}/freeze`)
 }
 
 export function unfreezeUser(id) {
-  return request.put(`/user/${id}/unfreeze`)
+  return request.post(`/user/${id}/unfreeze`)
 }
 
 export function pageUsers(params) {

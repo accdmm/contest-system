@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("cms_content")
-public class CmsContent {
+public class CmsContentDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;

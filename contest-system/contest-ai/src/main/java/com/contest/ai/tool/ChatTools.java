@@ -1,14 +1,14 @@
 package com.contest.ai.tool;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.contest.competition.entity.Contest;
+import com.contest.competition.entity.ContestDO;
 import com.contest.competition.service.ContestService;
 import com.contest.common.constant.CommonConstants;
-import com.contest.register.entity.Registration;
+import com.contest.register.entity.RegistrationDO;
 import com.contest.register.service.RegistrationService;
-import com.contest.team.entity.Team;
+import com.contest.team.entity.TeamDO;
 import com.contest.team.service.TeamService;
-import com.contest.user.entity.User;
+import com.contest.user.entity.UserDO;
 import com.contest.user.service.UserService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
@@ -48,8 +48,8 @@ public class ChatTools {
         try {
             int p = page != null && page > 0 ? page : 1;
             int s = size != null && size > 0 ? size : 10;
-            IPage<Contest> result = contestService.pageContests(p, s, keyword, category, 1, null);
-            List<Contest> records = result.getRecords();
+            IPage<ContestDO> result = contestService.pageContests(p, s, keyword, category, 1, null);
+            List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "当前没有找到符合条件的竞赛";
             }
@@ -66,7 +66,7 @@ public class ChatTools {
     @Tool(description = "查询指定竞赛的详细信息")
     public String getContestDetail(Long contestId) {
         try {
-            Contest c = contestService.getById(contestId);
+            ContestDO c = contestService.getById(contestId);
             if (c == null) {
                 return "竞赛不存在";
             }
@@ -93,8 +93,8 @@ public class ChatTools {
             return "无法获取当前用户信息";
         }
         try {
-            IPage<Registration> result = registrationService.pageByUser(userId, 1, 20);
-            List<Registration> records = result.getRecords();
+            IPage<RegistrationDO> result = registrationService.pageByUser(userId, 1, 20);
+            List<RegistrationDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "你还没有报名任何竞赛";
             }
@@ -127,7 +127,7 @@ public class ChatTools {
             return "无法获取当前用户信息，请先登录";
         }
         try {
-            User user = userService.getById(userId);
+            UserDO user = userService.getById(userId);
             if (user == null) {
                 return "用户不存在";
             }
@@ -148,12 +148,12 @@ public class ChatTools {
     @Tool(description = "【推荐】按竞赛名称精确搜索某个竞赛并查看详细信息，不需要事先知道竞赛ID。查找特定竞赛用此工具而非queryContests")
     public String searchContestDetail(String contestName) {
         try {
-            IPage<Contest> result = contestService.pageContests(1, 5, contestName, null, 1, null);
-            List<Contest> records = result.getRecords();
+            IPage<ContestDO> result = contestService.pageContests(1, 5, contestName, null, 1, null);
+            List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛";
             }
-            Contest c = records.get(0);
+            ContestDO c = records.get(0);
             return String.format(
                 "【%s】\n竞赛ID: %s\n分类: %s\n级别: %s\n主办方: %s\n竞赛时间: %s\n报名时间: %s ~ %s\n地点: %s\n类型: %s\n已报名: %d人\n简介: %s",
                 c.getName(), c.getId(), c.getCategory(), c.getLevel(), c.getOrganizer(),
@@ -177,23 +177,23 @@ public class ChatTools {
             return "无法获取当前用户信息";
         }
         try {
-            List<Team> teams = teamService.listUserTeams(userId);
+            List<TeamDO> teams = teamService.listUserTeams(userId);
             if (teams.isEmpty()) {
                 return "你还没有创建或加入任何团队";
             }
-            List<Long> teamIds = teams.stream().map(Team::getId).collect(Collectors.toList());
-            List<Registration> teamRegs = registrationService.lambdaQuery()
-                .in(Registration::getTeamId, teamIds)
+            List<Long> teamIds = teams.stream().map(TeamDO::getId).collect(Collectors.toList());
+            List<RegistrationDO> teamRegs = registrationService.lambdaQuery()
+                .in(RegistrationDO::getTeamId, teamIds)
                 .list();
             Map<Long, Long> teamContestMap = teamRegs.stream()
                 .filter(r -> r.getTeamId() != null && r.getContestId() != null)
-                .collect(Collectors.toMap(Registration::getTeamId, Registration::getContestId, (a, b) -> a));
+                .collect(Collectors.toMap(RegistrationDO::getTeamId, RegistrationDO::getContestId, (a, b) -> a));
             List<Long> contestIds = teamContestMap.values().stream().distinct().collect(Collectors.toList());
             Map<Long, String> contestNameMap = java.util.Collections.emptyMap();
             if (!contestIds.isEmpty()) {
-                List<Contest> contests = contestService.listByIds(contestIds);
+                List<ContestDO> contests = contestService.listByIds(contestIds);
                 contestNameMap = contests.stream()
-                    .collect(Collectors.toMap(Contest::getId, Contest::getName));
+                    .collect(Collectors.toMap(ContestDO::getId, ContestDO::getName));
             }
             Map<Long, String> finalContestNameMap = contestNameMap;
             return teams.stream()
@@ -225,12 +225,12 @@ public class ChatTools {
             return "无法获取当前用户信息，请先登录";
         }
         try {
-            IPage<Contest> result = contestService.pageContests(1, 10, contestName, null, 1, null);
-            List<Contest> records = result.getRecords();
+            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, 1, null);
+            List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛，请确认名称是否正确";
             }
-            Contest contest = records.get(0);
+            ContestDO contest = records.get(0);
             if (contest.getContestType() == CommonConstants.CONTEST_TEAM) {
                 return "「" + contest.getName() + "」为团队赛，不支持个人报名。请先调用 createTeamForContest 创建团队，然后由队长提交审核。";
             }
@@ -259,17 +259,17 @@ public class ChatTools {
             return "请提供团队名称，例如你想创建的团队叫什么名字？";
         }
         try {
-            IPage<Contest> result = contestService.pageContests(1, 10, contestName, null, 1, null);
-            List<Contest> records = result.getRecords();
+            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, 1, null);
+            List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛";
             }
-            Contest contest = records.get(0);
+            ContestDO contest = records.get(0);
             if (contest.getContestType() == CommonConstants.CONTEST_PERSONAL) {
                 return "「" + contest.getName() + "」为个人赛，不需要创建团队，请直接使用 registerForContest 报名";
             }
             try {
-                com.contest.team.entity.Team team = teamService.createTeam(userId, teamName, null);
+                com.contest.team.entity.TeamDO team = teamService.createTeam(userId, teamName, null);
                 return "团队创建成功！\n团队名称: " + team.getTeamName()
                     + "\n团队编号: " + team.getTeamNo()
                     + "\n竞赛: " + contest.getName()

@@ -2,18 +2,18 @@ package com.contest.team.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.team.entity.Team;
-import com.contest.team.entity.TeamMember;
+import com.contest.team.entity.TeamDO;
+import com.contest.team.entity.TeamMemberDO;
 
 import java.util.List;
 
-public interface TeamService extends IService<Team> {
+public interface TeamService extends IService<TeamDO> {
 
-    Team createTeam(Long userId, String teamName, Long teacherId);
+    TeamDO createTeam(Long userId, String teamName, Long teacherId);
 
     String generateInviteCode(Long teamId, Long userId);
 
-    Team joinByInviteCode(Long userId, String inviteCode);
+    TeamDO joinByInviteCode(Long userId, String inviteCode);
 
     void approveMember(Long teamId, Long userId, Long memberId);
 
@@ -27,21 +27,21 @@ public interface TeamService extends IService<Team> {
 
     void submitForReview(Long teamId, Long userId);
 
-    List<TeamMember> listMembers(Long teamId);
+    List<TeamMemberDO> listMembers(Long teamId);
 
-    List<TeamMember> listPendingMembers(Long teamId);
+    List<TeamMemberDO> listPendingMembers(Long teamId);
 
-    List<Team> getTeamsByLeader(Long userId);
+    List<TeamDO> getTeamsByLeader(Long userId);
 
-    IPage<Team> pageTeams(Integer status, Integer page, Integer size);
+    IPage<TeamDO> pageTeams(Integer status, Integer page, Integer size);
 
     void adminApproveTeam(Long teamId);
 
     void adminRejectTeam(Long teamId, String reason);
 
-    List<Team> listUserTeams(Long userId);
+    List<TeamDO> listUserTeams(Long userId);
 
     void setTeacher(Long teamId, Long teacherId, Long userId);
 
-    List<Team> getTeamsByTeacher(Long teacherId);
+    List<TeamDO> getTeamsByTeacher(Long teacherId);
 }

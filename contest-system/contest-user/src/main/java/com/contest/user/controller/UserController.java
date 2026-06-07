@@ -8,9 +8,9 @@ import com.contest.user.param.LoginRequest;
 import com.contest.user.param.RegisterRequest;
 import com.contest.user.param.AdminCreateUserRequest;
 import com.contest.user.param.UserProfileParam;
-import com.contest.user.entity.College;
-import com.contest.user.entity.Major;
-import com.contest.user.entity.User;
+import com.contest.user.entity.CollegeDO;
+import com.contest.user.entity.MajorDO;
+import com.contest.user.entity.UserDO;
 import com.contest.user.service.CollegeService;
 import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
@@ -46,7 +46,7 @@ public class UserController {
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody @Valid LoginRequest req) {
-        User user = userService.login(req.getUsername(), req.getPassword());
+        UserDO user = userService.login(req.getUsername(), req.getPassword());
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         user.setPassword(null);
         Map<String, Object> data = new HashMap<>();
@@ -57,7 +57,7 @@ public class UserController {
 
     @PostMapping("/register")
     public Result<Map<String, Object>> register(@RequestBody @Valid RegisterRequest req) {
-        User user = new User();
+        UserDO user = new UserDO();
         user.setUsername(req.getUsername());
         user.setName(req.getName());
         user.setEmail(req.getEmail());
@@ -65,7 +65,7 @@ public class UserController {
         user.setCollegeId(req.getCollegeId());
         user.setMajorId(req.getMajorId());
         log.info("新用户注册: username={}", req.getUsername());
-        User saved = userService.register(user, req.getPassword());
+        UserDO saved = userService.register(user, req.getPassword());
         String token = jwtUtil.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         saved.setPassword(null);
         Map<String, Object> data = new HashMap<>();
@@ -76,14 +76,14 @@ public class UserController {
 
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('user:create')")
-    public Result<User> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
+    public Result<UserDO> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean callerIsAdmin = auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         if (req.getRole() != null && req.getRole() == 1 && !callerIsAdmin) {
             return Result.error("仅管理员可创建管理员账号");
         }
-        User user = new User();
+        UserDO user = new UserDO();
         user.setUsername(req.getUsername());
         user.setName(req.getName());
         user.setEmail(req.getEmail());
@@ -91,30 +91,30 @@ public class UserController {
         user.setCollegeId(req.getCollegeId());
         user.setMajorId(req.getMajorId());
         user.setRole(req.getRole());
-        User saved = userService.adminCreateUser(user, req.getPassword());
+        UserDO saved = userService.adminCreateUser(user, req.getPassword());
         saved.setPassword(null);
         return Result.success(saved);
     }
 
     @GetMapping("/colleges")
-    public Result<List<College>> listColleges() {
+    public Result<List<CollegeDO>> listColleges() {
         return Result.success(collegeService.list());
     }
 
     @GetMapping("/majors")
-    public Result<List<Major>> listMajors(@RequestParam Integer collegeId) {
+    public Result<List<MajorDO>> listMajors(@RequestParam Integer collegeId) {
         return Result.success(majorService.getByCollegeId(collegeId));
     }
 
     @GetMapping("/teachers")
-    public Result<List<User>> listTeachers() {
+    public Result<List<UserDO>> listTeachers() {
         return Result.success(userService.listTeachers());
     }
 
     @GetMapping("/detail/{id}")
     @PreAuthorize("isAuthenticated()")
-    public Result<User> getById(@PathVariable Long id) {
-        User user = userService.getById(id);
+    public Result<UserDO> getById(@PathVariable Long id) {
+        UserDO user = userService.getById(id);
         if (user == null) {
             return Result.error("用户不存在");
         }
@@ -124,13 +124,13 @@ public class UserController {
 
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:list')")
-    public Result<IPage<User>> page(@RequestParam(required = false) String keyword,
+    public Result<IPage<UserDO>> page(@RequestParam(required = false) String keyword,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
         return Result.success(userService.pageUsers(keyword, page, size));
     }
 
-    @PutMapping("/{id}/profile")
+    @PostMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileParam param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
@@ -140,7 +140,7 @@ public class UserController {
         if (!currentUserId.equals(id) && !isAdmin) {
             return Result.error("无权修改其他用户的资料");
         }
-        User user = new User();
+        UserDO user = new UserDO();
         user.setName(param.getName());
         user.setEmail(param.getEmail());
         user.setPhone(param.getPhone());
@@ -152,7 +152,7 @@ public class UserController {
         return Result.success();
     }
 
-    @PutMapping("/{id}/password")
+    @PostMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
@@ -163,14 +163,14 @@ public class UserController {
         return Result.success();
     }
 
-    @PutMapping("/{id}/freeze")
+    @PostMapping("/{id}/freeze")
     @PreAuthorize("hasAuthority('user:freeze')")
     public Result<Void> freeze(@PathVariable Long id) {
         userService.freezeUser(id);
         return Result.success();
     }
 
-    @PutMapping("/{id}/unfreeze")
+    @PostMapping("/{id}/unfreeze")
     @PreAuthorize("hasAuthority('user:freeze')")
     public Result<Void> unfreeze(@PathVariable Long id) {
         userService.unfreezeUser(id);

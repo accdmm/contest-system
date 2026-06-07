@@ -1,17 +1,17 @@
 package com.contest.message.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.message.entity.CmsContent;
+import com.contest.message.entity.CmsContentDO;
 
 import java.util.List;
 
-public interface CmsContentService extends IService<CmsContent> {
+public interface CmsContentService extends IService<CmsContentDO> {
 
-    List<CmsContent> listBanners();
+    List<CmsContentDO> listBanners();
 
-    List<CmsContent> listAnnouncements(String position);
+    List<CmsContentDO> listAnnouncements(String position);
 
-    CmsContent createContent(CmsContent content);
+    CmsContentDO createContent(CmsContentDO content);
 
-    CmsContent updateContent(CmsContent content);
+    CmsContentDO updateContent(CmsContentDO content);
 }

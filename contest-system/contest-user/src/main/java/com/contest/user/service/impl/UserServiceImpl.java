@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.user.entity.College;
-import com.contest.user.entity.Major;
-import com.contest.user.entity.User;
+import com.contest.user.entity.CollegeDO;
+import com.contest.user.entity.MajorDO;
+import com.contest.user.entity.UserDO;
 import com.contest.user.mapper.CollegeMapper;
 import com.contest.user.mapper.MajorMapper;
 import com.contest.user.mapper.UserMapper;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
     private final CollegeMapper collegeMapper;
     private final MajorMapper majorMapper;
@@ -31,9 +31,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User login(String username, String password) {
-        User user = getOne(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, username));
+    public UserDO login(String username, String password) {
+        UserDO user = getOne(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getUsername, username));
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
         }
@@ -57,35 +57,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User register(User user, String rawPassword) {
+    public UserDO register(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
-        long count = count(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, user.getUsername()));
+        long count = count(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            long emailCount = count(new LambdaQueryWrapper<User>()
-                    .eq(User::getEmail, user.getEmail()));
+            long emailCount = count(new LambdaQueryWrapper<UserDO>()
+                    .eq(UserDO::getEmail, user.getEmail()));
             if (emailCount > 0) {
                 throw new BusinessException("邮箱已被其他用户使用");
             }
         }
         if (user.getPhone() != null && !user.getPhone().isBlank()) {
-            long phoneCount = count(new LambdaQueryWrapper<User>()
-                    .eq(User::getPhone, user.getPhone()));
+            long phoneCount = count(new LambdaQueryWrapper<UserDO>()
+                    .eq(UserDO::getPhone, user.getPhone()));
             if (phoneCount > 0) {
                 throw new BusinessException("手机号已被其他用户使用");
             }
         }
         if (user.getCollegeId() != null) {
-            College college = collegeMapper.selectById(user.getCollegeId());
+            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             }
         }
         if (user.getMajorId() != null) {
-            Major major = majorMapper.selectById(user.getMajorId());
+            MajorDO major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             }
@@ -98,35 +98,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User adminCreateUser(User user, String rawPassword) {
+    public UserDO adminCreateUser(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
-        long count = count(new LambdaQueryWrapper<User>()
-                .eq(User::getUsername, user.getUsername()));
+        long count = count(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            long emailCount = count(new LambdaQueryWrapper<User>()
-                    .eq(User::getEmail, user.getEmail()));
+            long emailCount = count(new LambdaQueryWrapper<UserDO>()
+                    .eq(UserDO::getEmail, user.getEmail()));
             if (emailCount > 0) {
                 throw new BusinessException("邮箱已被其他用户使用");
             }
         }
         if (user.getPhone() != null && !user.getPhone().isBlank()) {
-            long phoneCount = count(new LambdaQueryWrapper<User>()
-                    .eq(User::getPhone, user.getPhone()));
+            long phoneCount = count(new LambdaQueryWrapper<UserDO>()
+                    .eq(UserDO::getPhone, user.getPhone()));
             if (phoneCount > 0) {
                 throw new BusinessException("手机号已被其他用户使用");
             }
         }
         if (user.getCollegeId() != null) {
-            College college = collegeMapper.selectById(user.getCollegeId());
+            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             }
         }
         if (user.getMajorId() != null) {
-            Major major = majorMapper.selectById(user.getMajorId());
+            MajorDO major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             }
@@ -144,8 +144,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public void updateProfile(Long userId, User user) {
-        User existing = getById(userId);
+    public void updateProfile(Long userId, UserDO user) {
+        UserDO existing = getById(userId);
         if (existing == null) {
             throw new BusinessException("用户不存在");
         }
@@ -155,7 +155,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 同步冗余字段：collegeId → college（文字），仅当查找成功时才更新
         if (user.getCollegeId() != null) {
-            College college = collegeMapper.selectById(user.getCollegeId());
+            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             } else {
@@ -164,7 +164,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         if (user.getMajorId() != null) {
-            Major major = majorMapper.selectById(user.getMajorId());
+            MajorDO major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             } else {
@@ -180,7 +180,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void changePassword(Long userId, String oldPassword, String newPassword) {
-        User user = getById(userId);
+        UserDO user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -194,7 +194,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void freezeUser(Long userId) {
-        User user = getById(userId);
+        UserDO user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -204,7 +204,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void unfreezeUser(Long userId) {
-        User user = getById(userId);
+        UserDO user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -213,28 +213,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public IPage<User> pageUsers(String keyword, Integer page, Integer size) {
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+    public IPage<UserDO> pageUsers(String keyword, Integer page, Integer size) {
+        LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            wrapper.like(User::getUsername, keyword)
+            wrapper.like(UserDO::getUsername, keyword)
                    .or()
-                   .like(User::getName, keyword)
+                   .like(UserDO::getName, keyword)
                    .or()
-                   .like(User::getCollege, keyword)
+                   .like(UserDO::getCollege, keyword)
                    .or()
-                   .like(User::getMajor, keyword);
+                   .like(UserDO::getMajor, keyword);
         }
-        wrapper.orderByDesc(User::getCreateTime);
-        IPage<User> result = page(new Page<>(page, size), wrapper);
+        wrapper.orderByDesc(UserDO::getCreateTime);
+        IPage<UserDO> result = page(new Page<>(page, size), wrapper);
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
     }
 
     @Override
-    public List<User> listTeachers() {
-        List<User> teachers = list(new LambdaQueryWrapper<User>()
-                .eq(User::getRole, CommonConstants.ROLE_TEACHER)
-                .eq(User::getStatus, CommonConstants.STATUS_NORMAL));
+    public List<UserDO> listTeachers() {
+        List<UserDO> teachers = list(new LambdaQueryWrapper<UserDO>()
+                .eq(UserDO::getRole, CommonConstants.ROLE_TEACHER)
+                .eq(UserDO::getStatus, CommonConstants.STATUS_NORMAL));
         teachers.forEach(t -> t.setPassword(null));
         return teachers;
     }

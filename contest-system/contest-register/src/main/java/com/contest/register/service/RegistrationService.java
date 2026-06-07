@@ -2,13 +2,13 @@ package com.contest.register.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.register.entity.Registration;
+import com.contest.register.entity.RegistrationDO;
 
-public interface RegistrationService extends IService<Registration> {
+public interface RegistrationService extends IService<RegistrationDO> {
 
-    Registration registerPersonal(Long userId, Long contestId, String remark);
+    RegistrationDO registerPersonal(Long userId, Long contestId, String remark);
 
-    Registration registerTeam(Long userId, Long contestId, Long teamId);
+    RegistrationDO registerTeam(Long userId, Long contestId, Long teamId);
 
     void approveRegistration(Long id);
 
@@ -16,9 +16,9 @@ public interface RegistrationService extends IService<Registration> {
 
     void cancelRegistration(Long id, Long userId);
 
-    IPage<Registration> pageByUser(Long userId, Integer page, Integer size);
+    IPage<RegistrationDO> pageByUser(Long userId, Integer page, Integer size);
 
-    IPage<Registration> pageByContest(Long contestId, Integer page, Integer size, Integer status);
+    IPage<RegistrationDO> pageByContest(Long contestId, Integer page, Integer size, Integer status);
 
-    IPage<Registration> pageAll(Long contestId, Integer status, Integer page, Integer size);
+    IPage<RegistrationDO> pageAll(Long contestId, Integer status, Integer page, Integer size);
 }

@@ -1,7 +1,7 @@
 package com.contest.ai.controller;
 
-import com.contest.ai.entity.AiConversation;
-import com.contest.ai.entity.AiMessage;
+import com.contest.ai.entity.AiConversationDO;
+import com.contest.ai.entity.AiMessageDO;
 import com.contest.ai.dto.ChatEventVO;
 import com.contest.ai.dto.ChatRequest;
 import com.contest.ai.service.AiChatService;
@@ -42,7 +42,7 @@ public class AiChatController {
 
     @GetMapping("/conversations")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<AiConversation>> listConversations() {
+    public Result<List<AiConversationDO>> listConversations() {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
             return Result.error(ResultCodeEnum.UNAUTHORIZED);
@@ -52,7 +52,7 @@ public class AiChatController {
 
     @GetMapping("/conversations/{id}/messages")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<AiMessage>> listMessages(@PathVariable Long id) {
+    public Result<List<AiMessageDO>> listMessages(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
             return Result.error(ResultCodeEnum.UNAUTHORIZED);
@@ -60,7 +60,7 @@ public class AiChatController {
         return Result.success(aiChatService.listMessages(id, userId));
     }
 
-    @DeleteMapping("/conversations/{id}")
+    @PostMapping("/conversations/{id}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> deleteConversation(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();

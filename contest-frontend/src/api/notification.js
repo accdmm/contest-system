@@ -9,11 +9,11 @@ export function getUnreadCount(userId) {
 }
 
 export function markNotificationRead(id, userId) {
-  return request.put(`/notification/${id}/read`, null, { params: { userId } })
+  return request.post(`/notification/${id}/read`, null, { params: { userId } })
 }
 
 export function markAllNotificationsRead(userId) {
-  return request.put(`/notification/read-all/${userId}`)
+  return request.post(`/notification/read-all/${userId}`)
 }
 
 export function sendNotification(params) {
