@@ -26,7 +26,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** 竞赛服务实现，包含竞赛创建、修改、发布、下架、删除等核心业务逻辑 */
+/**
+ * 竞赛服务实现
+ *
+ * <p>包含竞赛创建、修改、发布、下架、删除等核心业务逻辑。
+ * 创建时校验时间顺序（报名开始 < 报名截止 < 竞赛时间），
+ * 下架时校验是否存在已通过报名。
+ */
 @Service
 public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> implements ContestService {
 
