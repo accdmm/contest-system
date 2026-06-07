@@ -36,6 +36,11 @@ public class TeamDO {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
+    @Override
+    public String toString() {
+        return "TeamDO{id=" + id + ", teamName='" + teamName + "', status=" + status + "}";
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getLeaderId() { return leaderId; }
