@@ -14,6 +14,8 @@ import com.contest.user.entity.User;
 import com.contest.user.service.CollegeService;
 import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +30,7 @@ import java.util.Map;
 @RequestMapping("/api/user")
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final CollegeService collegeService;
@@ -61,6 +64,7 @@ public class UserController {
         user.setPhone(req.getPhone());
         user.setCollegeId(req.getCollegeId());
         user.setMajorId(req.getMajorId());
+        log.info("新用户注册: username={}", req.getUsername());
         User saved = userService.register(user, req.getPassword());
         String token = jwtUtil.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         saved.setPassword(null);

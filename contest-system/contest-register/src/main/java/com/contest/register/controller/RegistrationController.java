@@ -6,6 +6,8 @@ import com.contest.common.dto.Result;
 import com.contest.register.entity.Registration;
 import com.contest.register.param.RegPersonalParam;
 import com.contest.register.param.RegTeamParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.contest.register.service.RegistrationService;
@@ -19,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/registration")
 public class RegistrationController {
 
+    private static final Logger log = LoggerFactory.getLogger(RegistrationController.class);
     private final RegistrationService registrationService;
 
     public RegistrationController(RegistrationService registrationService) {
@@ -29,6 +32,7 @@ public class RegistrationController {
     @PreAuthorize("isAuthenticated()")
     public Result<Registration> registerPersonal(@RequestBody @Valid RegPersonalParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
+        log.info("用户 {} 报名个人赛: contestId={}", userId, param.getContestId());
         return Result.success(registrationService.registerPersonal(userId, param.getContestId(), param.getRemark()));
     }
 
@@ -36,6 +40,7 @@ public class RegistrationController {
     @PreAuthorize("isAuthenticated()")
     public Result<Registration> registerTeam(@RequestBody @Valid RegTeamParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
+        log.info("用户 {} 报名团队赛: contestId={}, teamId={}", userId, param.getContestId(), param.getTeamId());
         return Result.success(registrationService.registerTeam(userId, param.getContestId(), param.getTeamId()));
     }
 

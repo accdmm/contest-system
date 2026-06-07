@@ -6,6 +6,8 @@ import com.contest.common.dto.Result;
 import com.contest.message.entity.Notification;
 import com.contest.message.param.NotificationSendParam;
 import com.contest.message.service.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/notification")
 public class NotificationController {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
     private final NotificationService notificationService;
 
     public NotificationController(NotificationService notificationService) {

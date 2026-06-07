@@ -7,6 +7,8 @@ import com.contest.competition.entity.Contest;
 import com.contest.competition.param.ContestCreateParam;
 import com.contest.competition.param.ContestUpdateParam;
 import com.contest.competition.service.ContestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import java.util.List;
 @RequestMapping("/api/contest")
 public class ContestController {
 
+    private static final Logger log = LoggerFactory.getLogger(ContestController.class);
     private final ContestService contestService;
 
     public ContestController(ContestService contestService) {
@@ -44,6 +47,7 @@ public class ContestController {
         contest.setMaxParticipants(param.getMaxParticipants());
         Long userId = SecurityUtil.getCurrentUserId();
         contest.setCreateBy(userId);
+        log.info("用户 {} 创建竞赛: {}", userId, param.getName());
         return Result.success(contestService.createContest(contest));
     }
 
@@ -73,6 +77,7 @@ public class ContestController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('contest:delete')")
     public Result<Void> delete(@PathVariable Long id) {
+        log.info("删除竞赛: {}", id);
         contestService.deleteContest(id);
         return Result.success();
     }
@@ -80,6 +85,7 @@ public class ContestController {
     @PutMapping("/{id}/publish")
     @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> publish(@PathVariable Long id) {
+        log.info("上架竞赛: {}", id);
         contestService.publishContest(id);
         return Result.success();
     }
@@ -87,6 +93,7 @@ public class ContestController {
     @PutMapping("/{id}/unpublish")
     @PreAuthorize("hasAuthority('contest:publish')")
     public Result<Void> unpublish(@PathVariable Long id) {
+        log.info("下架竞赛: {}", id);
         contestService.unpublishContest(id);
         return Result.success();
     }

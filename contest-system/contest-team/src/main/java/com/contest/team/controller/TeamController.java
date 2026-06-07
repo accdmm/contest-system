@@ -8,6 +8,8 @@ import com.contest.team.entity.TeamMember;
 import com.contest.team.param.TeamCreateParam;
 import com.contest.team.param.TeamJoinParam;
 import com.contest.team.service.TeamService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/team")
 public class TeamController {
 
+    private static final Logger log = LoggerFactory.getLogger(TeamController.class);
     private final TeamService teamService;
 
     public TeamController(TeamService teamService) {
@@ -29,6 +32,7 @@ public class TeamController {
     @PreAuthorize("isAuthenticated()")
     public Result<Team> create(@RequestBody @Valid TeamCreateParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
+        log.info("用户 {} 创建团队: {}", userId, param.getTeamName());
         return Result.success(teamService.createTeam(userId, param.getTeamName(), param.getTeacherId()));
     }
 
@@ -36,6 +40,7 @@ public class TeamController {
     @PreAuthorize("isAuthenticated()")
     public Result<String> generateInvite(@PathVariable Long teamId) {
         Long userId = SecurityUtil.getCurrentUserId();
+        log.info("用户 {} 生成团队 {} 邀请码", userId, teamId);
         return Result.success(teamService.generateInviteCode(teamId, userId));
     }
 
@@ -43,6 +48,7 @@ public class TeamController {
     @PreAuthorize("isAuthenticated()")
     public Result<Team> join(@RequestBody @Valid TeamJoinParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
+        log.info("用户 {} 通过邀请码加入团队", userId);
         return Result.success(teamService.joinByInviteCode(userId, param.getInviteCode()));
     }
 
