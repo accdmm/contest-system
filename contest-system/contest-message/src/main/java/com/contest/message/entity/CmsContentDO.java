@@ -3,28 +3,38 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 内容管理实体 */
 @TableName("cms_content")
 public class CmsContentDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 内容类型（轮播图/公告） */
     private Integer contentType;
 
+    /** 标题 */
     private String title;
 
+    /** 内容 */
     private String content;
 
+    /** 图片URL */
     private String imageUrl;
 
+    /** 链接URL */
     private String linkUrl;
 
+    /** 排序号 */
     private Integer sortOrder;
 
+    /** 展示位置 */
     private String position;
 
+    /** 状态（可见/隐藏） */
     private Integer status;
 
+    /** 发布时间 */
     private LocalDateTime publishTime;
 
     @TableField(fill = FieldFill.INSERT)

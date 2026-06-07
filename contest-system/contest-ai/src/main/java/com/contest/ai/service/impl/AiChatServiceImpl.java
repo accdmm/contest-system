@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/** AI对话服务实现：集成大模型API，支持SSE流式输出和工具调用 */
 @Service
 public class AiChatServiceImpl implements AiChatService {
 
@@ -52,6 +53,7 @@ public class AiChatServiceImpl implements AiChatService {
         this.chatTools = chatTools;
     }
 
+    /** 对话入口：获取或创建会话 → 保存用户消息 → 加载历史 → 调用AI流式生成 → 保存助手回复并更新标题 */
     @Override
     public Flux<ChatEventVO> chat(ChatRequest request, Long userId) {
         AiConversationDO conversation = getOrCreateConversation(request, userId);
@@ -102,6 +104,7 @@ public class AiChatServiceImpl implements AiChatService {
         generateStatus.remove(sessionId);
     }
 
+    /** 包装工具回调：为每个工具注入当前用户ID上下文 */
     private ToolCallback[] buildWrappedToolCallbacks(Long userId) {
         ToolCallback[] toolCallbacks = MethodToolCallbackProvider.builder()
                 .toolObjects(chatTools)
@@ -129,6 +132,7 @@ public class AiChatServiceImpl implements AiChatService {
         return wrapped;
     }
 
+    /** 加载指定会话的历史消息，按时间升序 */
     private List<Message> loadHistory(Long conversationId) {
         List<AiMessageDO> records = messageMapper.selectList(
                 new LambdaQueryWrapper<AiMessageDO>()
@@ -145,6 +149,7 @@ public class AiChatServiceImpl implements AiChatService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+    /** 获取已有会话或创建新会话：校验归属，更新访问时间 */
     private AiConversationDO getOrCreateConversation(ChatRequest request, Long userId) {
         if (request.getConversationId() != null) {
             AiConversationDO existing = conversationMapper.selectById(request.getConversationId());
@@ -161,6 +166,7 @@ public class AiChatServiceImpl implements AiChatService {
         return conversation;
     }
 
+    /** 保存用户消息 */
     private void saveUserMessage(Long conversationId, String content) {
         AiMessageDO msg = new AiMessageDO();
         msg.setConversationId(conversationId);
@@ -169,6 +175,7 @@ public class AiChatServiceImpl implements AiChatService {
         messageMapper.insert(msg);
     }
 
+    /** 保存助手回复消息 */
     private void saveAssistantMessage(Long conversationId, String content) {
         AiMessageDO msg = new AiMessageDO();
         msg.setConversationId(conversationId);
@@ -177,6 +184,7 @@ public class AiChatServiceImpl implements AiChatService {
         messageMapper.insert(msg);
     }
 
+    /** 首次对话时，根据用户提问自动生成会话标题（取前30字） */
     private void updateTitle(AiConversationDO conversation, String question, String response) {
         if (conversation.getTitle() == null && response.length() > 0) {
             String title = question.length() > 30 ? question.substring(0, 30) + "..." : question;

@@ -12,6 +12,9 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+/**
+ * JWT 工具类，用于生成、解析和校验 Token
+ */
 @Component
 public class JwtUtil {
 
@@ -27,6 +30,14 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 生成 JWT Token
+     *
+     * @param userId   用户 ID
+     * @param username 用户名
+     * @param role     角色
+     * @return JWT Token 字符串
+     */
     public String generateToken(Long userId, String username, Integer role) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expireDays * 24 * 3600 * 1000);
@@ -40,6 +51,12 @@ public class JwtUtil {
                 .compact();
     }
 
+    /**
+     * 解析 JWT Token
+     *
+     * @param token JWT Token
+     * @return Claims 载荷
+     */
     public Claims parseToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getKey())
@@ -56,6 +73,12 @@ public class JwtUtil {
         return parseToken(token).get("role", Integer.class);
     }
 
+    /**
+     * 校验 Token 是否有效
+     *
+     * @param token JWT Token
+     * @return true 有效，false 无效
+     */
     public boolean validateToken(String token) {
         try {
             parseToken(token);

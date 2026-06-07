@@ -5,8 +5,8 @@ import com.contest.ai.entity.AiMessageDO;
 import com.contest.ai.dto.ChatEventVO;
 import com.contest.ai.dto.ChatRequest;
 import com.contest.ai.service.AiChatService;
-import com.contest.common.dto.Result;
-import com.contest.common.enums.ResultCodeEnum;
+import com.contest.common.result.Result;
+import com.contest.common.result.ResultCodeEnum;
 import com.contest.common.security.SecurityUtil;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +14,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.List;
 
+/** AI智能咨询接口 */
 @RestController
 @RequestMapping("/api/ai")
 public class AiChatController {
@@ -24,6 +25,7 @@ public class AiChatController {
         this.aiChatService = aiChatService;
     }
 
+    /** SSE流式对话接口 */
     @PostMapping("/chat")
     @PreAuthorize("isAuthenticated()")
     public Flux<ChatEventVO> chat(@RequestBody ChatRequest request) {
@@ -34,12 +36,14 @@ public class AiChatController {
         return aiChatService.chat(request, userId);
     }
 
+    /** 停止AI生成 */
     @PostMapping("/stop/{sessionId}")
     @PreAuthorize("isAuthenticated()")
     public void stop(@PathVariable Long sessionId) {
         aiChatService.stop(sessionId);
     }
 
+    /** 获取当前用户会话列表 */
     @GetMapping("/conversations")
     @PreAuthorize("isAuthenticated()")
     public Result<List<AiConversationDO>> listConversations() {
@@ -50,6 +54,7 @@ public class AiChatController {
         return Result.success(aiChatService.listConversations(userId));
     }
 
+    /** 获取会话消息列表 */
     @GetMapping("/conversations/{id}/messages")
     @PreAuthorize("isAuthenticated()")
     public Result<List<AiMessageDO>> listMessages(@PathVariable Long id) {
@@ -60,6 +65,7 @@ public class AiChatController {
         return Result.success(aiChatService.listMessages(id, userId));
     }
 
+    /** 删除单个会话 */
     @PostMapping("/conversations/{id}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> deleteConversation(@PathVariable Long id) {
@@ -71,6 +77,7 @@ public class AiChatController {
         return Result.success();
     }
 
+    /** 批量删除会话 */
     @PostMapping("/conversations/batch-delete")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> deleteConversations(@RequestBody List<Long> ids) {

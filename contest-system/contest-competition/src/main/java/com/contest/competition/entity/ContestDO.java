@@ -3,6 +3,7 @@ package com.contest.competition.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 竞赛实体 */
 @TableName("contest")
 public class ContestDO {
 
@@ -40,6 +41,9 @@ public class ContestDO {
     private Integer maxParticipants;
 
     private Long createBy;
+
+    @TableField(exist = false)
+    private String creatorName;
 
     private Integer status;
 
@@ -90,6 +94,8 @@ public class ContestDO {
     public void setMaxParticipants(Integer maxParticipants) { this.maxParticipants = maxParticipants; }
     public Long getCreateBy() { return createBy; }
     public void setCreateBy(Long createBy) { this.createBy = createBy; }
+    public String getCreatorName() { return creatorName; }
+    public void setCreatorName(String creatorName) { this.creatorName = creatorName; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getCurrentCount() { return currentCount; }

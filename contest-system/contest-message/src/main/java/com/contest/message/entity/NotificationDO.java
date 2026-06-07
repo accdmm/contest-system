@@ -3,24 +3,32 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 通知实体 */
 @TableName("notification")
 public class NotificationDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 接收用户ID（0表示广播） */
     private Long userId;
 
+    /** 通知类型 */
     private Integer type;
 
+    /** 通知标题 */
     private String title;
 
+    /** 通知内容 */
     private String content;
 
+    /** 关联业务ID */
     private Long relatedId;
 
+    /** 关联业务类型 */
     private String relatedType;
 
+    /** 是否已读（0-未读，1-已读） */
     private Integer isRead;
 
     @TableField(fill = FieldFill.INSERT)

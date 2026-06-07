@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+/** 专业服务实现 */
 public class MajorServiceImpl extends ServiceImpl<MajorMapper, MajorDO> implements MajorService {
 
+    /** 根据学院ID查询专业列表 */
     @Override
     public List<MajorDO> getByCollegeId(Integer collegeId) {
         return list(new LambdaQueryWrapper<MajorDO>()

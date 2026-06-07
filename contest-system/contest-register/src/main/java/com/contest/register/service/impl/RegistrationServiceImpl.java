@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/** 报名服务实现，包含个人/团队报名、审核、取消及报名校验等核心业务逻辑 */
 @Service
 public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, RegistrationDO> implements RegistrationService {
 
@@ -82,6 +83,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
     }
 
+    /**
+     * 个人赛报名：校验竞赛开放状态和时间 → 校验人数上限 → 校验重复报名（同一竞赛不可重复报名）→
+     * 校验每人最多3个活跃报名 → 创建待审核记录 → 发送管理员通知
+     */
     @Override
     @Transactional
     public RegistrationDO registerPersonal(Long userId, Long contestId, String remark) {
@@ -118,6 +123,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return reg;
     }
 
+    /**
+     * 团队赛报名：验证团队有效性和队长身份 → 校验竞赛状态和时间 → 校验人数上限 →
+     * 校验重复报名（同一团队不可重复报名同一竞赛）→ 校验每人最多3个活跃报名 → 创建待审核记录 → 发送管理员通知
+     */
     @Override
     @Transactional
     public RegistrationDO registerTeam(Long userId, Long contestId, Long teamId) {
@@ -156,6 +165,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return reg;
     }
 
+    /**
+     * 审核通过报名：仅待审核状态可批准 → 检查人数上限 → 递增竞赛 currentCount →
+     * 状态流转为已通过 → 发送审核通过通知
+     */
     @Override
     @Transactional
     public void approveRegistration(Long id) {
@@ -180,6 +193,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 reg.getContestId(), "contest");
     }
 
+    /**
+     * 驳回报名：校验驳回原因长度 → 仅待审核或已通过状态可驳回 → 若之前是已通过状态则递减竞赛 currentCount →
+     * 状态流转为已驳回 → 发送驳回通知
+     */
     @Override
     @Transactional
     public void rejectRegistration(Long id, String reason) {

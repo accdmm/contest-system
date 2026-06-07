@@ -10,6 +10,7 @@ import com.contest.message.mapper.NotificationMapper;
 import com.contest.message.service.NotificationService;
 import org.springframework.stereotype.Service;
 
+/** 通知服务实现 */
 @Service
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, NotificationDO> implements NotificationService {
 

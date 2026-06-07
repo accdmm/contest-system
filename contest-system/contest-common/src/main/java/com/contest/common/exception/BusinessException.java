@@ -1,7 +1,10 @@
 package com.contest.common.exception;
 
-import com.contest.common.enums.ResultCodeEnum;
+import com.contest.common.result.ResultCodeEnum;
 
+/**
+ * 业务异常
+ */
 public class BusinessException extends RuntimeException {
 
     private int code;

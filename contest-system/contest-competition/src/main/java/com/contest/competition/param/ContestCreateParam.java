@@ -9,38 +9,52 @@ public class ContestCreateParam {
     @NotBlank(message = "竞赛名称不能为空")
     private String name;
 
+    /** 竞赛类别 */
     @NotBlank(message = "竞赛类别不能为空")
     private String category;
 
+    /** 竞赛级别 */
     @NotBlank(message = "竞赛级别不能为空")
     private String level;
 
+    /** 主办方 */
     private String organizer;
 
+    /** 竞赛时间 */
     @NotNull(message = "竞赛时间不能为空")
     private LocalDateTime contestTime;
 
+    /** 报名开始时间 */
     @NotNull(message = "报名开始时间不能为空")
     private LocalDateTime registerStartTime;
 
+    /** 报名结束时间 */
     @NotNull(message = "报名结束时间不能为空")
     private LocalDateTime registerEndTime;
 
+    /** 竞赛地点 */
     private String location;
 
+    /** 封面图片URL */
     private String coverImageUrl;
 
+    /** 竞赛描述 */
     private String description;
 
+    /** 附件URL（多个以逗号分隔） */
     private String attachmentUrls;
 
+    /** 竞赛类型：0-个人赛，1-团队赛，2-两者皆可 */
     @NotNull(message = "竞赛类型不能为空")
     private Integer contestType;
 
+    /** 团队最小人数 */
     private Integer teamMinSize;
 
+    /** 团队最大人数 */
     private Integer teamMaxSize;
 
+    /** 最大参与人数 */
     private Integer maxParticipants;
 
     public String getName() { return name; }

@@ -3,6 +3,7 @@ package com.contest.user.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 学院实体 */
 @TableName("college")
 public class CollegeDO {
 

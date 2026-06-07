@@ -1,5 +1,8 @@
-package com.contest.common.enums;
+package com.contest.common.result;
 
+/**
+ * 响应状态码枚举
+ */
 public enum ResultCodeEnum {
 
     SUCCESS(200, "成功"),

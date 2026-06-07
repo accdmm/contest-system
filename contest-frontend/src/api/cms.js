@@ -15,7 +15,7 @@ export function createCmsContent(data) {
 }
 
 export function updateCmsContent(data) {
-  return request.post('/cms', data)
+  return request.post('/cms/update', data)
 }
 
 export function deleteCmsContent(id) {

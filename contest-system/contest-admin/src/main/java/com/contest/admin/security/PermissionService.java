@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/** 权限服务：获取用户权限（角色权限 + 个人额外权限），管理员默认拥有全部权限 */
 @Service
 public class PermissionService {
 
@@ -29,6 +30,10 @@ public class PermissionService {
         this.userPermissionMapper = userPermissionMapper;
     }
 
+    /** 获取用户权限编码集合
+     * @param userId 用户ID（可能为空）
+     * @param role 用户角色
+     * @return 权限编码集合 */
     public Set<String> getPermissions(Long userId, Integer role) {
         Set<String> perms = new HashSet<>();
         try {
@@ -56,16 +61,24 @@ public class PermissionService {
         return perms;
     }
 
+    /** 获取所有权限
+     * @return 权限列表 */
     public List<PermissionDO> getAllPermissions() {
         return permissionMapper.selectList(null);
     }
 
+    /** 获取角色关联的权限ID列表
+     * @param role 角色
+     * @return 权限ID列表 */
     public List<Integer> getPermissionIdsByRole(Integer role) {
         return rolePermissionMapper.selectList(
                 new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role)
         ).stream().map(RolePermissionDO::getPermissionId).collect(Collectors.toList());
     }
 
+    /** 保存角色的权限配置（先删后插）
+     * @param role 角色
+     * @param permissionIds 权限ID列表 */
     public void saveRolePermissions(Integer role, List<Integer> permissionIds) {
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role));
         for (Integer permId : permissionIds) {
@@ -76,12 +89,18 @@ public class PermissionService {
         }
     }
 
+    /** 获取用户额外权限ID列表
+     * @param userId 用户ID
+     * @return 权限ID列表 */
     public List<Integer> getPermissionIdsByUser(Long userId) {
         return userPermissionMapper.selectList(
                 new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId)
         ).stream().map(UserPermissionDO::getPermissionId).collect(Collectors.toList());
     }
 
+    /** 保存用户的额外权限配置（先删后插）
+     * @param userId 用户ID
+     * @param permissionIds 权限ID列表 */
     public void saveUserPermissions(Long userId, List<Integer> permissionIds) {
         userPermissionMapper.delete(new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId));
         for (Integer permId : permissionIds) {

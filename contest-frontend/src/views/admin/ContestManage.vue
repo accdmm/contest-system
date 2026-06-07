@@ -23,6 +23,7 @@
             </el-table-column>
             <el-table-column prop="category" label="类别" width="100" />
             <el-table-column prop="level" label="级别" width="80" />
+            <el-table-column prop="creatorName" label="创建人" width="100" />
             <el-table-column prop="currentCount" label="报名数" width="80" align="center" />
             <el-table-column prop="status" label="状态" width="100" align="center">
               <template #default="{ row }">

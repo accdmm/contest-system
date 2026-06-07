@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/** 团队服务实现 */
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements TeamService {
 
@@ -46,6 +47,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         this.adminNotifyService = adminNotifyService;
     }
 
+    /** 创建团队：初始化团队信息，队长自动成为已批准的成员 */
     @Override
     @Transactional
     public TeamDO createTeam(Long userId, String teamName, Long teacherId) {
@@ -87,6 +89,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return code;
     }
 
+    /** 通过邀请码加入团队：校验邀请码有效性、过期时间、团队状态；去重校验后插入或更新申请记录；通知队长 */
     @Override
     @Transactional
     public TeamDO joinByInviteCode(Long userId, String inviteCode) {
@@ -134,6 +137,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return team;
     }
 
+    /** 批准成员加入：队长校验 → 人数上限校验 → 状态前置校验 → 更新成员状态并增加团队人数 → 发送通知 */
     @Override
     @Transactional
     public void approveMember(Long teamId, Long userId, Long memberId) {
@@ -374,6 +378,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return page(new Page<>(page, size), wrapper);
     }
 
+    /** 管理员通过团队审核：校验团队已提交 → 更新状态 → 自动通过关联的报名记录 → 发送通知 */
     @Override
     @Transactional
     public void adminApproveTeam(Long teamId) {

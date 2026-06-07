@@ -3,6 +3,7 @@ package com.contest.user.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 专业实体 */
 @TableName("major")
 public class MajorDO {
 

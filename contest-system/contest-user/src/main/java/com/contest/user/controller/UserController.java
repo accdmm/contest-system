@@ -2,7 +2,8 @@ package com.contest.user.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
-import com.contest.common.dto.Result;
+import com.contest.common.annotation.OperationLog;
+import com.contest.common.result.Result;
 import com.contest.common.util.JwtUtil;
 import com.contest.user.param.LoginRequest;
 import com.contest.user.param.RegisterRequest;
@@ -28,6 +29,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
+/** 用户相关接口 */
 public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
@@ -44,6 +46,7 @@ public class UserController {
         this.majorService = majorService;
     }
 
+    /** 用户登录 */
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody @Valid LoginRequest req) {
         UserDO user = userService.login(req.getUsername(), req.getPassword());
@@ -55,6 +58,7 @@ public class UserController {
         return Result.success(data);
     }
 
+    /** 用户注册 */
     @PostMapping("/register")
     public Result<Map<String, Object>> register(@RequestBody @Valid RegisterRequest req) {
         UserDO user = new UserDO();
@@ -74,6 +78,7 @@ public class UserController {
         return Result.success(data);
     }
 
+    /** 管理员创建用户 */
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('user:create')")
     public Result<UserDO> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
@@ -96,21 +101,25 @@ public class UserController {
         return Result.success(saved);
     }
 
+    /** 获取学院列表 */
     @GetMapping("/colleges")
     public Result<List<CollegeDO>> listColleges() {
         return Result.success(collegeService.list());
     }
 
+    /** 根据学院ID获取专业列表 */
     @GetMapping("/majors")
     public Result<List<MajorDO>> listMajors(@RequestParam Integer collegeId) {
         return Result.success(majorService.getByCollegeId(collegeId));
     }
 
+    /** 获取教师列表 */
     @GetMapping("/teachers")
     public Result<List<UserDO>> listTeachers() {
         return Result.success(userService.listTeachers());
     }
 
+    /** 根据ID获取用户详情 */
     @GetMapping("/detail/{id}")
     @PreAuthorize("isAuthenticated()")
     public Result<UserDO> getById(@PathVariable Long id) {
@@ -122,6 +131,7 @@ public class UserController {
         return Result.success(user);
     }
 
+    /** 分页查询用户列表 */
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:list')")
     public Result<IPage<UserDO>> page(@RequestParam(required = false) String keyword,
@@ -130,6 +140,7 @@ public class UserController {
         return Result.success(userService.pageUsers(keyword, page, size));
     }
 
+    /** 修改用户资料 */
     @PostMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileParam param) {
@@ -152,6 +163,7 @@ public class UserController {
         return Result.success();
     }
 
+    /** 修改密码 */
     @PostMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
@@ -163,15 +175,19 @@ public class UserController {
         return Result.success();
     }
 
+    /** 冻结用户 */
     @PostMapping("/{id}/freeze")
     @PreAuthorize("hasAuthority('user:freeze')")
+    @OperationLog(action = "冻结用户")
     public Result<Void> freeze(@PathVariable Long id) {
         userService.freezeUser(id);
         return Result.success();
     }
 
+    /** 解冻用户 */
     @PostMapping("/{id}/unfreeze")
     @PreAuthorize("hasAuthority('user:freeze')")
+    @OperationLog(action = "解冻用户")
     public Result<Void> unfreeze(@PathVariable Long id) {
         userService.unfreezeUser(id);
         return Result.success();

@@ -1,7 +1,7 @@
 package com.contest.admin.controller;
 
 import com.contest.admin.service.MinioService;
-import com.contest.common.dto.Result;
+import com.contest.common.result.Result;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 
+/** 文件上传接口 */
 @RestController
 @RequestMapping("/api")
 public class UploadController {
@@ -22,6 +23,7 @@ public class UploadController {
         this.minioService = minioService;
     }
 
+    /** 上传文件 */
     @PostMapping("/upload")
     @PreAuthorize("isAuthenticated()")
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
@@ -29,6 +31,7 @@ public class UploadController {
         return Result.success(url);
     }
 
+    /** 获取上传文件 */
     @GetMapping("/uploads/{filename:.+}")
     public ResponseEntity<Resource> getFile(@PathVariable String filename) {
         InputStream inputStream = minioService.getFile(filename);

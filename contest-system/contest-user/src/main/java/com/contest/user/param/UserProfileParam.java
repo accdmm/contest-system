@@ -2,18 +2,25 @@ package com.contest.user.param;
 
 public class UserProfileParam {
 
+    /** 姓名 */
     private String name;
 
+    /** 邮箱 */
     private String email;
 
+    /** 手机号 */
     private String phone;
 
+    /** 学院ID */
     private Integer collegeId;
 
+    /** 专业ID */
     private Integer majorId;
 
+    /** 班级名称 */
     private String className;
 
+    /** 头像URL */
     private String avatarUrl;
 
     public String getName() { return name; }

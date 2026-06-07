@@ -2,7 +2,7 @@ package com.contest.message.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
-import com.contest.common.dto.Result;
+import com.contest.common.result.Result;
 import com.contest.message.entity.NotificationDO;
 import com.contest.message.param.NotificationSendParam;
 import com.contest.message.service.NotificationService;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+/** 通知消息接口 */
 @RestController
 @RequestMapping("/api/notification")
 public class NotificationController {
@@ -24,6 +25,7 @@ public class NotificationController {
         this.notificationService = notificationService;
     }
 
+    /** 分页获取用户通知列表 */
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<IPage<NotificationDO>> byUser(@PathVariable Long userId,
@@ -36,6 +38,7 @@ public class NotificationController {
         return Result.success(notificationService.pageByUser(userId, page, size));
     }
 
+    /** 获取用户未读通知数量 */
     @GetMapping("/unread/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Long> unreadCount(@PathVariable Long userId) {
@@ -46,6 +49,7 @@ public class NotificationController {
         return Result.success(notificationService.countUnread(userId));
     }
 
+    /** 标记单条通知为已读 */
     @PostMapping("/{id}/read")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> markRead(@PathVariable Long id) {
@@ -54,6 +58,7 @@ public class NotificationController {
         return Result.success();
     }
 
+    /** 标记所有通知为已读 */
     @PostMapping("/read-all/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> markAllRead(@PathVariable Long userId) {
@@ -65,6 +70,7 @@ public class NotificationController {
         return Result.success();
     }
 
+    /** 发送通知给指定用户 */
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('notification:send')")
     public Result<Void> send(@RequestBody @Valid NotificationSendParam param) {
@@ -72,6 +78,7 @@ public class NotificationController {
         return Result.success();
     }
 
+    /** 发送广播通知 */
     @PostMapping("/broadcast")
     @PreAuthorize("hasAuthority('notification:broadcast')")
     public Result<Void> broadcast(@RequestParam Integer type, @RequestParam String title,

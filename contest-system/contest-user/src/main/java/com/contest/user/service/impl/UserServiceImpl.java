@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
+/** 用户服务实现 */
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
     private final CollegeMapper collegeMapper;
@@ -30,6 +31,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         this.majorMapper = majorMapper;
     }
 
+    /** 用户登录：校验用户名密码、检查账号状态 */
     @Override
     public UserDO login(String username, String password) {
         UserDO user = getOne(new LambdaQueryWrapper<UserDO>()
@@ -46,6 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
+    /** 校验密码强度：8-20位，需包含字母和数字 */
     private void validatePassword(String password) {
         if (password == null || password.length() < 8 || password.length() > 20) {
             throw new BusinessException("密码长度需为8-20位");
@@ -56,6 +59,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
     }
 
+    /** 用户注册：校验唯一性、BCrypt加密、默认角色为学生 */
     @Override
     public UserDO register(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
@@ -97,6 +101,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
+    /** 管理员创建用户：校验唯一性和角色值，BCrypt加密 */
     @Override
     public UserDO adminCreateUser(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
@@ -143,6 +148,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
+    /** 修改用户资料：同步学院/专业冗余文字字段 */
     @Override
     public void updateProfile(Long userId, UserDO user) {
         UserDO existing = getById(userId);
@@ -178,6 +184,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
+    /** 修改密码：校验原密码后更新为新密码 */
     @Override
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         UserDO user = getById(userId);
@@ -192,6 +199,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
+    /** 冻结用户 */
     @Override
     public void freezeUser(Long userId) {
         UserDO user = getById(userId);
@@ -202,6 +210,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
+    /** 解冻用户 */
     @Override
     public void unfreezeUser(Long userId) {
         UserDO user = getById(userId);
@@ -212,6 +221,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
+    /** 分页查询用户：支持按用户名、姓名、学院、专业模糊搜索 */
     @Override
     public IPage<UserDO> pageUsers(String keyword, Integer page, Integer size) {
         LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
@@ -230,6 +240,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return result;
     }
 
+    /** 获取所有状态正常的教师列表 */
     @Override
     public List<UserDO> listTeachers() {
         List<UserDO> teachers = list(new LambdaQueryWrapper<UserDO>()

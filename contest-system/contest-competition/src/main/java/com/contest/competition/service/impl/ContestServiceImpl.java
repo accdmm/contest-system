@@ -4,20 +4,41 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.competition.entity.ContestDO;
 import com.contest.competition.mapper.ContestMapper;
 import com.contest.competition.service.ContestService;
+import com.contest.user.entity.UserDO;
+import com.contest.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+/** 竞赛服务实现，包含竞赛创建、修改、发布、下架、删除等核心业务逻辑 */
 @Service
 public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> implements ContestService {
 
+    private final UserMapper userMapper;
+
+    public ContestServiceImpl(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
+    /**
+     * 创建竞赛：先校验时间顺序（报名开始 < 报名截止 < 竞赛时间），再初始化为草稿状态，设置当前报名人数为0
+     */
     @Override
     public ContestDO createContest(ContestDO contest) {
         LocalDateTime now = LocalDateTime.now();
@@ -41,9 +62,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         contest.setStatus(CommonConstants.CONTEST_DRAFT);
         contest.setCurrentCount(0);
         save(contest);
+        populateCreatorName(contest);
         return contest;
     }
 
+    /**
+     * 修改竞赛：非草稿状态且有已通过报名时禁止修改；设置 status/currentCount 为 null 避免覆盖数据库值
+     */
     @Override
     @Transactional
     public ContestDO updateContest(ContestDO contest) {
@@ -69,7 +94,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return contest;
     }
 
+    /** 上架竞赛：将状态置为已开放 */
     @Override
+    @Transactional
     public void publishContest(Long id) {
         ContestDO contest = getById(id);
         if (contest == null) {
@@ -79,7 +106,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         updateById(contest);
     }
 
+    /** 下架竞赛：有已通过报名时不能下架 */
     @Override
+    @Transactional
     public void unpublishContest(Long id) {
         ContestDO contest = getById(id);
         if (contest == null) {
@@ -92,6 +121,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         updateById(contest);
     }
 
+    /** 删除竞赛：仅草稿状态且无报名时允许删除 */
     @Override
     @Transactional
     public void deleteContest(Long id) {
@@ -106,6 +136,15 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
             throw new BusinessException("已有报名的竞赛不可删除");
         }
         removeById(id);
+    }
+
+    @Override
+    public ContestDO getById(Serializable id) {
+        ContestDO contest = super.getById(id);
+        if (contest != null) {
+            populateCreatorName(contest);
+        }
+        return contest;
     }
 
     @Override
@@ -149,7 +188,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         } else {
             wrapper.orderByDesc(ContestDO::getUpdateTime);
         }
-        return page(new Page<>(page, size), wrapper);
+        IPage<ContestDO> result = page(new Page<>(page, size), wrapper);
+        populateCreatorNames(result.getRecords());
+        return result;
     }
 
     @Override
@@ -158,7 +199,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
                .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
         wrapper.orderByDesc(ContestDO::getCurrentCount);
-        return page(new Page<>(1, limit), wrapper).getRecords();
+        List<ContestDO> list = page(new Page<>(1, limit), wrapper).getRecords();
+        populateCreatorNames(list);
+        return list;
     }
 
     @Override
@@ -167,6 +210,32 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
                .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
         wrapper.orderByDesc(ContestDO::getCreateTime);
-        return page(new Page<>(1, limit), wrapper).getRecords();
+        List<ContestDO> list = page(new Page<>(1, limit), wrapper).getRecords();
+        populateCreatorNames(list);
+        return list;
+    }
+
+    private void populateCreatorName(ContestDO contest) {
+        if (contest == null || contest.getCreateBy() == null) return;
+        UserDO user = userMapper.selectById(contest.getCreateBy());
+        if (user != null) {
+            contest.setCreatorName(user.getName());
+        }
+    }
+
+    private void populateCreatorNames(List<ContestDO> contests) {
+        Set<Long> userIds = contests.stream()
+                .map(ContestDO::getCreateBy)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) return;
+        List<UserDO> users = userMapper.selectBatchIds(userIds);
+        Map<Long, String> nameMap = users.stream()
+                .collect(Collectors.toMap(UserDO::getId, UserDO::getName));
+        for (ContestDO c : contests) {
+            if (c.getCreateBy() != null) {
+                c.setCreatorName(nameMap.get(c.getCreateBy()));
+            }
+        }
     }
 }

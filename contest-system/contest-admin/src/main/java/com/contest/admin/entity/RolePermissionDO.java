@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+/** 角色-权限关联实体 */
 @TableName("role_permission")
 public class RolePermissionDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
+    /** 角色 */
     private Integer role;
+    /** 权限ID */
     private Integer permissionId;
 
     public Integer getId() { return id; }

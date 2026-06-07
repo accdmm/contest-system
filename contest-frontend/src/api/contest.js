@@ -5,7 +5,7 @@ export function createContest(data) {
 }
 
 export function updateContest(data) {
-  return request.post('/contest', data)
+  return request.post('/contest/update', data)
 }
 
 export function deleteContest(id) {

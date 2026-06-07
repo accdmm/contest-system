@@ -2,7 +2,8 @@ package com.contest.register.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
-import com.contest.common.dto.Result;
+import com.contest.common.annotation.OperationLog;
+import com.contest.common.result.Result;
 import com.contest.register.entity.RegistrationDO;
 import com.contest.register.param.RegPersonalParam;
 import com.contest.register.param.RegTeamParam;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.Map;
 
+/** 报名管理接口 */
 @RestController
 @RequestMapping("/api/registration")
 public class RegistrationController {
@@ -28,6 +30,7 @@ public class RegistrationController {
         this.registrationService = registrationService;
     }
 
+    /** 个人赛报名 */
     @PostMapping("/personal")
     @PreAuthorize("isAuthenticated()")
     public Result<RegistrationDO> registerPersonal(@RequestBody @Valid RegPersonalParam param) {
@@ -36,6 +39,7 @@ public class RegistrationController {
         return Result.success(registrationService.registerPersonal(userId, param.getContestId(), param.getRemark()));
     }
 
+    /** 团队赛报名 */
     @PostMapping("/team")
     @PreAuthorize("isAuthenticated()")
     public Result<RegistrationDO> registerTeam(@RequestBody @Valid RegTeamParam param) {
@@ -44,20 +48,25 @@ public class RegistrationController {
         return Result.success(registrationService.registerTeam(userId, param.getContestId(), param.getTeamId()));
     }
 
+    /** 审核通过报名 */
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAuthority('registration:approve')")
+    @OperationLog(action = "通过报名")
     public Result<Void> approve(@PathVariable Long id) {
         registrationService.approveRegistration(id);
         return Result.success();
     }
 
+    /** 驳回报名 */
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAuthority('registration:approve')")
+    @OperationLog(action = "驳回报名")
     public Result<Void> reject(@PathVariable Long id, @RequestBody Map<String, String> params) {
         registrationService.rejectRegistration(id, params.get("reason"));
         return Result.success();
     }
 
+    /** 取消报名 */
     @PostMapping("/{id}/cancel")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> cancel(@PathVariable Long id) {
@@ -66,6 +75,7 @@ public class RegistrationController {
         return Result.success();
     }
 
+    /** 查询用户的报名记录 */
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
     public Result<IPage<RegistrationDO>> byUser(@PathVariable Long userId,
@@ -81,6 +91,7 @@ public class RegistrationController {
         return Result.success(registrationService.pageByUser(userId, page, size));
     }
 
+    /** 查询竞赛的报名记录 */
     @GetMapping("/contest/{contestId}")
     @PreAuthorize("hasAuthority('registration:list')")
     public Result<IPage<RegistrationDO>> byContest(@PathVariable Long contestId,
@@ -90,6 +101,7 @@ public class RegistrationController {
         return Result.success(registrationService.pageByContest(contestId, page, size, status));
     }
 
+    /** 分页查询报名列表 */
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('registration:list')")
     public Result<IPage<RegistrationDO>> page(@RequestParam(required = false) Long contestId,
@@ -99,6 +111,7 @@ public class RegistrationController {
         return Result.success(registrationService.pageAll(contestId, status, page, size));
     }
 
+    /** 查询报名详情 */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public Result<RegistrationDO> getById(@PathVariable Long id) {

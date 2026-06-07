@@ -3,14 +3,17 @@ package com.contest.ai.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** AI会话实体 */
 @TableName("ai_conversation")
 public class AiConversationDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户ID */
     private Long userId;
 
+    /** 会话标题（由首条提问自动生成） */
     private String title;
 
     @TableField(fill = FieldFill.INSERT)

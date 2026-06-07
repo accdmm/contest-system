@@ -3,31 +3,42 @@ package com.contest.team.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 团队实体 */
 @TableName("team")
 public class TeamDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 队长用户ID */
     private Long leaderId;
 
+    /** 指导教师用户ID */
     private Long teacherId;
 
+    /** 团队名称 */
     private String teamName;
 
+    /** 团队编号 */
     private String teamNo;
 
+    /** 邀请码 */
     private String inviteCode;
 
+    /** 邀请码过期时间 */
     private LocalDateTime inviteCodeExpire;
 
+    /** 逻辑删除标记 */
     @TableLogic
     private Integer deleted;
 
+    /** 团队状态（组建中/已提交/已通过/已驳回） */
     private Integer status;
 
+    /** 成员人数 */
     private Integer memberCount;
 
+    /** 作品材料URL（逗号分隔） */
     private String materialUrls;
 
     @TableField(fill = FieldFill.INSERT)

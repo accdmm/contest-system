@@ -3,18 +3,23 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 操作日志实体 */
 @TableName("operation_log")
 public class OperationLogDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 操作用户ID */
     private Long userId;
 
+    /** 操作动作 */
     private String action;
 
+    /** 操作详情 */
     private String detail;
 
+    /** 请求IP地址 */
     private String ipAddress;
 
     @TableField(fill = FieldFill.INSERT)

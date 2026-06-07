@@ -2,9 +2,12 @@ package com.contest.ai.dto;
 
 import com.contest.ai.enums.ChatEventTypeEnum;
 
+/** SSE事件VO */
 public class ChatEventVO {
 
+    /** 事件类型（start/data/error/stop） */
     private String eventType;
+    /** 事件数据 */
     private String eventData;
 
     public ChatEventVO() {}

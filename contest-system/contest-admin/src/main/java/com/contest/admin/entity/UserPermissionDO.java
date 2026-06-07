@@ -2,14 +2,17 @@ package com.contest.admin.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
+/** 用户-权限关联实体 */
 @TableName("user_permission")
 public class UserPermissionDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
 
+    /** 用户ID */
     private Long userId;
 
+    /** 权限ID */
     private Integer permissionId;
 
     public Integer getId() { return id; }

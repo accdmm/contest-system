@@ -3,6 +3,7 @@ package com.contest.user.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 用户实体 */
 @TableName("user")
 public class UserDO {
 

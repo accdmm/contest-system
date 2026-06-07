@@ -4,13 +4,17 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+/** 权限实体 */
 @TableName("permission")
 public class PermissionDO {
 
     @TableId(type = IdType.AUTO)
     private Integer id;
+    /** 权限编码 */
     private String code;
+    /** 权限名称 */
     private String name;
+    /** 所属模块 */
     private String module;
 
     public Integer getId() { return id; }

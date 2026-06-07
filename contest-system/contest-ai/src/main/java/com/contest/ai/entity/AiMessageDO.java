@@ -3,19 +3,24 @@ package com.contest.ai.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** AI消息实体 */
 @TableName("ai_message")
 public class AiMessageDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 所属会话ID */
     private Long conversationId;
 
+    /** 消息角色（user/assistant） */
     private String role;
 
+    /** 消息内容 */
     @TableField("`content`")
     private String content;
 
+    /** 消耗Token数 */
     private Integer tokens;
 
     @TableField(fill = FieldFill.INSERT)

@@ -3,22 +3,29 @@ package com.contest.team.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
+/** 团队成员实体 */
 @TableName("team_member")
 public class TeamMemberDO {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 团队ID */
     private Long teamId;
 
+    /** 用户ID */
     private Long userId;
 
+    /** 成员角色（0-普通成员，1-队长） */
     private Integer role;
 
+    /** 成员状态（待审批/已通过/已驳回） */
     private Integer status;
 
+    /** 申请时间 */
     private LocalDateTime applyTime;
 
+    /** 处理时间 */
     private LocalDateTime handleTime;
 
     @TableField(fill = FieldFill.INSERT)
