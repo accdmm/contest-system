@@ -1,4 +1,6 @@
-package com.contest.ai.entity;
+package com.contest.ai.dto;
+
+import com.contest.ai.enums.ChatEventTypeEnum;
 
 public class ChatEventVO {
 

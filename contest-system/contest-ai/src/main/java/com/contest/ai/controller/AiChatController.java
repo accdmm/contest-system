@@ -2,8 +2,8 @@ package com.contest.ai.controller;
 
 import com.contest.ai.entity.AiConversation;
 import com.contest.ai.entity.AiMessage;
-import com.contest.ai.entity.ChatEventVO;
-import com.contest.ai.entity.ChatRequest;
+import com.contest.ai.dto.ChatEventVO;
+import com.contest.ai.dto.ChatRequest;
 import com.contest.ai.service.AiChatService;
 import com.contest.common.dto.Result;
 import com.contest.common.enums.ResultCodeEnum;

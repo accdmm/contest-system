@@ -1,4 +1,4 @@
-package com.contest.common.dto;
+package com.contest.common.param;
 
 import jakarta.validation.constraints.Min;
 

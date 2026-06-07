@@ -1,4 +1,4 @@
-package com.contest.ai.entity;
+package com.contest.ai.enums;
 
 public enum ChatEventTypeEnum {
 

@@ -1,4 +1,4 @@
-package com.contest.user.dto;
+package com.contest.user.param;
 
 import jakarta.validation.constraints.NotBlank;
 
