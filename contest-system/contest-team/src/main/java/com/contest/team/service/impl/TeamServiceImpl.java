@@ -27,7 +27,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/** 团队服务实现 */
+/**
+ * 团队服务实现
+ *
+ * <p>处理团队创建、成员管理、加入审批、团队报名等业务逻辑。
+ * 队长创建团队时生成6位唯一邀请码，成员通过邀请码申请加入，
+ * 队长审批成员申请，团队人数达标后方可提交报名审核。
+ */
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements TeamService {
 
