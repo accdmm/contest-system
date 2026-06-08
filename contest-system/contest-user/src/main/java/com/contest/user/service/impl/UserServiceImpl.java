@@ -14,6 +14,7 @@ import com.contest.user.mapper.MajorMapper;
 import com.contest.user.mapper.UserMapper;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import cn.hutool.crypto.digest.DigestUtil;
 import java.util.List;
@@ -52,6 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 冻结账号在登录时直接拦截，不暴露更详细的错误原因。
      */
     @Override
+    @Transactional(readOnly = true)
     public UserDO login(String username, String password) {
         UserDO user = getOne(new LambdaQueryWrapper<UserDO>()
                 .eq(UserDO::getUsername, username));
@@ -91,6 +93,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 同步写入学院/专业的文字冗余字段，避免后续关联查询。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserDO register(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
         long count = count(new LambdaQueryWrapper<UserDO>()
@@ -138,6 +141,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 此方法校验角色值必须在 [0, 2] 范围内，防止越权传入非法角色。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserDO adminCreateUser(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
         long count = count(new LambdaQueryWrapper<UserDO>()
@@ -192,6 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * - 设置 id、password、username、status 为 null，防止覆盖数据库已有值
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateProfile(Long userId, UserDO user) {
         UserDO existing = getById(userId);
         if (existing == null) {
@@ -233,6 +238,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 强度校验后再进行 BCrypt 加密存储。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         UserDO user = getById(userId);
         if (user == null) {
@@ -250,6 +256,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 冻结用户：将账号状态置为 1（冻结），登录时被拦截
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void freezeUser(Long userId) {
         UserDO user = getById(userId);
         if (user == null) {
@@ -263,6 +270,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 解冻用户：恢复账号状态为 0（正常）
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void unfreezeUser(Long userId) {
         UserDO user = getById(userId);
         if (user == null) {
@@ -280,6 +288,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 性能说明：user 表有 idx_college、idx_status 索引，like 查询在数据量较小时性能可接受。
      */
     @Override
+    @Transactional(readOnly = true)
     public IPage<UserDO> pageUsers(String keyword, Integer page, Integer size) {
         LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -303,6 +312,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * 仅返回 status=0（正常）的教师，冻结教师不可被选为指导教师。
      */
     @Override
+    @Transactional(readOnly = true)
     public List<UserDO> listTeachers() {
         List<UserDO> teachers = list(new LambdaQueryWrapper<UserDO>()
                 .eq(UserDO::getRole, CommonConstants.ROLE_TEACHER)

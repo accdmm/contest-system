@@ -62,6 +62,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 创建后自动填充 creatorName（通过 createBy 查询用户表）。
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ContestDO createContest(ContestDO contest) {
         LocalDateTime now = LocalDateTime.now();
         if (contest.getRegisterStartTime() != null && contest.getRegisterStartTime().isBefore(now)) {
@@ -215,13 +216,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         }
         LocalDateTime now = LocalDateTime.now();
         if (status != null) {
-            if (status == 0) {
+            if (status == CommonConstants.CONTEST_DRAFT) {
                 wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_DRAFT);
-            } else if (status == 1) {
+            } else if (status == CommonConstants.CONTEST_OPEN) {
                 wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
                         .le(ContestDO::getRegisterStartTime, now)
                         .gt(ContestDO::getRegisterEndTime, now);
-            } else if (status == 2) {
+            } else if (status == CommonConstants.CONTEST_CLOSED) {
                 wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
                         .le(ContestDO::getRegisterEndTime, now);
             }
@@ -232,9 +233,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         if (contestType != null) {
             wrapper.eq(ContestDO::getContestType, contestType);
         }
-        if ("hot".equals(sortBy)) {
+        if (CommonConstants.SORT_HOT.equals(sortBy)) {
             wrapper.orderByDesc(ContestDO::getCurrentCount);
-        } else if ("deadline".equals(sortBy)) {
+        } else if (CommonConstants.SORT_DEADLINE.equals(sortBy)) {
             wrapper.orderByAsc(ContestDO::getRegisterEndTime);
         } else {
             wrapper.orderByDesc(ContestDO::getUpdateTime);

@@ -5,9 +5,9 @@ import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
 import com.contest.common.util.JwtUtil;
-import com.contest.user.param.LoginRequest;
-import com.contest.user.param.RegisterRequest;
-import com.contest.user.param.AdminCreateUserRequest;
+import com.contest.user.param.LoginParam;
+import com.contest.user.param.RegisterParam;
+import com.contest.user.param.AdminCreateUserParam;
 import com.contest.user.param.UserProfileParam;
 import com.contest.user.entity.CollegeDO;
 import com.contest.user.entity.MajorDO;
@@ -60,7 +60,7 @@ public class UserController {
 
     /** 用户登录：校验学号/邮箱和密码，成功返回用户信息 + JWT Token */
     @PostMapping("/login")
-    public Result<Map<String, Object>> login(@RequestBody @Valid LoginRequest req) {
+    public Result<Map<String, Object>> login(@RequestBody @Valid LoginParam req) {
         UserDO user = userService.login(req.getUsername(), req.getPassword());
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         user.setPassword(null);
@@ -72,7 +72,7 @@ public class UserController {
 
     /** 用户注册：校验唯一性 → BCrypt 加密密码 → 默认学生角色 → 返回用户信息 + JWT Token */
     @PostMapping("/register")
-    public Result<Map<String, Object>> register(@RequestBody @Valid RegisterRequest req) {
+    public Result<Map<String, Object>> register(@RequestBody @Valid RegisterParam req) {
         UserDO user = new UserDO();
         user.setUsername(req.getUsername());
         user.setName(req.getName());
@@ -93,10 +93,10 @@ public class UserController {
     /** 管理员创建用户：非管理员不能创建管理员账号（角色校验在方法内完成） */
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('user:create')")
-    public Result<UserDO> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
+    public Result<UserDO> adminCreateUser(@RequestBody @Valid AdminCreateUserParam req) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean callerIsAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         if (req.getRole() != null && req.getRole() == 1 && !callerIsAdmin) {
             return Result.error("仅管理员可创建管理员账号");
         }
@@ -153,13 +153,13 @@ public class UserController {
     }
 
     /** 修改用户资料：仅本人或管理员可操作 */
-    @PostMapping("/{id}/profile")
+    @PutMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileParam param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         if (!currentUserId.equals(id) && !isAdmin) {
             return Result.error("无权修改其他用户的资料");
         }
@@ -176,7 +176,7 @@ public class UserController {
     }
 
     /** 修改密码：仅本人可操作，需提供旧密码验证 */
-    @PostMapping("/{id}/password")
+    @PutMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
         Long currentUserId = SecurityUtil.getCurrentUserId();

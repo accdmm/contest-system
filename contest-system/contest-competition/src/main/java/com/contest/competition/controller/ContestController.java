@@ -55,7 +55,7 @@ public class ContestController {
     }
 
     /** 修改竞赛 */
-    @PostMapping("/update")
+    @PutMapping("/update")
     @PreAuthorize("hasAuthority('contest:update')")
     public Result<ContestDO> update(@RequestBody @Valid ContestUpdateParam param) {
         ContestDO contest = new ContestDO();
@@ -79,7 +79,7 @@ public class ContestController {
     }
 
     /** 删除竞赛（仅草稿状态可删） */
-    @PostMapping("/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('contest:delete')")
     @OperationLog(action = "删除竞赛")
     public Result<Void> delete(@PathVariable Long id) {
@@ -89,7 +89,7 @@ public class ContestController {
     }
 
     /** 上架竞赛 */
-    @PostMapping("/{id}/publish")
+    @PutMapping("/{id}/publish")
     @PreAuthorize("hasAuthority('contest:publish')")
     @OperationLog(action = "上架竞赛")
     public Result<Void> publish(@PathVariable Long id) {
@@ -99,7 +99,7 @@ public class ContestController {
     }
 
     /** 下架竞赛（有已通过报名不可下架） */
-    @PostMapping("/{id}/unpublish")
+    @PutMapping("/{id}/unpublish")
     @PreAuthorize("hasAuthority('contest:publish')")
     @OperationLog(action = "下架竞赛")
     public Result<Void> unpublish(@PathVariable Long id) {

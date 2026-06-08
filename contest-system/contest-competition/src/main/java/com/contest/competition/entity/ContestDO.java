@@ -2,10 +2,13 @@ package com.contest.competition.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 竞赛实体 */
 @TableName("contest")
-public class ContestDO {
+public class ContestDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;

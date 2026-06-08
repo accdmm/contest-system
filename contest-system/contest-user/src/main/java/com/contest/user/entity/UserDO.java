@@ -2,10 +2,13 @@ package com.contest.user.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 用户实体 */
 @TableName("user")
-public class UserDO {
+public class UserDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;

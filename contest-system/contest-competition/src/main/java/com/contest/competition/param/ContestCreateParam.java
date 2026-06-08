@@ -1,10 +1,13 @@
 package com.contest.competition.param;
 
+import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-public class ContestCreateParam {
+public class ContestCreateParam implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "竞赛名称不能为空")
     private String name;

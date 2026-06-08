@@ -2,10 +2,13 @@ package com.contest.user.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 学院实体 */
 @TableName("college")
-public class CollegeDO {
+public class CollegeDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Integer id;
