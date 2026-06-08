@@ -25,6 +25,10 @@ public class OperationLogDO implements Serializable {
     /** 请求IP地址 */
     private String ipAddress;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
@@ -41,6 +45,8 @@ public class OperationLogDO implements Serializable {
     public void setDetail(String detail) { this.detail = detail; }
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }

@@ -25,6 +25,10 @@ public class TeamMemberDO implements Serializable {
     /** 成员状态（待审批/已通过/已驳回） */
     private Integer status;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     /** 申请时间 */
     private LocalDateTime applyTime;
 
@@ -50,6 +54,8 @@ public class TeamMemberDO implements Serializable {
     public void setRole(Integer role) { this.role = role; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getApplyTime() { return applyTime; }
     public void setApplyTime(LocalDateTime applyTime) { this.applyTime = applyTime; }
     public LocalDateTime getHandleTime() { return handleTime; }

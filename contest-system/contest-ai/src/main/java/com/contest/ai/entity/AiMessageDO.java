@@ -26,6 +26,10 @@ public class AiMessageDO implements Serializable {
     /** 消耗Token数 */
     private Integer tokens;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
@@ -39,6 +43,8 @@ public class AiMessageDO implements Serializable {
     public void setContent(String content) { this.content = content; }
     public Integer getTokens() { return tokens; }
     public void setTokens(Integer tokens) { this.tokens = tokens; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
 }

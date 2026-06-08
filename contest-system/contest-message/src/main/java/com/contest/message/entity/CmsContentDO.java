@@ -37,6 +37,10 @@ public class CmsContentDO implements Serializable {
     /** 状态（可见/隐藏） */
     private Integer status;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     /** 发布时间 */
     private LocalDateTime publishTime;
 
@@ -64,6 +68,8 @@ public class CmsContentDO implements Serializable {
     public void setPosition(String position) { this.position = position; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getPublishTime() { return publishTime; }
     public void setPublishTime(LocalDateTime publishTime) { this.publishTime = publishTime; }
     public LocalDateTime getCreateTime() { return createTime; }

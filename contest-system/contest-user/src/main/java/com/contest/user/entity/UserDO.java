@@ -46,6 +46,10 @@ public class UserDO implements Serializable {
 
     private Integer deadlineNotify;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
@@ -91,6 +95,8 @@ public class UserDO implements Serializable {
     public void setSmsNotify(Integer smsNotify) { this.smsNotify = smsNotify; }
     public Integer getDeadlineNotify() { return deadlineNotify; }
     public void setDeadlineNotify(Integer deadlineNotify) { this.deadlineNotify = deadlineNotify; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
