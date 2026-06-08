@@ -8,6 +8,8 @@ import com.contest.team.entity.TeamDO;
 import com.contest.team.entity.TeamMemberDO;
 import com.contest.team.param.TeamCreateParam;
 import com.contest.team.param.TeamJoinParam;
+import com.contest.team.param.RejectParam;
+import com.contest.team.param.SetTeacherParam;
 import com.contest.team.service.TeamService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /** 团队管理接口 */
 @RestController
@@ -173,17 +174,17 @@ public class TeamController {
     @PostMapping("/{teamId}/admin-reject")
     @PreAuthorize("hasAuthority('team:approve')")
     @OperationLog(action = "驳回团队")
-    public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody Map<String, String> params) {
-        teamService.adminRejectTeam(teamId, params.get("reason"));
+    public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody @Valid RejectParam param) {
+        teamService.adminRejectTeam(teamId, param.getReason());
         return Result.success();
     }
 
     /** 设置团队指导教师 */
     @PostMapping("/{teamId}/teacher")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> setTeacher(@PathVariable Long teamId, @RequestBody Map<String, Long> params) {
+    public Result<Void> setTeacher(@PathVariable Long teamId, @RequestBody @Valid SetTeacherParam param) {
         Long userId = SecurityUtil.getCurrentUserId();
-        teamService.setTeacher(teamId, params.get("teacherId"), userId);
+        teamService.setTeacher(teamId, param.getTeacherId(), userId);
         return Result.success();
     }
 

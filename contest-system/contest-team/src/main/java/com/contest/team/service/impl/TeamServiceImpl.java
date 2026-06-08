@@ -403,9 +403,28 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 .eq(RegistrationDO::getUserId, userId)
                 .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
+
+        List<Long> contestIds = regs.stream()
+                .map(RegistrationDO::getContestId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, ContestDO> contestMap = contestIds.isEmpty()
+                ? java.util.Collections.emptyMap()
+                : contestService.listByIds(contestIds).stream()
+                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+
         for (RegistrationDO reg : regs) {
+            boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_CANCELLED);
             registrationService.updateById(reg);
+            if (wasApproved) {
+                ContestDO contest = contestMap.get(reg.getContestId());
+                if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
+                    contest.setCurrentCount(contest.getCurrentCount() - 1);
+                    contestService.updateById(contest);
+                }
+            }
         }
     }
 

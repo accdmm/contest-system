@@ -130,6 +130,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
+        if (contest.getStatus() != CommonConstants.CONTEST_DRAFT) {
+            throw new BusinessException("仅草稿状态的竞赛可上架");
+        }
+        if (contest.getRegisterEndTime() != null
+                && contest.getRegisterEndTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("报名截止时间已过，不可上架");
+        }
         contest.setStatus(CommonConstants.CONTEST_OPEN);
         updateById(contest);
     }

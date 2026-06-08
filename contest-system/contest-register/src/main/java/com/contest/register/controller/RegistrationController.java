@@ -7,6 +7,7 @@ import com.contest.common.result.Result;
 import com.contest.register.entity.RegistrationDO;
 import com.contest.register.param.RegPersonalParam;
 import com.contest.register.param.RegTeamParam;
+import com.contest.register.param.RejectParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -16,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import java.util.Map;
 
 /** 报名管理接口 */
 @RestController
@@ -61,8 +61,8 @@ public class RegistrationController {
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAuthority('registration:approve')")
     @OperationLog(action = "驳回报名")
-    public Result<Void> reject(@PathVariable Long id, @RequestBody Map<String, String> params) {
-        registrationService.rejectRegistration(id, params.get("reason"));
+    public Result<Void> reject(@PathVariable Long id, @RequestBody @Valid RejectParam param) {
+        registrationService.rejectRegistration(id, param.getReason());
         return Result.success();
     }
 

@@ -222,6 +222,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteConversation(Long conversationId, Long userId) {
         AiConversationDO conversation = conversationMapper.selectById(conversationId);
         if (conversation == null) {
@@ -237,6 +238,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteConversations(List<Long> ids, Long userId) {
         if (ids == null || ids.isEmpty()) return;
         List<AiConversationDO> list = conversationMapper.selectList(

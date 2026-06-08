@@ -8,6 +8,7 @@ import com.contest.common.util.JwtUtil;
 import com.contest.user.param.LoginParam;
 import com.contest.user.param.RegisterParam;
 import com.contest.user.param.AdminCreateUserParam;
+import com.contest.user.param.PasswordChangeParam;
 import com.contest.user.param.UserProfileParam;
 import com.contest.user.entity.CollegeDO;
 import com.contest.user.entity.MajorDO;
@@ -178,12 +179,12 @@ public class UserController {
     /** 修改密码：仅本人可操作，需提供旧密码验证 */
     @PutMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> changePassword(@PathVariable Long id, @RequestBody Map<String, String> params) {
+    public Result<Void> changePassword(@PathVariable Long id, @RequestBody @Valid PasswordChangeParam param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         if (!currentUserId.equals(id)) {
             return Result.error("无权修改其他用户的密码");
         }
-        userService.changePassword(id, params.get("oldPassword"), params.get("newPassword"));
+        userService.changePassword(id, param.getOldPassword(), param.getNewPassword());
         return Result.success();
     }
 
