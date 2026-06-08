@@ -61,4 +61,13 @@ public interface ContestService extends IService<ContestDO> {
      * @param limit 返回条数
      * @return 最新竞赛列表 */
     List<ContestDO> listLatestContests(int limit);
+
+    /** 管理员分页查询所有竞赛（包含草稿、已发布、已截止，不按状态过滤）
+     * @param page 页码
+     * @param size 每页条数
+     * @param keyword 关键词
+     * @param category 竞赛类别
+     * @param status 状态（可选，传 null 显示全部）
+     * @return 分页结果 */
+    IPage<ContestDO> pageAdminContests(Integer page, Integer size, String keyword, String category, Integer status);
 }
