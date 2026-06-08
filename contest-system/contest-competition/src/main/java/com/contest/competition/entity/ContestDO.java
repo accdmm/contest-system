@@ -45,6 +45,10 @@ public class ContestDO {
     @TableField(exist = false)
     private String creatorName;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     private Integer status;
 
     private Integer currentCount;
@@ -96,6 +100,8 @@ public class ContestDO {
     public void setCreateBy(Long createBy) { this.createBy = createBy; }
     public String getCreatorName() { return creatorName; }
     public void setCreatorName(String creatorName) { this.creatorName = creatorName; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getCurrentCount() { return currentCount; }

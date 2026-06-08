@@ -35,6 +35,10 @@ public class RegistrationDO {
     /** 报名备注 */
     private String remark;
 
+    /** 逻辑删除标识：0-未删除，1-已删除 */
+    @TableLogic
+    private Integer isDelete;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
@@ -65,6 +69,8 @@ public class RegistrationDO {
     public void setMaterialUrls(String materialUrls) { this.materialUrls = materialUrls; }
     public String getRemark() { return remark; }
     public void setRemark(String remark) { this.remark = remark; }
+    public Integer getIsDelete() { return isDelete; }
+    public void setIsDelete(Integer isDelete) { this.isDelete = isDelete; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }
