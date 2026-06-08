@@ -2,20 +2,26 @@ package com.contest.common.dto;
 
 import java.util.List;
 
+/**
+ * 通用分页响应结果
+ *
+ * 封装后端分页查询结果，包含总记录数、当前页码、每页大小和当前页数据。
+ * 部分接口已切换为此类返回，逐步替代 MyBatis-Plus 的 IPage。
+ */
 public class PageResult<T> {
 
     private long total;
     private int page;
     private int size;
-    private List<T> records;
+    private List<T> data;
 
     public PageResult() {}
 
-    public PageResult(long total, int page, int size, List<T> records) {
+    public PageResult(long total, int page, int size, List<T> data) {
         this.total = total;
         this.page = page;
         this.size = size;
-        this.records = records;
+        this.data = data;
     }
 
     public long getTotal() { return total; }
@@ -24,6 +30,6 @@ public class PageResult<T> {
     public void setPage(int page) { this.page = page; }
     public int getSize() { return size; }
     public void setSize(int size) { this.size = size; }
-    public List<T> getRecords() { return records; }
-    public void setRecords(List<T> records) { this.records = records; }
+    public List<T> getData() { return data; }
+    public void setData(List<T> data) { this.data = data; }
 }

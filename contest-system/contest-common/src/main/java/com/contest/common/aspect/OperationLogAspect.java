@@ -13,7 +13,18 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
- * 操作日志切面，自动记录带有 @OperationLog 注解的方法调用
+ * 操作日志切面 — 通过 AOP 自动记录管理员操作
+ *
+ * <p>使用 @Around("@annotation(operationLog)") 切入点表达式，拦截所有
+ * 标注 @OperationLog 注解的 Controller 方法。在方法执行成功后，
+ * 通过 Spring 事件机制异步写入操作日志表。
+ *
+ * <p>事件驱动设计说明：Aspect 发布 OperationLogEvent 事件，
+ * OperationLogEventListener 监听事件并写入数据库。避免了 Aspect 直接
+ * 注入 Service 可能导致的循环依赖（common → message → common）。
+ *
+ * <p>安全性说明：仅记录登录用户的操作，未登录时不记录。
+ * 日志内容包含操作类型、参数关键信息和请求 IP，便于审计追踪。
  */
 @Aspect
 @Component
@@ -29,7 +40,10 @@ public class OperationLogAspect {
     }
 
     /**
-     * 环绕通知，在方法执行后记录操作日志
+     * 环绕通知：方法执行成功后记录操作日志
+     *
+     * <p>先执行目标方法（joinPoint.proceed()），执行成功后再收集参数并发布事件。
+     * 这样设计确保：即使日志记录失败也不影响业务操作。
      */
     @Around("@annotation(operationLog)")
     public Object around(ProceedingJoinPoint joinPoint, OperationLog operationLog) throws Throwable {
