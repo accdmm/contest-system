@@ -1,10 +1,13 @@
 package com.contest.admin.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import java.io.Serializable;
 
 /** 用户-权限关联实体 */
 @TableName("user_permission")
-public class UserPermissionDO {
+public class UserPermissionDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Integer id;

@@ -13,6 +13,7 @@ import com.contest.user.entity.UserDO;
 import com.contest.user.mapper.UserMapper;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -44,6 +45,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 概览统计：总用户数、总竞赛数、总报名数、总团队数 */
+    @Transactional(readOnly = true)
     public Map<String, Long> getStatistics() {
         Map<String, Long> stats = new LinkedHashMap<>();
         stats.put("totalUsers", userService.count());
@@ -54,6 +56,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 竞赛类别分布（饼图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getContestCategoryDistribution() {
         QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("category, COUNT(*) as count")
@@ -63,6 +66,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 竞赛级别分布（柱状图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getContestLevelDistribution() {
         QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("level, COUNT(*) as count")
@@ -72,6 +76,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 报名趋势（折线图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getRegistrationTrend(int days) {
         QueryWrapper<RegistrationDO> wrapper = new QueryWrapper<>();
         wrapper.select("DATE(create_time) as date, COUNT(*) as count")
@@ -82,6 +87,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 报名状态分布（环图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getRegistrationStatusDistribution() {
         QueryWrapper<RegistrationDO> wrapper = new QueryWrapper<>();
         wrapper.select("status, COUNT(*) as count")
@@ -90,6 +96,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 用户增长趋势（折线图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getUserGrowth(int days) {
         QueryWrapper<UserDO> wrapper = new QueryWrapper<>();
         wrapper.select("DATE(create_time) as date, COUNT(*) as count")
@@ -100,11 +107,12 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     /** 热门竞赛 Top N（横向柱状图） */
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getTopContests(int limit) {
         QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
         wrapper.select("id, name, current_count")
                .orderByDesc("current_count")
-               .last("LIMIT " + limit);
+                .last("LIMIT " + Math.min(Math.max(1, limit), 100));
         return contestMapper.selectMaps(wrapper);
     }
 }

@@ -8,13 +8,21 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.ServerException;
+import io.minio.errors.XmlParserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.contest.common.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.util.UUID;
 
 /**
@@ -26,7 +34,7 @@ import java.util.UUID;
  * 可用性说明：
  * - 上传文件自动生成唯一文件名（UUID + 原始扩展名），防覆盖
  * - 存储桶不存在时自动创建（init 方法中有 try-catch 兜底，不影响服务启动）
- * - getFile 时文件不存在返回 null 而非抛出异常，方便调用方处理
+ * - getFile 时文件不存在或读取失败时抛出 BusinessException，由全局异常处理器统一处理
  *
  * 性能说明：MinIO 是高性能对象存储，单次上传/下载耗时通常在毫秒级，
  * 文件可被 CDN 缓存加速前端页面加载。上传路径配置在 application.yml 中，
@@ -74,7 +82,9 @@ public class MinioServiceImpl implements MinioService {
                         .bucket(properties.getBucket()).build());
                 log.info("MinIO bucket created: {}", properties.getBucket());
             }
-        } catch (Exception e) {
+        } catch (ErrorResponseException | InsufficientDataException | InternalException |
+                 InvalidResponseException | ServerException | XmlParserException |
+                 GeneralSecurityException | IOException e) {
             log.warn("MinIO bucket check failed (will retry on upload): {}", e.getMessage());
         }
     }
@@ -103,7 +113,9 @@ public class MinioServiceImpl implements MinioService {
                     .contentType(file.getContentType())
                     .build());
             return "/api/uploads/" + fileName;
-        } catch (Exception e) {
+        } catch (ErrorResponseException | InsufficientDataException | InternalException |
+                 InvalidResponseException | ServerException | XmlParserException |
+                 GeneralSecurityException | IOException e) {
             throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
         }
     }
@@ -111,10 +123,10 @@ public class MinioServiceImpl implements MinioService {
     /**
      * 从 MinIO 获取文件流
      *
-     * 文件不存在时返回 null 而不是抛出异常，方便 UploadController 返回 404。
+     * 文件不存在或读取失败时抛出 BusinessException，由全局异常处理器统一处理。
      *
      * @param filename 文件名
-     * @return 文件输入流，文件不存在或读取失败时返回 null
+     * @return 文件输入流
      */
     public InputStream getFile(String filename) {
         try {
@@ -124,10 +136,12 @@ public class MinioServiceImpl implements MinioService {
                     .build());
         } catch (ErrorResponseException e) {
             log.warn("MinIO file not found: {}", filename);
-            return null;
-        } catch (Exception e) {
+            throw new BusinessException("文件不存在: " + filename);
+        } catch (InsufficientDataException | InternalException |
+                 InvalidResponseException | ServerException | XmlParserException |
+                 GeneralSecurityException | IOException e) {
             log.error("MinIO getFile error: {}", e.getMessage());
-            return null;
+            throw new BusinessException("文件读取失败: " + e.getMessage());
         }
     }
 }

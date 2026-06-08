@@ -8,7 +8,11 @@ import com.contest.admin.mapper.PermissionMapper;
 import com.contest.admin.mapper.RolePermissionMapper;
 import com.contest.admin.mapper.UserPermissionMapper;
 import com.contest.common.constant.PermissionConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +36,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class PermissionService {
+
+    private static final Logger log = LoggerFactory.getLogger(PermissionService.class);
 
     private final RolePermissionMapper rolePermissionMapper;
     private final PermissionMapper permissionMapper;
@@ -76,7 +82,8 @@ public class PermissionService {
                             .map(PermissionDO::getCode).collect(Collectors.toSet()));
                 }
             }
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
+            log.warn("Permission query failed, fallback for admin: {}", e.getMessage());
             if (role == 1) perms.addAll(allPermissions());
         }
         return perms;
@@ -107,6 +114,7 @@ public class PermissionService {
      * @param role          角色
      * @param permissionIds 权限 ID 列表
      */
+    @Transactional(rollbackFor = Exception.class)
     public void saveRolePermissions(Integer role, List<Integer> permissionIds) {
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role));
         for (Integer permId : permissionIds) {
@@ -135,6 +143,7 @@ public class PermissionService {
      * @param userId        用户 ID
      * @param permissionIds 权限 ID 列表
      */
+    @Transactional(rollbackFor = Exception.class)
     public void saveUserPermissions(Long userId, List<Integer> permissionIds) {
         userPermissionMapper.delete(new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId));
         for (Integer permId : permissionIds) {

@@ -1,6 +1,10 @@
 package com.contest.admin.security;
 
 import com.contest.common.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -85,8 +89,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     userId, null, authorities);
             auth.setDetails(username);
             SecurityContextHolder.getContext().setAuthentication(auth);
-        } catch (Exception e) {
-            log.warn("JWT auth failed: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token expired: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        } catch (MalformedJwtException e) {
+            log.warn("JWT token malformed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        } catch (SignatureException e) {
+            log.warn("JWT signature verification failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        } catch (UnsupportedJwtException e) {
+            log.warn("JWT token unsupported: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT token argument invalid: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
     }
