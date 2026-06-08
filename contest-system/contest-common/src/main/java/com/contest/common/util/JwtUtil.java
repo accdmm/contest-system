@@ -1,8 +1,12 @@
 package com.contest.common.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -119,8 +123,20 @@ public class JwtUtil {
         try {
             parseToken(token);
             return true;
-        } catch (Exception e) {
-            log.warn("Token validation failed: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.warn("Token expired: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException e) {
+            log.warn("Token malformed: {}", e.getMessage());
+            return false;
+        } catch (SignatureException e) {
+            log.warn("Token signature invalid: {}", e.getMessage());
+            return false;
+        } catch (UnsupportedJwtException e) {
+            log.warn("Token unsupported: {}", e.getMessage());
+            return false;
+        } catch (IllegalArgumentException e) {
+            log.warn("Token argument invalid: {}", e.getMessage());
             return false;
         }
     }

@@ -1,5 +1,6 @@
 package com.contest.common.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -8,7 +9,9 @@ import java.util.List;
  * 封装后端分页查询结果，包含总记录数、当前页码、每页大小和当前页数据。
  * 部分接口已切换为此类返回，逐步替代 MyBatis-Plus 的 IPage。
  */
-public class PageResult<T> {
+public class PageResult<T> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private long total;
     private int page;

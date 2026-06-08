@@ -1,5 +1,7 @@
 package com.contest.common.result;
 
+import java.io.Serializable;
+
 /**
  * 统一响应体 — 前后端数据交换的标准格式
  *
@@ -23,7 +25,9 @@ package com.contest.common.result;
  *
  * @param <T> 响应数据类型
  */
-public class Result<T> {
+public class Result<T> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private int code;
     private String message;

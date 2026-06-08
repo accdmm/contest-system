@@ -89,7 +89,7 @@ CREATE TABLE `team` (
     `team_no` VARCHAR(20) NOT NULL COMMENT '唯一团队编号',
     `invite_code` VARCHAR(10) DEFAULT NULL COMMENT '6位邀请码',
     `invite_code_expire` DATETIME DEFAULT NULL COMMENT '邀请码过期时间',
-    `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0=未删除 1=已删除',
+    `is_delete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0=未删除 1=已删除',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '团队状态 0=组建中 1=已提交报名(待审核) 2=已通过 3=已驳回',
     `member_count` INT NOT NULL DEFAULT 1 COMMENT '当前成员数',
     `material_urls` TEXT COMMENT '团队报名材料URL JSON字符串',

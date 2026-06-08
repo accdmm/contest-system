@@ -1,5 +1,6 @@
 package com.contest.common.param;
 
+import java.io.Serializable;
 import jakarta.validation.constraints.Min;
 
 /**
@@ -11,7 +12,9 @@ import jakarta.validation.constraints.Min;
  * <p>可用性说明：默认 page=1, size=10，前端不传时使用默认值。
  * 校验约束防止恶意大数值请求拖垮数据库。
  */
-public class PageParam {
+public class PageParam implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Min(value = 1, message = "页码最小为1")
     private int page = 1;

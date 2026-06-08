@@ -108,4 +108,16 @@ public interface CommonConstants {
     // ==================== 内容可见性 ====================
     int CMS_HIDDEN = 0;
     int CMS_VISIBLE = 1;
+
+    // ==================== 排序方式 ====================
+    String SORT_HOT = "hot";
+    String SORT_DEADLINE = "deadline";
+
+    // ==================== 业务限制 ====================
+    int MAX_ACTIVE_REGISTRATIONS = 3;
+    int MIN_REJECT_REASON_LENGTH = 5;
+    int INVITE_CODE_LENGTH = 6;
+    int INVITE_CODE_EXPIRE_DAYS = 7;
+    int AI_TITLE_MAX_LENGTH = 80;
+    int AI_QUESTION_TRUNCATE_LENGTH = 30;
 }
