@@ -28,6 +28,10 @@ export function pageContests(params) {
   return request.get('/contest/page', { params })
 }
 
+export function pageAdminContests(params) {
+  return request.get('/admin/contest/page', { params })
+}
+
 export function getHotContests(limit = 5) {
   return request.get('/contest/hot', { params: { limit } })
 }

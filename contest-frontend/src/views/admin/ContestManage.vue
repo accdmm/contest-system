@@ -157,7 +157,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FileUpload from '../../components/FileUpload.vue'
-import { pageContests, createContest, updateContest, publishContest, unpublishContest, deleteContest } from '../../api/contest'
+import { pageAdminContests, createContest, updateContest, publishContest, unpublishContest, deleteContest } from '../../api/contest'
 
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])
@@ -196,7 +196,7 @@ function openCreate() {
 async function fetchData() {
   loading.value = true
   try {
-    const res = await pageContests({ page: page.value, size })
+    const res = await pageAdminContests({ page: page.value, size })
     list.value = res.data.records || []
     total.value = res.data.total || 0
   } catch (e) { ElMessage.error('加载竞赛列表失败') } finally { loading.value = false }

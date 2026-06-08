@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * 用户服务实现
  *
- * <p>处理用户注册、登录、密码管理、账号冻结等业务逻辑。
+ * 处理用户注册、登录、密码管理、账号冻结等业务逻辑。
  * 注册时做唯一性校验和 BCrypt 加密，登录时检查账号状态。
  */
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
