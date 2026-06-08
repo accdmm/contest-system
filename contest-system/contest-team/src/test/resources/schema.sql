@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `team` (
     `team_no` VARCHAR(20) NOT NULL,
     `invite_code` VARCHAR(10) DEFAULT NULL,
     `invite_code_expire` DATETIME DEFAULT NULL,
-    `deleted` TINYINT NOT NULL DEFAULT 0,
+    `is_delete` TINYINT NOT NULL DEFAULT 0,
     `status` TINYINT NOT NULL DEFAULT 0,
     `member_count` INT NOT NULL DEFAULT 1,
     `material_urls` TEXT,

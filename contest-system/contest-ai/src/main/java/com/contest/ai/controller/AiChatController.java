@@ -2,8 +2,8 @@ package com.contest.ai.controller;
 
 import com.contest.ai.entity.AiConversationDO;
 import com.contest.ai.entity.AiMessageDO;
-import com.contest.ai.dto.ChatEventVO;
-import com.contest.ai.dto.ChatRequest;
+import com.contest.ai.dto.ChatEventDTO;
+import com.contest.ai.dto.ChatRequestDTO;
 import com.contest.ai.service.AiChatService;
 import com.contest.common.result.Result;
 import com.contest.common.result.ResultCodeEnum;
@@ -28,10 +28,10 @@ public class AiChatController {
     /** SSE流式对话接口 */
     @PostMapping("/chat")
     @PreAuthorize("isAuthenticated()")
-    public Flux<ChatEventVO> chat(@RequestBody ChatRequest request) {
+    public Flux<ChatEventDTO> chat(@RequestBody ChatRequestDTO request) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
-            return Flux.just(ChatEventVO.error("未登录或登录已过期"));
+            return Flux.just(ChatEventDTO.error("未登录或登录已过期"));
         }
         return aiChatService.chat(request, userId);
     }
@@ -66,7 +66,7 @@ public class AiChatController {
     }
 
     /** 删除单个会话 */
-    @PostMapping("/conversations/{id}")
+    @DeleteMapping("/conversations/{id}")
     @PreAuthorize("isAuthenticated()")
     public Result<Void> deleteConversation(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();

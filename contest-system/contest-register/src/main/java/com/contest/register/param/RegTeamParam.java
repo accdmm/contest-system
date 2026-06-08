@@ -1,9 +1,12 @@
 package com.contest.register.param;
 
+import java.io.Serializable;
 import jakarta.validation.constraints.NotNull;
 
 /** 团队报名参数 */
-public class RegTeamParam {
+public class RegTeamParam implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** 竞赛ID */
     @NotNull(message = "竞赛ID不能为空")

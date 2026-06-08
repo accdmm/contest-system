@@ -1,10 +1,13 @@
 package com.contest.message.param;
 
+import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /** 发送通知请求参数 */
-public class NotificationSendParam {
+public class NotificationSendParam implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** 接收用户ID */
     @NotNull(message = "用户ID不能为空")

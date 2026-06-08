@@ -7,6 +7,7 @@ import com.contest.message.entity.CmsContentDO;
 import com.contest.message.mapper.CmsContentMapper;
 import com.contest.message.service.CmsContentService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +41,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public CmsContentDO createContent(CmsContentDO content) {
         content.setStatus(CommonConstants.CMS_VISIBLE);
         save(content);
@@ -47,6 +49,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public CmsContentDO updateContent(CmsContentDO content) {
         content.setPublishTime(LocalDateTime.now());
         updateById(content);

@@ -2,10 +2,13 @@ package com.contest.ai.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** AI会话实体 */
 @TableName("ai_conversation")
-public class AiConversationDO {
+public class AiConversationDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;

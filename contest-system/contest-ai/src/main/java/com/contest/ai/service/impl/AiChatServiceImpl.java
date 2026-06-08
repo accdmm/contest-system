@@ -3,9 +3,10 @@ package com.contest.ai.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.ai.config.AiProperties;
 import com.contest.ai.entity.AiConversationDO;
+import com.contest.common.constant.CommonConstants;
 import com.contest.ai.entity.AiMessageDO;
-import com.contest.ai.dto.ChatEventVO;
-import com.contest.ai.dto.ChatRequest;
+import com.contest.ai.dto.ChatEventDTO;
+import com.contest.ai.dto.ChatRequestDTO;
 import com.contest.ai.mapper.AiConversationMapper;
 import com.contest.ai.mapper.AiMessageMapper;
 import com.contest.ai.service.AiChatService;
@@ -20,6 +21,7 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
 
@@ -55,7 +57,7 @@ public class AiChatServiceImpl implements AiChatService {
 
     /** 对话入口：获取或创建会话 → 保存用户消息 → 加载历史 → 调用AI流式生成 → 保存助手回复并更新标题 */
     @Override
-    public Flux<ChatEventVO> chat(ChatRequest request, Long userId) {
+    public Flux<ChatEventDTO> chat(ChatRequestDTO request, Long userId) {
         AiConversationDO conversation = getOrCreateConversation(request, userId);
         Long conversationId = conversation.getId();
 
@@ -69,7 +71,7 @@ public class AiChatServiceImpl implements AiChatService {
         Long sessionId = conversationId;
 
         return Flux.concat(
-                Flux.just(ChatEventVO.start(conversationId)),
+                Flux.just(ChatEventDTO.start(conversationId)),
                 chatClient.prompt()
                     .system(spec -> spec.text(aiProperties.getSystemPrompt()))
                     .messages(history)
@@ -81,14 +83,14 @@ public class AiChatServiceImpl implements AiChatService {
                     .takeWhile(r -> generateStatus.getOrDefault(sessionId, false))
                     .filter(text -> text != null && !text.isEmpty())
                     .doOnNext(text -> fullResponse.append(text))
-                    .map(ChatEventVO::data)
+                    .map(ChatEventDTO::data)
                 .onErrorResume(e -> {
                     log.error("AI chat stream error, sessionId={}", sessionId, e);
                     String msg = e.getMessage();
-                    if (msg != null && msg.length() > 80) msg = msg.substring(0, 80) + "...";
-                    return Flux.just(ChatEventVO.error(msg != null ? msg : "服务器内部错误"));
+                    if (msg != null && msg.length() > CommonConstants.AI_TITLE_MAX_LENGTH) msg = msg.substring(0, CommonConstants.AI_TITLE_MAX_LENGTH) + "...";
+                    return Flux.just(ChatEventDTO.error(msg != null ? msg : "服务器内部错误"));
                 })
-                .concatWithValues(ChatEventVO.stop())
+                .concatWithValues(ChatEventDTO.stop())
                 .doFinally(signalType -> {
                     generateStatus.remove(sessionId);
                     if (signalType == SignalType.ON_COMPLETE && fullResponse.length() > 0) {
@@ -133,6 +135,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /** 加载指定会话的历史消息，按时间升序 */
+    @Transactional(readOnly = true)
     private List<Message> loadHistory(Long conversationId) {
         List<AiMessageDO> records = messageMapper.selectList(
                 new LambdaQueryWrapper<AiMessageDO>()
@@ -150,10 +153,10 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /** 获取已有会话或创建新会话：校验归属，更新访问时间 */
-    private AiConversationDO getOrCreateConversation(ChatRequest request, Long userId) {
+    private AiConversationDO getOrCreateConversation(ChatRequestDTO request, Long userId) {
         if (request.getConversationId() != null) {
             AiConversationDO existing = conversationMapper.selectById(request.getConversationId());
-            if (existing != null && existing.getUserId().equals(userId)) {
+            if (existing != null && Objects.equals(existing.getUserId(), userId)) {
                 existing.setUpdateTime(LocalDateTime.now());
                 conversationMapper.updateById(existing);
                 return existing;
@@ -187,19 +190,20 @@ public class AiChatServiceImpl implements AiChatService {
     /** 首次对话时，根据用户提问自动生成会话标题（取前30字） */
     private void updateTitle(AiConversationDO conversation, String question, String response) {
         if (conversation.getTitle() == null && response.length() > 0) {
-            String title = question.length() > 30 ? question.substring(0, 30) + "..." : question;
+            String title = question.length() > CommonConstants.AI_QUESTION_TRUNCATE_LENGTH ? question.substring(0, CommonConstants.AI_QUESTION_TRUNCATE_LENGTH) + "..." : question;
             conversation.setTitle(title);
             conversationMapper.updateById(conversation);
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AiMessageDO> listMessages(Long conversationId, Long userId) {
         AiConversationDO conversation = conversationMapper.selectById(conversationId);
         if (conversation == null) {
             throw new com.contest.common.exception.BusinessException("会话不存在");
         }
-        if (!conversation.getUserId().equals(userId)) {
+        if (!Objects.equals(conversation.getUserId(), userId)) {
             throw new com.contest.common.exception.BusinessException("无权查看其他用户的会话");
         }
         return messageMapper.selectList(
@@ -209,6 +213,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AiConversationDO> listConversations(Long userId) {
         return conversationMapper.selectList(
                 new LambdaQueryWrapper<AiConversationDO>()
@@ -222,7 +227,7 @@ public class AiChatServiceImpl implements AiChatService {
         if (conversation == null) {
             throw new com.contest.common.exception.BusinessException("会话不存在");
         }
-        if (!conversation.getUserId().equals(userId)) {
+        if (!Objects.equals(conversation.getUserId(), userId)) {
             throw new com.contest.common.exception.BusinessException("无权删除其他用户的会话");
         }
         // 先删关联消息，再删会话（无级联外键）

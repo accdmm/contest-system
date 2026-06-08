@@ -2,8 +2,8 @@ package com.contest.ai.service;
 
 import com.contest.ai.entity.AiConversationDO;
 import com.contest.ai.entity.AiMessageDO;
-import com.contest.ai.dto.ChatEventVO;
-import com.contest.ai.dto.ChatRequest;
+import com.contest.ai.dto.ChatEventDTO;
+import com.contest.ai.dto.ChatRequestDTO;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -15,7 +15,7 @@ public interface AiChatService {
      * @param request 对话请求
      * @param userId 当前用户ID
      * @return SSE事件流 */
-    Flux<ChatEventVO> chat(ChatRequest request, Long userId);
+    Flux<ChatEventDTO> chat(ChatRequestDTO request, Long userId);
 
     /** 停止AI生成
      * @param sessionId 会话ID */

@@ -2,10 +2,13 @@ package com.contest.team.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 团队实体 */
 @TableName("team")
-public class TeamDO {
+public class TeamDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -30,7 +33,7 @@ public class TeamDO {
 
     /** 逻辑删除标记 */
     @TableLogic
-    private Integer deleted;
+    private Integer isDelete;
 
     /** 团队状态（组建中/已提交/已通过/已驳回） */
     private Integer status;

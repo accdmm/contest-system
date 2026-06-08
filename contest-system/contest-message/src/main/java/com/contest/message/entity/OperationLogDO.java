@@ -2,10 +2,13 @@ package com.contest.message.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 操作日志实体 */
 @TableName("operation_log")
-public class OperationLogDO {
+public class OperationLogDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;

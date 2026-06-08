@@ -38,6 +38,8 @@ import java.util.stream.Collectors;
 @Service
 public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, RegistrationDO> implements RegistrationService {
 
+    private static final String UNKNOWN_CONTEST = "未知竞赛";
+
     private final ContestService contestService;
     private final NotificationService notificationService;
     private final UserService userService;
@@ -148,7 +150,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         long activeCount = count(new LambdaQueryWrapper<RegistrationDO>()
                 .eq(RegistrationDO::getUserId, userId)
                 .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
-        if (activeCount >= 3) {
+        if (activeCount >= CommonConstants.MAX_ACTIVE_REGISTRATIONS) {
             throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
@@ -160,7 +162,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         reg.setRemark(remark);
         save(reg);
         UserDO user = userService.getById(userId);
-        String userName = user != null ? user.getName() : "用户" + userId;
+        String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的个人报名，请及时审核。",
                 contestId, "contest");
@@ -197,7 +199,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         long activeCount = count(new LambdaQueryWrapper<RegistrationDO>()
                 .eq(RegistrationDO::getUserId, userId)
                 .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
-        if (activeCount >= 3) {
+        if (activeCount >= CommonConstants.MAX_ACTIVE_REGISTRATIONS) {
             throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
@@ -209,7 +211,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         reg.setStatus(CommonConstants.REG_PENDING);
         save(reg);
         UserDO user = userService.getById(userId);
-        String userName = user != null ? user.getName() : "用户" + userId;
+        String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的团队报名，请及时审核。",
                 contestId, "contest");
@@ -255,7 +257,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectRegistration(Long id, String reason) {
-        if (reason == null || reason.trim().length() < 5) {
+        if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
             throw new BusinessException("驳回原因不少于5个字符");
         }
         RegistrationDO reg = getById(id);
@@ -317,8 +319,8 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
         ContestDO c = contestService.getById(reg.getContestId());
         UserDO user = userService.getById(userId);
-        String userName = user != null ? user.getName() : "用户" + userId;
-        String contestName = c != null ? c.getName() : "未知竞赛";
+        String userName = user != null ? user.getName() : String.format("用户%d", userId);
+        String contestName = c != null ? c.getName() : UNKNOWN_CONTEST;
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
                 userName + " 取消了竞赛「" + contestName + "」的报名。",
                 reg.getContestId(), "contest");

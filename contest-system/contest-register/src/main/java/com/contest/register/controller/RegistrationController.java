@@ -84,7 +84,7 @@ public class RegistrationController {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         if (!currentUserId.equals(userId) && !isAdmin) {
             return Result.error("无权查看其他用户的报名记录");
         }

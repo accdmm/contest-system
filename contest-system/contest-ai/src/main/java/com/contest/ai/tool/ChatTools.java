@@ -48,7 +48,7 @@ public class ChatTools {
         try {
             int p = page != null && page > 0 ? page : 1;
             int s = size != null && size > 0 ? size : 10;
-            IPage<ContestDO> result = contestService.pageContests(p, s, keyword, category, 1, null);
+            IPage<ContestDO> result = contestService.pageContests(p, s, keyword, category, CommonConstants.CONTEST_OPEN, null);
             List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "当前没有找到符合条件的竞赛";
@@ -75,7 +75,7 @@ public class ChatTools {
                 c.getName(), c.getCategory(), c.getLevel(), c.getOrganizer(),
                 c.getContestTime(), c.getRegisterStartTime(), c.getRegisterEndTime(),
                 c.getLocation(),
-                c.getContestType() == 0 ? "个人" : c.getContestType() == 1 ? "团队" : "个人/团队",
+                c.getContestType() == CommonConstants.CONTEST_PERSONAL ? "个人" : c.getContestType() == CommonConstants.CONTEST_TEAM ? "团队" : "个人/团队",
                 c.getCurrentCount(),
                 c.getDescription() != null && c.getDescription().length() > 200
                     ? c.getDescription().substring(0, 200) + "..."
@@ -101,10 +101,10 @@ public class ChatTools {
             return records.stream()
                 .map(r -> {
                     String statusStr = switch (r.getStatus()) {
-                        case 0 -> "待审核";
-                        case 1 -> "已通过";
-                        case 2 -> "已拒绝";
-                        case 3 -> "已取消";
+                        case CommonConstants.REG_PENDING -> "待审核";
+                        case CommonConstants.REG_APPROVED -> "已通过";
+                        case CommonConstants.REG_REJECTED -> "已拒绝";
+                        case CommonConstants.REG_CANCELLED -> "已取消";
                         default -> "未知";
                     };
                     String contestName = r.getContestName() != null ? r.getContestName() : "";
@@ -148,7 +148,7 @@ public class ChatTools {
     @Tool(description = "【推荐】按竞赛名称精确搜索某个竞赛并查看详细信息，不需要事先知道竞赛ID。查找特定竞赛用此工具而非queryContests")
     public String searchContestDetail(String contestName) {
         try {
-            IPage<ContestDO> result = contestService.pageContests(1, 5, contestName, null, 1, null);
+            IPage<ContestDO> result = contestService.pageContests(1, 5, contestName, null, CommonConstants.CONTEST_OPEN, null);
             List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛";
@@ -159,7 +159,7 @@ public class ChatTools {
                 c.getName(), c.getId(), c.getCategory(), c.getLevel(), c.getOrganizer(),
                 c.getContestTime(), c.getRegisterStartTime(), c.getRegisterEndTime(),
                 c.getLocation(),
-                c.getContestType() == 0 ? "个人" : c.getContestType() == 1 ? "团队" : "个人/团队",
+                c.getContestType() == CommonConstants.CONTEST_PERSONAL ? "个人" : c.getContestType() == CommonConstants.CONTEST_TEAM ? "团队" : "个人/团队",
                 c.getCurrentCount(),
                 c.getDescription() != null && c.getDescription().length() > 200
                     ? c.getDescription().substring(0, 200) + "..."
@@ -199,10 +199,10 @@ public class ChatTools {
             return teams.stream()
                 .map(t -> {
                     String statusStr = switch (t.getStatus()) {
-                        case 0 -> "组建中";
-                        case 1 -> "已提交审核";
-                        case 2 -> "已通过";
-                        case 3 -> "已驳回";
+                        case CommonConstants.TEAM_FORMING -> "组建中";
+                        case CommonConstants.TEAM_SUBMITTED -> "已提交审核";
+                        case CommonConstants.TEAM_APPROVED -> "已通过";
+                        case CommonConstants.TEAM_REJECTED -> "已驳回";
                         default -> "未知";
                     };
                     Long contestId = teamContestMap.get(t.getId());
@@ -225,7 +225,7 @@ public class ChatTools {
             return "无法获取当前用户信息，请先登录";
         }
         try {
-            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, 1, null);
+            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, CommonConstants.CONTEST_OPEN, null);
             List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛，请确认名称是否正确";
@@ -259,7 +259,7 @@ public class ChatTools {
             return "请提供团队名称，例如你想创建的团队叫什么名字？";
         }
         try {
-            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, 1, null);
+            IPage<ContestDO> result = contestService.pageContests(1, 10, contestName, null, CommonConstants.CONTEST_OPEN, null);
             List<ContestDO> records = result.getRecords();
             if (records.isEmpty()) {
                 return "未找到名称为「" + contestName + "」的竞赛";

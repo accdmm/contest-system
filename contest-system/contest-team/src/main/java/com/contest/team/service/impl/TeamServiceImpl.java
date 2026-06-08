@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements TeamService {
+
+    private static final String TEAM_NO_PREFIX = "T";
+    private static final String TEAM_NO_DATE_FORMAT = "yyyyMMddHHmmss";
 
     private final TeamMemberMapper teamMemberMapper;
     private final ContestService contestService;
@@ -80,7 +84,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         team.setLeaderId(userId);
         team.setTeamName(teamName);
         team.setTeacherId(teacherId);
-        team.setTeamNo("T" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+        team.setTeamNo(TEAM_NO_PREFIX + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern(TEAM_NO_DATE_FORMAT)));
         team.setStatus(CommonConstants.TEAM_FORMING);
         team.setMemberCount(1);
         save(team);
@@ -114,12 +118,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         if (team == null) {
             throw new BusinessException("团队不存在");
         }
-        if (!team.getLeaderId().equals(userId)) {
+        if (!Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可生成邀请码");
         }
-        String code = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
+        String code = UUID.randomUUID().toString().replace("-", "").substring(0, CommonConstants.INVITE_CODE_LENGTH).toUpperCase();
         team.setInviteCode(code);
-        team.setInviteCodeExpire(LocalDateTime.now().plusDays(7));
+        team.setInviteCodeExpire(LocalDateTime.now().plusDays(CommonConstants.INVITE_CODE_EXPIRE_DAYS));
         updateById(team);
         return code;
     }
@@ -174,8 +178,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             teamMemberMapper.insert(member);
         }
 
-        UserDO applicant = userService.getById(userId);
-        String applicantName = applicant != null ? applicant.getName() : "用户" + userId;
+            UserDO applicant = userService.getById(userId);
+        String applicantName = applicant != null ? applicant.getName() : String.format("用户%d", userId);
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_APPLY,
                 "新成员申请", applicantName + " 申请加入你的团队「" + team.getTeamName() + "」，请及时处理。",
                 team.getId(), "team");
@@ -197,7 +201,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Transactional(rollbackFor = Exception.class)
     public void approveMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
-        if (team == null || !team.getLeaderId().equals(userId)) {
+        if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可审核成员");
         }
         Integer maxSize = resolveTeamMaxSize(teamId);
@@ -206,7 +210,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             throw new BusinessException("团队人数已达上限（最多" + maxSize + "人），无法添加更多成员");
         }
         TeamMemberDO member = teamMemberMapper.selectById(memberId);
-        if (member == null || !member.getTeamId().equals(teamId)) {
+        if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员申请不存在");
         }
         if (member.getStatus() != CommonConstants.MEMBER_PENDING) {
@@ -235,11 +239,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Transactional(rollbackFor = Exception.class)
     public void rejectMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
-        if (team == null || !team.getLeaderId().equals(userId)) {
+        if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可审核成员");
         }
         TeamMemberDO member = teamMemberMapper.selectById(memberId);
-        if (member == null || !member.getTeamId().equals(teamId)) {
+        if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员申请不存在");
         }
         if (member.getStatus() != CommonConstants.MEMBER_PENDING && member.getStatus() != CommonConstants.MEMBER_APPROVED) {
@@ -272,11 +276,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Transactional(rollbackFor = Exception.class)
     public void removeMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
-        if (team == null || !team.getLeaderId().equals(userId)) {
+        if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可移除成员");
         }
         TeamMemberDO member = teamMemberMapper.selectById(memberId);
-        if (member == null || !member.getTeamId().equals(teamId)) {
+        if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员不存在");
         }
         if (member.getRole() == CommonConstants.MEMBER_LEADER) {
@@ -305,7 +309,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Transactional(rollbackFor = Exception.class)
     public void dissolveTeam(Long teamId, Long userId) {
         TeamDO team = getById(teamId);
-        if (team == null || !team.getLeaderId().equals(userId)) {
+        if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可解散团队");
         }
 
@@ -317,7 +321,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         for (TeamMemberDO m : members) {
             m.setStatus(CommonConstants.MEMBER_REJECTED);
             teamMemberMapper.updateById(m);
-            if (!m.getUserId().equals(userId)) {
+            if (!Objects.equals(m.getUserId(), userId)) {
                 notificationService.sendNotification(m.getUserId(), CommonConstants.NOTIFY_SYSTEM,
                         "团队已解散", "你所在的团队「" + team.getTeamName() + "」已被队长解散。",
                         teamId, "team");
@@ -421,7 +425,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Transactional(rollbackFor = Exception.class)
     public void submitForReview(Long teamId, Long userId) {
         TeamDO team = getById(teamId);
-        if (team == null || !team.getLeaderId().equals(userId)) {
+        if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可提交报名");
         }
         Integer minSize = resolveTeamMinSize(teamId);
@@ -573,7 +577,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adminRejectTeam(Long teamId, String reason) {
-        if (reason == null || reason.trim().length() < 5) {
+        if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
             throw new BusinessException("驳回原因不少于5个字符");
         }
         TeamDO team = getById(teamId);
@@ -623,7 +627,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "团队审核未通过", rejectMsg, teamId, "team");
         for (TeamMemberDO m : members) {
-            if (!m.getUserId().equals(team.getLeaderId())) {
+            if (!Objects.equals(m.getUserId(), team.getLeaderId())) {
                 notificationService.sendNotification(m.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                         "团队审核未通过", "你所在的团队「" + team.getTeamName() + "」已被管理员驳回。原因：" + reason,
                         teamId, "team");
@@ -635,7 +639,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * 解析团队关联竞赛的最大人数限制
      *
      * 通过该团队的所有非取消报名记录，反查竞赛的 teamMaxSize。
-     * 若团队尚未报名则返回 null。
+     * 若团队尚未报名则返回 null（无限制）。
      */
     private Integer resolveTeamMaxSize(Long teamId) {
         List<RegistrationDO> regs = registrationService.lambdaQuery()
@@ -647,6 +651,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             if (contest != null && contest.getTeamMaxSize() != null && contest.getTeamMaxSize() > 0) {
                 return contest.getTeamMaxSize();
             }
+            return 0;
         }
         return null;
     }
@@ -655,7 +660,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * 解析团队关联竞赛的最小人数限制
      *
      * 通过该团队的所有非取消报名记录，反查竞赛的 teamMinSize。
-     * 若团队尚未报名则返回 null。
+     * 若关联竞赛未设置最小值则返回 0，未关联竞赛则返回 null。
      */
     private Integer resolveTeamMinSize(Long teamId) {
         List<RegistrationDO> regs = registrationService.lambdaQuery()
@@ -667,6 +672,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             if (contest != null && contest.getTeamMinSize() != null && contest.getTeamMinSize() > 0) {
                 return contest.getTeamMinSize();
             }
+            return 0;
         }
         return null;
     }
@@ -707,7 +713,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         if (team == null) {
             throw new BusinessException("团队不存在");
         }
-        if (!team.getLeaderId().equals(userId)) {
+        if (!Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可设置指导教师");
         }
         if (teacherId != null) {

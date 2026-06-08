@@ -39,7 +39,7 @@ public class CmsContentController {
     }
 
     /** 更新内容 */
-    @PostMapping("/update")
+    @PutMapping("/update")
     @PreAuthorize("hasAuthority('cms:update')")
     public Result<CmsContentDO> update(@RequestBody CmsContentDO content) {
         return Result.success(cmsContentService.updateContent(content));
@@ -56,7 +56,7 @@ public class CmsContentController {
     }
 
     /** 删除内容 */
-    @PostMapping("/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('cms:delete')")
     public Result<Void> delete(@PathVariable Long id) {
         cmsContentService.removeById(id);

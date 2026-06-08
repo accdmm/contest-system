@@ -1,9 +1,12 @@
 package com.contest.team.param;
 
+import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 
 /** 创建团队请求参数 */
-public class TeamCreateParam {
+public class TeamCreateParam implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** 团队名称 */
     @NotBlank(message = "团队名称不能为空")

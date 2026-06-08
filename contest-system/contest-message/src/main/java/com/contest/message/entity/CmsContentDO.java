@@ -2,10 +2,13 @@ package com.contest.message.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /** 内容管理实体 */
 @TableName("cms_content")
-public class CmsContentDO {
+public class CmsContentDO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
     private Long id;
