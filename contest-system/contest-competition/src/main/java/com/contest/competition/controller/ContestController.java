@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
+import com.contest.common.util.HtmlSanitizer;
 import com.contest.competition.entity.ContestDO;
 import com.contest.competition.param.ContestCreateParam;
 import com.contest.competition.param.ContestUpdateParam;
@@ -42,7 +43,7 @@ public class ContestController {
         contest.setRegisterEndTime(param.getRegisterEndTime());
         contest.setLocation(param.getLocation());
         contest.setCoverImageUrl(param.getCoverImageUrl());
-        contest.setDescription(param.getDescription());
+        contest.setDescription(HtmlSanitizer.sanitize(param.getDescription()));
         contest.setAttachmentUrls(param.getAttachmentUrls());
         contest.setContestType(param.getContestType());
         contest.setTeamMinSize(param.getTeamMinSize());
@@ -69,7 +70,7 @@ public class ContestController {
         contest.setRegisterEndTime(param.getRegisterEndTime());
         contest.setLocation(param.getLocation());
         contest.setCoverImageUrl(param.getCoverImageUrl());
-        contest.setDescription(param.getDescription());
+        contest.setDescription(HtmlSanitizer.sanitize(param.getDescription()));
         contest.setAttachmentUrls(param.getAttachmentUrls());
         contest.setContestType(param.getContestType());
         contest.setTeamMinSize(param.getTeamMinSize());

@@ -1,6 +1,7 @@
 package com.contest.message.controller;
 
 import com.contest.common.result.Result;
+import com.contest.common.util.HtmlSanitizer;
 import com.contest.message.entity.CmsContentDO;
 import com.contest.message.service.CmsContentService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +36,7 @@ public class CmsContentController {
     @PostMapping
     @PreAuthorize("hasAuthority('cms:create')")
     public Result<CmsContentDO> create(@RequestBody CmsContentDO content) {
+        content.setContent(HtmlSanitizer.sanitize(content.getContent()));
         return Result.success(cmsContentService.createContent(content));
     }
 
@@ -42,6 +44,7 @@ public class CmsContentController {
     @PutMapping("/update")
     @PreAuthorize("hasAuthority('cms:update')")
     public Result<CmsContentDO> update(@RequestBody CmsContentDO content) {
+        content.setContent(HtmlSanitizer.sanitize(content.getContent()));
         return Result.success(cmsContentService.updateContent(content));
     }
 

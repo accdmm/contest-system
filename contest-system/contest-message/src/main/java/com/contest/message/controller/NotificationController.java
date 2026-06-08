@@ -3,6 +3,7 @@ package com.contest.message.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.result.Result;
+import com.contest.common.util.HtmlSanitizer;
 import com.contest.message.entity.NotificationDO;
 import com.contest.message.param.NotificationSendParam;
 import com.contest.message.service.NotificationService;
@@ -74,7 +75,8 @@ public class NotificationController {
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('notification:send')")
     public Result<Void> send(@RequestBody @Valid NotificationSendParam param) {
-        notificationService.sendNotification(param.getUserId(), param.getType(), param.getTitle(), param.getContent(), param.getRelatedId(), param.getRelatedType());
+        notificationService.sendNotification(param.getUserId(), param.getType(), param.getTitle(),
+                HtmlSanitizer.sanitize(param.getContent()), param.getRelatedId(), param.getRelatedType());
         return Result.success();
     }
 
@@ -83,7 +85,7 @@ public class NotificationController {
     @PreAuthorize("hasAuthority('notification:broadcast')")
     public Result<Void> broadcast(@RequestParam Integer type, @RequestParam String title,
                                   @RequestParam String content) {
-        notificationService.sendBroadcast(type, title, content);
+        notificationService.sendBroadcast(type, title, HtmlSanitizer.sanitize(content));
         return Result.success();
     }
 }

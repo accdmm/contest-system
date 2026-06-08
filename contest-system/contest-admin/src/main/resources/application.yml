@@ -35,6 +35,8 @@ contest:
   jwt:
     expire-days: 7
     secret: contest-system-jwt-secret-key-2024-2025-2026
+  cors:
+    allowed-origins: "*"
   threshold:
     warn-percent: 80
   deadline:
