@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * 竞赛服务实现
  *
- * <p>包含竞赛创建、修改、发布、下架、删除等核心业务逻辑。
+ * 包含竞赛创建、修改、发布、下架、删除等核心业务逻辑。
  * 创建时校验时间顺序（报名开始 < 报名截止 < 竞赛时间），
  * 下架时校验是否存在已通过报名。
  */
@@ -194,6 +194,31 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         } else {
             wrapper.orderByDesc(ContestDO::getUpdateTime);
         }
+        IPage<ContestDO> result = page(new Page<>(page, size), wrapper);
+        populateCreatorNames(result.getRecords());
+        return result;
+    }
+
+    /**
+     * 管理员分页查询所有竞赛（包含草稿、已发布、已截止，不按状态过滤）
+     *
+     * 与前台 pageContests 不同：不默认过滤 status=1（已发布），
+     * 管理员可见全部状态的竞赛，便于管理草稿和已截止的竞赛。
+     * 同时支持按状态筛选，status 为 null 时展示全部。
+     */
+    @Override
+    public IPage<ContestDO> pageAdminContests(Integer page, Integer size, String keyword, String category, Integer status) {
+        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            wrapper.like(ContestDO::getName, keyword);
+        }
+        if (category != null && !category.isEmpty()) {
+            wrapper.eq(ContestDO::getCategory, category);
+        }
+        if (status != null) {
+            wrapper.eq(ContestDO::getStatus, status);
+        }
+        wrapper.orderByDesc(ContestDO::getCreateTime);
         IPage<ContestDO> result = page(new Page<>(page, size), wrapper);
         populateCreatorNames(result.getRecords());
         return result;
