@@ -135,7 +135,7 @@ async function handleAvatarUpload(e) {
   try {
     const res = await request.post('/upload', f, { headers: { 'Content-Type': 'multipart/form-data' } })
     form.avatarUrl = res.data
-    ElMessage.success('头像上传成功')
+    ElMessage.success('头像已上传，点击保存修改生效')
   } catch { /* handled by interceptor */ }
 }
 

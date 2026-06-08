@@ -203,10 +203,12 @@ async function fetchData() {
 }
 
 function edit(row) {
-  const sanitized = {
-    ...row,
-    teamMinSize: row.teamMinSize || 1,
-    teamMaxSize: row.teamMaxSize || 10
+  const allowed = ['id', 'name', 'category', 'level', 'organizer', 'contestTime',
+    'registerStartTime', 'registerEndTime', 'location', 'description',
+    'contestType', 'teamMinSize', 'teamMaxSize', 'maxParticipants', 'coverImageUrl', 'attachmentUrls']
+  const sanitized = { teamMinSize: row.teamMinSize || 1, teamMaxSize: row.teamMaxSize || 10 }
+  for (const key of allowed) {
+    if (key in row) sanitized[key] = row[key]
   }
   if (sanitized.contestTime == null) sanitized.contestTime = undefined
   if (sanitized.registerStartTime == null) sanitized.registerStartTime = undefined

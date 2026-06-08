@@ -108,13 +108,13 @@ const chartGrowth = ref(null)
 const chartLevel = ref(null)
 const chartTop = ref(null)
 
-const instances = []
 let resizeHandler = null
 
 function initChart(el) {
   if (!el) return null
+  const existing = echarts.getInstanceByDom(el)
+  if (existing) return existing
   const chart = echarts.init(el)
-  instances.push(chart)
   return chart
 }
 
@@ -296,14 +296,17 @@ async function fetchData() {
 
 onMounted(() => {
   fetchData()
-  resizeHandler = () => instances.forEach(c => c.resize())
+  const charts = [chartCategory, chartTrend, chartStatus, chartGrowth, chartLevel, chartTop]
+  resizeHandler = () => charts.forEach(ref => { const c = echarts.getInstanceByDom(ref.value); if (c) c.resize() })
   window.addEventListener('resize', resizeHandler)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', resizeHandler)
-  instances.forEach(c => c.dispose())
-  instances.length = 0
+  ;[chartCategory, chartTrend, chartStatus, chartGrowth, chartLevel, chartTop].forEach(ref => {
+    const c = echarts.getInstanceByDom(ref.value)
+    if (c) c.dispose()
+  })
 })
 </script>
 

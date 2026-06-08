@@ -60,16 +60,17 @@ const statusMap = {
 }
 
 const statusLabel = computed(() => {
-  // 兜底：状态为"报名中"但报名截止时间已过 → 显示"已截止"
-  if (props.contest.status === 1 && props.contest.registerEndTime) {
-    const end = new Date(props.contest.registerEndTime.replace(' ', 'T'))
+  const endTime = props.contest.registerEndTime
+  if (props.contest.status === 1 && endTime) {
+    const end = new Date(typeof endTime === 'string' ? endTime.replace(' ', 'T') : endTime)
     if (end < new Date()) return '已截止'
   }
   return statusMap[props.contest.status]?.label || '未知'
 })
 const statusType = computed(() => {
-  if (props.contest.status === 1 && props.contest.registerEndTime) {
-    const end = new Date(props.contest.registerEndTime.replace(' ', 'T'))
+  const endTime = props.contest.registerEndTime
+  if (props.contest.status === 1 && endTime) {
+    const end = new Date(typeof endTime === 'string' ? endTime.replace(' ', 'T') : endTime)
     if (end < new Date()) return 'warning'
   }
   return statusMap[props.contest.status]?.type || 'info'

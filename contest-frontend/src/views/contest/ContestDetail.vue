@@ -206,7 +206,7 @@ const statusLabel = computed(() => {
   const endTime = contest.value?.registerEndTime
   // 兜底：状态为"报名中"但报名截止时间已过 → 显示"已截止"
   if (s === 1 && endTime) {
-    const end = new Date(endTime.replace(' ', 'T'))
+    const end = new Date(typeof endTime === 'string' ? endTime.replace(' ', 'T') : endTime)
     if (end < new Date()) return '已截止'
   }
   return statusMap[s]?.label || ''
@@ -215,7 +215,7 @@ const statusType = computed(() => {
   const s = contest.value?.status
   const endTime = contest.value?.registerEndTime
   if (s === 1 && endTime) {
-    const end = new Date(endTime.replace(' ', 'T'))
+    const end = new Date(typeof endTime === 'string' ? endTime.replace(' ', 'T') : endTime)
     if (end < new Date()) return 'warning'
   }
   return statusMap[s]?.type || 'info'
@@ -292,11 +292,12 @@ async function loadMyRegistration() {
 }
 
 async function handleCancelRegistration(reg) {
-  if (reg.status === 1) {
-    try {
-      await ElMessageBox.confirm('确定取消已通过的报名吗？取消后需重新报名等待审核。', '确认取消')
-    } catch { return }
-  }
+  try {
+    const msg = reg.status === 1
+      ? '确定取消已通过的报名吗？取消后需重新报名等待审核。'
+      : '确定取消此报名吗？'
+    await ElMessageBox.confirm(msg, '确认取消')
+  } catch { return }
   try {
     await cancelRegistration(reg.id, store.userId)
     ElMessage.success('已取消')
