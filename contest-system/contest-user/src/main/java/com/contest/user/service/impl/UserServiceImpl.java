@@ -19,13 +19,21 @@ import cn.hutool.crypto.digest.DigestUtil;
 import java.util.List;
 import java.util.regex.Pattern;
 
-@Service
 /**
  * 用户服务实现
  *
  * 处理用户注册、登录、密码管理、账号冻结等业务逻辑。
  * 注册时做唯一性校验和 BCrypt 加密，登录时检查账号状态。
+ *
+ * 安全性说明：
+ * - 密码使用 BCrypt 算法（Hutool DigestUtil）加密存储，不可逆哈希
+ * - 登录时通过 BCrypt.checkPassword 比对，不解密原始密码
+ * - 密码强度校验：8-20 位，必须包含字母和数字
+ * - 学号（username）、邮箱（email）、手机号（phone）均建立唯一索引，防止重复注册
+ * - 账号冻结状态（status=1）在登录时前置检查
+ * - 所有数据库操作使用 MyBatis-Plus 参数化查询，防 SQL 注入
  */
+@Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
 
     private final CollegeMapper collegeMapper;
@@ -36,7 +44,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         this.majorMapper = majorMapper;
     }
 
-    /** 用户登录：校验用户名密码、检查账号状态 */
+    /**
+     * 用户登录：校验用户名密码、检查账号状态
+     *
+     * 查询流程：学号存在性 → 账号冻结检查 → 密码 BCrypt 比对。
+     * 密码错误和账号不存在均返回同一提示，防止账号枚举攻击。
+     * 冻结账号在登录时直接拦截，不暴露更详细的错误原因。
+     */
     @Override
     public UserDO login(String username, String password) {
         UserDO user = getOne(new LambdaQueryWrapper<UserDO>()
@@ -53,7 +67,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
-    /** 校验密码强度：8-20位，需包含字母和数字 */
+    /**
+     * 校验密码强度：8-20位，需包含字母和数字
+     *
+     * 前后端校验规则保持一致。使用正则表达式逐一检查字母和数字的存在性，
+     * 而非一次性 ^(?=.*[a-zA-Z])(?=.*\d).{8,20}$ 正则，便于错误提示定位。
+     */
     private void validatePassword(String password) {
         if (password == null || password.length() < 8 || password.length() > 20) {
             throw new BusinessException("密码长度需为8-20位");
@@ -64,7 +83,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
     }
 
-    /** 用户注册：校验唯一性、BCrypt加密、默认角色为学生 */
+    /**
+     * 用户注册：校验唯一性、BCrypt加密、默认角色为学生
+     *
+     * 校验顺序：密码强度 → 学号唯一 → 邮箱唯一（可选）→ 手机号唯一（可选），
+     * 尽早阻断无效请求。注册时自动设置默认角色为 0（学生）、状态为 0（正常）。
+     * 同步写入学院/专业的文字冗余字段，避免后续关联查询。
+     */
     @Override
     public UserDO register(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
@@ -106,7 +131,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
-    /** 管理员创建用户：校验唯一性和角色值，BCrypt加密 */
+    /**
+     * 管理员创建用户：校验唯一性和角色值，BCrypt加密
+     *
+     * Controller 层已校验非管理员不能创建管理员账号（ROLE_ADMIN 角色检查）。
+     * 此方法校验角色值必须在 [0, 2] 范围内，防止越权传入非法角色。
+     */
     @Override
     public UserDO adminCreateUser(UserDO user, String rawPassword) {
         validatePassword(rawPassword);
@@ -153,7 +183,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return user;
     }
 
-    /** 修改用户资料：同步学院/专业冗余文字字段 */
+    /**
+     * 修改用户资料：同步学院/专业冗余文字字段
+     *
+     * 处理要点：
+     * - 防止前端提交空字符串覆盖已有头像（avatarUrl 为空时设为 null，不更新数据库）
+     * - 通过 collegeId 反查 college 名称，同步更新冗余字段（避免每次查询都 JOIN）
+     * - 设置 id、password、username、status 为 null，防止覆盖数据库已有值
+     */
     @Override
     public void updateProfile(Long userId, UserDO user) {
         UserDO existing = getById(userId);
@@ -189,7 +226,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
-    /** 修改密码：校验原密码后更新为新密码 */
+    /**
+     * 修改密码：校验原密码后更新为新密码
+     *
+     * 先通过 BCrypt.checkPassword 校验原密码，新密码需通过 validatePassword
+     * 强度校验后再进行 BCrypt 加密存储。
+     */
     @Override
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         UserDO user = getById(userId);
@@ -204,7 +246,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
-    /** 冻结用户 */
+    /**
+     * 冻结用户：将账号状态置为 1（冻结），登录时被拦截
+     */
     @Override
     public void freezeUser(Long userId) {
         UserDO user = getById(userId);
@@ -215,7 +259,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
-    /** 解冻用户 */
+    /**
+     * 解冻用户：恢复账号状态为 0（正常）
+     */
     @Override
     public void unfreezeUser(Long userId) {
         UserDO user = getById(userId);
@@ -226,7 +272,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         updateById(user);
     }
 
-    /** 分页查询用户：支持按用户名、姓名、学院、专业模糊搜索 */
+    /**
+     * 分页查询用户：支持按用户名、姓名、学院、专业模糊搜索
+     *
+     * 使用 MyBatis-Plus 分页插件自动添加 LIMIT 和 COUNT 查询。
+     * 返回前清除密码字段（setPassword(null)），防止密码泄露。
+     * 性能说明：user 表有 idx_college、idx_status 索引，like 查询在数据量较小时性能可接受。
+     */
     @Override
     public IPage<UserDO> pageUsers(String keyword, Integer page, Integer size) {
         LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
@@ -245,7 +297,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         return result;
     }
 
-    /** 获取所有状态正常的教师列表 */
+    /**
+     * 获取所有状态正常的教师列表
+     *
+     * 仅返回 status=0（正常）的教师，冻结教师不可被选为指导教师。
+     */
     @Override
     public List<UserDO> listTeachers() {
         List<UserDO> teachers = list(new LambdaQueryWrapper<UserDO>()

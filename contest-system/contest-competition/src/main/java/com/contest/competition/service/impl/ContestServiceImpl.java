@@ -4,10 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.competition.entity.ContestDO;
@@ -30,8 +26,19 @@ import java.util.stream.Collectors;
  * 竞赛服务实现
  *
  * 包含竞赛创建、修改、发布、下架、删除等核心业务逻辑。
- * 创建时校验时间顺序（报名开始 < 报名截止 < 竞赛时间），
+ * 创建时校验时间顺序（报名开始 &lt; 报名截止 &lt; 竞赛时间），
  * 下架时校验是否存在已通过报名。
+ *
+ * 安全性说明：
+ * - 所有数据库操作通过 MyBatis-Plus 参数化查询（PreparedStatement），防 SQL 注入
+ * - 时间校验防止前端传入异常时间戳导致竞态条件
+ * - 删除操作校验 draft 状态，防止误删已发布竞赛
+ *
+ * 性能说明：
+ * - 分页查询使用 MyBatis-Plus 分页插件，自动生成 LIMIT + COUNT SQL
+ * - contest 表有 idx_status_type、idx_time 索引，覆盖常用查询条件
+ * - 热门/最新竞赛均限制返回条数（limit 参数），避免全表扫描
+ * - creatorName 通过批量查询（selectBatchIds）+ Map 映射填充，避免 N+1 问题
  */
 @Service
 public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> implements ContestService {
@@ -43,7 +50,16 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     }
 
     /**
-     * 创建竞赛：先校验时间顺序（报名开始 < 报名截止 < 竞赛时间），再初始化为草稿状态，设置当前报名人数为0
+     * 创建竞赛：校验时间顺序 → 初始化为草稿状态 → 设置报名人数为0
+     *
+     * 校验时间约束（按顺序）：
+     * 1. 报名开始时间不能早于当前时间
+     * 2. 报名截止时间不能早于当前时间
+     * 3. 竞赛时间不能早于当前时间
+     * 4. 报名截止不能早于报名开始
+     * 5. 竞赛时间不能早于报名截止
+     *
+     * 创建后自动填充 creatorName（通过 createBy 查询用户表）。
      */
     @Override
     public ContestDO createContest(ContestDO contest) {
@@ -73,10 +89,13 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     }
 
     /**
-     * 修改竞赛：非草稿状态且有已通过报名时禁止修改；设置 status/currentCount 为 null 避免覆盖数据库值
+     * 修改竞赛：非草稿状态且有已通过报名时禁止修改
+     *
+     * 设置 status 和 currentCount 为 null，避免 MyBatis-Plus 的 updateById
+     * 将这两个字段覆盖为 null。仅修改前端传入的字段。
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public ContestDO updateContest(ContestDO contest) {
         ContestDO existing = getById(contest.getId());
         if (existing == null) {
@@ -100,9 +119,11 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return contest;
     }
 
-    /** 上架竞赛：将状态置为已开放 */
+    /**
+     * 上架竞赛：将状态从草稿（0）置为已开放（1），前台可见并开放报名
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void publishContest(Long id) {
         ContestDO contest = getById(id);
         if (contest == null) {
@@ -112,9 +133,14 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         updateById(contest);
     }
 
-    /** 下架竞赛：有已通过报名时不能下架 */
+    /**
+     * 下架竞赛：仅有已通过报名时不允许下架（保护已报名用户权益）
+     *
+     * 下架后状态恢复为草稿（0），前台不可见。若 currentCount = 0，
+     * 说明无任何已通过报名，允许下架。
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void unpublishContest(Long id) {
         ContestDO contest = getById(id);
         if (contest == null) {
@@ -127,9 +153,14 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         updateById(contest);
     }
 
-    /** 删除竞赛：仅草稿状态且无报名时允许删除 */
+    /**
+     * 删除竞赛：仅草稿状态且无报名时允许删除
+     *
+     * 使用 removeById（逻辑删除，由于 @TableLogic 注解自动转为 UPDATE SET is_delete=1）。
+     * 物理删除仅发生在 is_delete 字段不存在时，当前已添加该字段，故为逻辑删除。
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void deleteContest(Long id) {
         ContestDO contest = getById(id);
         if (contest == null) {
@@ -144,6 +175,12 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         removeById(id);
     }
 
+    /**
+     * 重写 getById：查询后自动填充创建人名称
+     *
+     * 由于 MyBatis-Plus 的 @TableLogic 自动过滤 is_delete=1 的记录，
+     * 已逻辑删除的竞赛会返回 null。
+     */
     @Override
     public ContestDO getById(Serializable id) {
         ContestDO contest = super.getById(id);
@@ -158,6 +195,15 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return pageContests(page, size, keyword, category, status, null, sortBy);
     }
 
+    /**
+     * 前台竞赛列表分页查询
+     *
+     * 默认只展示 status=1（已发布）且报名未截止的竞赛。
+     * 可选按类别、竞赛类型筛选，支持按热度（currentCount）和截止时间（registerEndTime）排序。
+     *
+     * 性能说明：查询使用了 contest 表的 idx_status_type（status + contest_type 复合索引）
+     * 和 idx_time（register_end_time 索引），确保在大量竞赛数据下的查询性能。
+     */
     @Override
     public IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
         LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
@@ -180,7 +226,6 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
                         .le(ContestDO::getRegisterEndTime, now);
             }
         } else {
-            // 默认只展示报名未截止的上架竞赛，排除草稿和已过期的
             wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
                     .gt(ContestDO::getRegisterEndTime, now);
         }
@@ -224,6 +269,11 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return result;
     }
 
+    /**
+     * 获取热门竞赛（按报名人数倒序）
+     *
+     * 仅返回已发布且报名未截止的竞赛。限制返回条数（默认 5 条）。
+     */
     @Override
     public List<ContestDO> listHotContests(int limit) {
         LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
@@ -235,6 +285,11 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return list;
     }
 
+    /**
+     * 获取最新竞赛（按创建时间倒序）
+     *
+     * 仅返回已发布且报名未截止的竞赛。限制返回条数（默认 5 条）。
+     */
     @Override
     public List<ContestDO> listLatestContests(int limit) {
         LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
@@ -246,6 +301,12 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         return list;
     }
 
+    /**
+     * 填充单个竞赛的创建人名称
+     *
+     * 通过 createBy 字段查询 user 表获取 name。
+     * 适用于详情页等单条查询场景。
+     */
     private void populateCreatorName(ContestDO contest) {
         if (contest == null || contest.getCreateBy() == null) return;
         UserDO user = userMapper.selectById(contest.getCreateBy());
@@ -254,6 +315,12 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
         }
     }
 
+    /**
+     * 批量填充竞赛列表的创建人名称
+     *
+     * 使用 selectBatchIds + Map 映射，避免逐条查询的 N+1 问题。
+     * 适用于列表页等批量查询场景。
+     */
     private void populateCreatorNames(List<ContestDO> contests) {
         Set<Long> userIds = contests.stream()
                 .map(ContestDO::getCreateBy)
