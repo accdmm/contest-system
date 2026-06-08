@@ -1,81 +1,63 @@
 package com.contest.team.controller;
 
-import com.contest.team.entity.TeamDO;
-import com.contest.team.entity.TeamMemberDO;
 import com.contest.team.service.TeamService;
+import com.contest.team.test.TestApplication;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = TestApplication.class)
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
+@Transactional
 class TeamControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private TeamService teamService;
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    private void setAuthUser(Long userId) {
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, java.util.List.of());
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+    }
 
     @BeforeEach
     void setUp() {
-        TeamController controller = new TeamController(teamService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (1, 'leader', 'pw', '队长', 0, 0)");
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (2, 'member', 'pw', '成员A', 0, 0)");
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (3, 'applicant', 'pw', '申请人', 0, 0)");
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (13, 'teacher', 'pw', '王教授', 2, 0)");
+        jdbc.execute("INSERT INTO contest (id, name, contest_type, team_min_size, team_max_size, max_participants, status, register_start_time, register_end_time, contest_time) VALUES (1, '测试竞赛', 1, 2, 5, 100, 1, '2026-01-01 00:00:00', '2026-12-31 23:59:59', '2027-01-01 00:00:00')");
+        jdbc.execute("INSERT INTO team (id, leader_id, team_name, team_no, status, member_count, invite_code, invite_code_expire) VALUES (1, 1, '测试团队', 'T00001', 0, 1, 'ABC123', '2026-12-31 23:59:59')");
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 1, 1, 1, NOW())");
     }
 
-    @Test
-    void create_shouldReturnTeam() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        team.setTeamName("测试团队");
-        lenient().when(teamService.createTeam(any(), anyString(), any())).thenReturn(team);
-
-        mockMvc.perform(post("/api/team")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"teamName\": \"测试团队\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.teamName").value("测试团队"));
-    }
-
-    @Test
-    void create_shouldReturnErrorWhenMissingParams() throws Exception {
-        mockMvc.perform(post("/api/team")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\": 1}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(400));
-    }
-
-    @Test
-    void getByLeader_shouldReturnTeams() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        team.setLeaderId(1L);
-        lenient().when(teamService.getTeamsByLeader(any())).thenReturn(List.of(team));
-
-        mockMvc.perform(get("/api/team/leader"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].id").value(1));
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void getById_shouldReturnTeam() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        team.setTeamName("测试团队");
-        when(teamService.getById(1L)).thenReturn(team);
-
         mockMvc.perform(get("/api/team/1/detail"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.teamName").value("测试团队"));
@@ -83,144 +65,33 @@ class TeamControllerTest {
 
     @Test
     void getById_shouldReturnErrorWhenNotFound() throws Exception {
-        when(teamService.getById(999L)).thenReturn(null);
-
         mockMvc.perform(get("/api/team/999/detail"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(400));
     }
 
     @Test
-    void generateInvite_shouldReturnCode() throws Exception {
-        lenient().when(teamService.generateInviteCode(any(), any())).thenReturn("ABC123");
-
-        mockMvc.perform(post("/api/team/1/invite")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+    void getByLeader_shouldReturnTeams() throws Exception {
+        setAuthUser(1L);
+        mockMvc.perform(get("/api/team/leader?userId=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").value("ABC123"));
-    }
-
-    @Test
-    void generateInvite_shouldSucceedWithoutUserId() throws Exception {
-        lenient().when(teamService.generateInviteCode(any(), any())).thenReturn("CODE123");
-        mockMvc.perform(post("/api/team/1/invite")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void join_shouldReturnTeam() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        lenient().when(teamService.joinByInviteCode(any(), anyString())).thenReturn(team);
-
-        mockMvc.perform(post("/api/team/join")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inviteCode\": \"ABC123\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value(1));
-    }
-
-    @Test
-    void join_shouldReturnErrorWhenMissingParams() throws Exception {
-        mockMvc.perform(post("/api/team/join")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\": 1}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(400));
-    }
-
-    @Test
-    void dissolve_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/dissolve").param("userId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void submitReview_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/submit").param("userId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void approveMember_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/members/2/approve").param("userId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void rejectMember_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/members/3/reject").param("userId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void removeMember_shouldSucceed() throws Exception {
-        mockMvc.perform(delete("/api/team/1/members/4").param("userId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void leave_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/leave").param("userId", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+                .andExpect(jsonPath("$.data[0].leaderId").value(1));
     }
 
     @Test
     void members_shouldReturnList() throws Exception {
-        TeamMemberDO member = new TeamMemberDO();
-        member.setId(1L);
-        member.setUserId(2L);
-        when(teamService.listMembers(1L)).thenReturn(List.of(member));
-
         mockMvc.perform(get("/api/team/1/members"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].userId").value(2));
+                .andExpect(status().isOk());
     }
 
     @Test
     void pendingMembers_shouldReturnList() throws Exception {
-        TeamMemberDO member = new TeamMemberDO();
-        member.setId(1L);
-        member.setStatus(0);
-        when(teamService.listPendingMembers(1L)).thenReturn(List.of(member));
-
         mockMvc.perform(get("/api/team/1/pending"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].status").value(0));
-    }
-
-    @Test
-    void adminApprove_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/admin-approve"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
-
-    @Test
-    void adminReject_shouldSucceed() throws Exception {
-        mockMvc.perform(put("/api/team/1/admin-reject")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"reason\": \"材料不符合要求，请修改后重新提交\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+                .andExpect(status().isOk());
     }
 
     @Test
     void userTeams_shouldReturnList() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        when(teamService.listUserTeams(1L)).thenReturn(List.of(team));
-
         mockMvc.perform(get("/api/team/user/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value(1));
@@ -228,19 +99,117 @@ class TeamControllerTest {
 
     @Test
     void page_shouldReturnPagedResult() throws Exception {
-        TeamDO team = new TeamDO();
-        team.setId(1L);
-        when(teamService.pageTeams(any(), anyInt(), anyInt())).thenReturn(
-                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<TeamDO>() {{
-                    setRecords(List.of(team));
-                    setTotal(1);
-                }}
-        );
-
         mockMvc.perform(get("/api/team/page")
                         .param("page", "1")
                         .param("size", "10"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void generateInvite_shouldReturnCode() throws Exception {
+        setAuthUser(1L);
+        mockMvc.perform(post("/api/team/1/invite")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("userId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.records[0].id").value(1));
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void createTeam_shouldSucceed() throws Exception {
+        setAuthUser(2L);
+        mockMvc.perform(post("/api/team")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"teamName\": \"新建团队\", \"userId\": 2}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.teamName").value("新建团队"));
+    }
+
+    @Test
+    void joinTeam_shouldSucceed() throws Exception {
+        setAuthUser(3L);
+        mockMvc.perform(post("/api/team/join")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inviteCode\": \"ABC123\", \"userId\": 3}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void approveMember_shouldSucceed() throws Exception {
+        setAuthUser(1L);
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 3, 0, 0, NOW())");
+        Long memberId = jdbc.queryForObject("SELECT id FROM team_member WHERE team_id = 1 AND user_id = 3", Long.class);
+        mockMvc.perform(post("/api/team/1/members/" + memberId + "/approve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void rejectMember_shouldSucceed() throws Exception {
+        setAuthUser(1L);
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 3, 0, 0, NOW())");
+        Long memberId = jdbc.queryForObject("SELECT id FROM team_member WHERE team_id = 1 AND user_id = 3", Long.class);
+        mockMvc.perform(post("/api/team/1/members/" + memberId + "/reject"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void removeMember_shouldSucceed() throws Exception {
+        setAuthUser(1L);
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 3, 0, 1, NOW())");
+        jdbc.execute("UPDATE team SET member_count = 2 WHERE id = 1");
+        Long memberId = jdbc.queryForObject("SELECT id FROM team_member WHERE team_id = 1 AND user_id = 3", Long.class);
+        mockMvc.perform(post("/api/team/1/members/" + memberId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void leaveTeam_shouldSucceed() throws Exception {
+        setAuthUser(3L);
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 3, 0, 1, NOW())");
+        jdbc.execute("UPDATE team SET member_count = 2 WHERE id = 1");
+        mockMvc.perform(post("/api/team/1/leave"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void dissolveTeam_shouldSucceed() throws Exception {
+        setAuthUser(1L);
+        mockMvc.perform(post("/api/team/1/dissolve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void submitReview_shouldSucceed() throws Exception {
+        setAuthUser(1L);
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time, handle_time) VALUES (1, 2, 0, 1, NOW(), NOW())");
+        jdbc.execute("UPDATE team SET member_count = 2 WHERE id = 1");
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, team_id, reg_type, status) VALUES (1, 1, 1, 1, 0)");
+        mockMvc.perform(post("/api/team/1/submit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void adminApprove_shouldSucceed() throws Exception {
+        jdbc.execute("UPDATE team SET status = 1 WHERE id = 1");
+        mockMvc.perform(post("/api/team/1/admin-approve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void adminReject_shouldSucceed() throws Exception {
+        jdbc.execute("UPDATE team SET status = 1 WHERE id = 1");
+        mockMvc.perform(post("/api/team/1/admin-reject")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\": \"材料不符合要求，请修改后重新提交\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
     }
 }

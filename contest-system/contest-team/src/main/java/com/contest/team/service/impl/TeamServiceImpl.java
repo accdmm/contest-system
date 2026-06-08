@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,12 @@ import java.util.stream.Collectors;
  * 处理团队创建、成员管理、加入审批、团队报名等业务逻辑。
  * 队长创建团队时生成6位唯一邀请码，成员通过邀请码申请加入，
  * 队长审批成员申请，团队人数达标后方可提交报名审核。
+ *
+ * 事务说明：团队创建、成员管理、审批、解散等核心操作均标注 @Transactional，
+ * 确保团队表、成员表、报名表之间的数据一致性（如解散团队时同步取消关联报名）。
+ *
+ * 安全性说明：关键操作（加入、审批、移出、解散等）均校验当前用户身份，
+ * 确保只有队长可管理团队。
  */
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements TeamService {
@@ -53,9 +60,21 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         this.adminNotifyService = adminNotifyService;
     }
 
-    /** 创建团队：初始化团队信息，队长自动成为已批准的成员 */
+    /**
+     * 创建团队：初始化团队信息，队长自动成为已批准的成员
+     *
+     * 创建流程：
+     * 1. 生成团队编号（T + 时间戳，精确到秒）
+     * 2. 初始化状态为组建中（TEAM_FORMING），成员计数为 1
+     * 3. 在 team_member 表中插入队长记录（角色=队长，状态=已通过）
+     *
+     * @param userId    队长用户 ID
+     * @param teamName  团队名称
+     * @param teacherId 指导教师 ID（可选）
+     * @return 创建的团队对象
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public TeamDO createTeam(Long userId, String teamName, Long teacherId) {
         TeamDO team = new TeamDO();
         team.setLeaderId(userId);
@@ -78,8 +97,18 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return team;
     }
 
+    /**
+     * 生成 6 位唯一邀请码
+     *
+     * 使用 UUID 的前 6 位并转大写，碰撞概率极低。有效期 7 天。
+     * 邀请码存入 team 表的 invite_code 字段，通过唯一索引保证不重复。
+     *
+     * @param teamId 团队 ID
+     * @param userId 请求用户 ID（需为队长）
+     * @return 6 位大写邀请码
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public String generateInviteCode(Long teamId, Long userId) {
         TeamDO team = getById(teamId);
         if (team == null) {
@@ -95,9 +124,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return code;
     }
 
-    /** 通过邀请码加入团队：校验邀请码有效性、过期时间、团队状态；去重校验后插入或更新申请记录；通知队长 */
+    /**
+     * 通过邀请码加入团队
+     *
+     * 校验流程：邀请码有效性 → 过期时间 → 团队状态（仅 TEAM_FORMING 可加入）→
+     * 重复校验（已通过成员不可再次加入）→ 更新或插入申请记录 → 通知队长。
+     *
+     * 已拒绝或已移除的成员可重新申请，此时更新原有记录的 status 为 MEMBER_PENDING。
+     *
+     * @param userId     申请用户 ID
+     * @param inviteCode 6 位邀请码
+     * @return 目标团队
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public TeamDO joinByInviteCode(Long userId, String inviteCode) {
         TeamDO team = getOne(new LambdaQueryWrapper<TeamDO>()
                 .eq(TeamDO::getInviteCode, inviteCode));
@@ -143,9 +183,18 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return team;
     }
 
-    /** 批准成员加入：队长校验 → 人数上限校验 → 状态前置校验 → 更新成员状态并增加团队人数 → 发送通知 */
+    /**
+     * 批准成员加入
+     *
+     * 校验：仅队长可操作 → 团队人数上限检查 → 成员申请存在性 → 重复审批检测
+     * → 更新成员状态为已通过 → 增加团队 memberCount → 发送通知。
+     *
+     * @param teamId   团队 ID
+     * @param userId   队长用户 ID
+     * @param memberId 成员申请记录 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void approveMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
@@ -173,8 +222,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 teamId, "team");
     }
 
+    /**
+     * 拒绝成员加入 / 移除已批准的成员
+     *
+     * 支持拒绝待审批和已批准的成员。若移除已批准的成员，递减 team.memberCount。
+     *
+     * @param teamId   团队 ID
+     * @param userId   队长用户 ID
+     * @param memberId 成员记录 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void rejectMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
@@ -200,8 +258,18 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 teamId, "team");
     }
 
+    /**
+     * 移除团队成员
+     *
+     * 仅队长可操作，不能移除队长本人。移除后成员状态置为 MEMBER_REJECTED，
+     * 递减团队 memberCount。
+     *
+     * @param teamId   团队 ID
+     * @param userId   队长用户 ID
+     * @param memberId 成员记录 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void removeMember(Long teamId, Long userId, Long memberId) {
         TeamDO team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
@@ -221,8 +289,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         updateById(team);
     }
 
+    /**
+     * 解散团队
+     *
+     * 仅队长可操作。操作流程：
+     * 1. 逻辑删除团队记录（@TableLogic 设为已删除）
+     * 2. 将待审批和已通过的成员记录置为已拒绝
+     * 3. 取消该团队的所有报名（已完成报名时递减竞赛 currentCount）
+     * 4. 逐个发送通知给所有受影响的成员
+     *
+     * @param teamId 团队 ID
+     * @param userId 队长用户 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void dissolveTeam(Long teamId, Long userId) {
         TeamDO team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
@@ -248,12 +328,24 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 .eq(RegistrationDO::getTeamId, teamId)
                 .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
+
+        // 批量查询关联竞赛，避免 N+1 问题
+        List<Long> contestIds = regs.stream()
+                .map(RegistrationDO::getContestId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, ContestDO> contestMap = contestIds.isEmpty() ?
+                java.util.Collections.emptyMap() :
+                contestService.listByIds(contestIds).stream()
+                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+
         for (RegistrationDO reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_CANCELLED);
             registrationService.updateById(reg);
             if (wasApproved) {
-                ContestDO contest = contestService.getById(reg.getContestId());
+                ContestDO contest = contestMap.get(reg.getContestId());
                 if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                     contest.setCurrentCount(contest.getCurrentCount() - 1);
                     contestService.updateById(contest);
@@ -265,8 +357,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
     }
 
+    /**
+     * 成员主动退出团队
+     *
+     * 非队长成员可主动退出。退出的操作顺序：
+     * 更新成员状态 → 递减团队 memberCount → 通知队长 → 取消该成员在团队关联的报名。
+     *
+     * @param teamId 团队 ID
+     * @param userId 退出用户 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void leaveTeam(Long teamId, Long userId) {
         TeamMemberDO member = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMemberDO>()
                 .eq(TeamMemberDO::getTeamId, teamId)
@@ -304,8 +405,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
     }
 
+    /**
+     * 提交团队报名审核
+     *
+     * 仅队长可操作。校验条件：
+     * - 团队需已关联竞赛（通过报名记录反查）
+     * - 队员数需达到竞赛设定的团队最少人数
+     * - 至少有一名已通过的普通成员（队长不算）
+     * 通过后将团队状态置为 TEAM_SUBMITTED，通知管理员审批。
+     *
+     * @param teamId 团队 ID
+     * @param userId 队长用户 ID
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void submitForReview(Long teamId, Long userId) {
         TeamDO team = getById(teamId);
         if (team == null || !team.getLeaderId().equals(userId)) {
@@ -333,6 +446,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 teamId, "team");
     }
 
+    /**
+     * 查询团队成员列表（仅已通过的成员）
+     *
+     * 自动填充用户名称（通过 userService.listByIds 批量查询）。
+     *
+     * @param teamId 团队 ID
+     * @return 成员列表
+     */
     @Override
     public List<TeamMemberDO> listMembers(Long teamId) {
         List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
@@ -341,6 +462,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return enrichWithUserName(members);
     }
 
+    /**
+     * 查询待审批的成员申请列表
+     *
+     * @param teamId 团队 ID
+     * @return 待审批成员列表
+     */
     @Override
     public List<TeamMemberDO> listPendingMembers(Long teamId) {
         List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
@@ -349,6 +476,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return enrichWithUserName(members);
     }
 
+    /**
+     * 批量填充成员列表的用户名称
+     *
+     * 使用 selectBatchIds + Map 映射避免 N+1 查询。
+     *
+     * @param members 成员列表（不含 userName）
+     * @return 含 userName 的成员列表
+     */
     private List<TeamMemberDO> enrichWithUserName(List<TeamMemberDO> members) {
         List<Long> userIds = members.stream()
                 .map(TeamMemberDO::getUserId)
@@ -368,12 +503,26 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 获取用户作为队长创建的团队列表
+     *
+     * @param userId 用户 ID
+     * @return 团队列表
+     */
     @Override
     public List<TeamDO> getTeamsByLeader(Long userId) {
         return list(new LambdaQueryWrapper<TeamDO>()
                 .eq(TeamDO::getLeaderId, userId));
     }
 
+    /**
+     * 分页查询所有团队（管理员后台用）
+     *
+     * @param status 团队状态筛选（可选）
+     * @param page   页码
+     * @param size   每页条数
+     * @return 团队分页数据
+     */
     @Override
     public IPage<TeamDO> pageTeams(Integer status, Integer page, Integer size) {
         LambdaQueryWrapper<TeamDO> wrapper = new LambdaQueryWrapper<>();
@@ -384,9 +533,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return page(new Page<>(page, size), wrapper);
     }
 
-    /** 管理员通过团队审核：校验团队已提交 → 更新状态 → 自动通过关联的报名记录 → 发送通知 */
+    /**
+     * 管理员通过团队审核
+     *
+     * 校验团队已提交 → 更新状态为已通过 → 自动审批关联的报名记录
+     * → 发送通知给队长。
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void adminApproveTeam(Long teamId) {
         TeamDO team = getById(teamId);
         if (team == null) throw new BusinessException("团队不存在");
@@ -407,8 +561,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 teamId, "team");
     }
 
+    /**
+     * 管理员驳回团队
+     *
+     * 校验驳回原因长度 → 更新团队状态为已驳回 → 取消关联的所有报名
+     * （递减已通过报名的竞赛 currentCount）→ 拒绝所有成员 → 发送通知。
+     *
+     * @param teamId 团队 ID
+     * @param reason 驳回原因（不少于 5 个字符）
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void adminRejectTeam(Long teamId, String reason) {
         if (reason == null || reason.trim().length() < 5) {
             throw new BusinessException("驳回原因不少于5个字符");
@@ -423,13 +586,25 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                 .eq(RegistrationDO::getTeamId, teamId)
                 .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
+
+        // 批量查询关联竞赛，避免 N+1 问题
+        List<Long> contestIds = regs.stream()
+                .map(RegistrationDO::getContestId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, ContestDO> contestMap = contestIds.isEmpty() ?
+                java.util.Collections.emptyMap() :
+                contestService.listByIds(contestIds).stream()
+                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+
         for (RegistrationDO reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_REJECTED);
             reg.setReviewReason(reason);
             registrationService.updateById(reg);
             if (wasApproved) {
-                ContestDO contest = contestService.getById(reg.getContestId());
+                ContestDO contest = contestMap.get(reg.getContestId());
                 if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                     contest.setCurrentCount(contest.getCurrentCount() - 1);
                     contestService.updateById(contest);
@@ -456,6 +631,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
     }
 
+    /**
+     * 解析团队关联竞赛的最大人数限制
+     *
+     * 通过该团队的所有非取消报名记录，反查竞赛的 teamMaxSize。
+     * 若团队尚未报名则返回 null。
+     */
     private Integer resolveTeamMaxSize(Long teamId) {
         List<RegistrationDO> regs = registrationService.lambdaQuery()
                 .eq(RegistrationDO::getTeamId, teamId)
@@ -470,6 +651,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return null;
     }
 
+    /**
+     * 解析团队关联竞赛的最小人数限制
+     *
+     * 通过该团队的所有非取消报名记录，反查竞赛的 teamMinSize。
+     * 若团队尚未报名则返回 null。
+     */
     private Integer resolveTeamMinSize(Long teamId) {
         List<RegistrationDO> regs = registrationService.lambdaQuery()
                 .eq(RegistrationDO::getTeamId, teamId)
@@ -484,6 +671,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return null;
     }
 
+    /**
+     * 获取用户所在的所有团队（含待审批和已加入的）
+     *
+     * 先查询 team_member 表获取用户关联的团队 ID，
+     * 再批量查询 team 表返回列表。
+     *
+     * @param userId 用户 ID
+     * @return 团队列表（不包括被拒绝的）
+     */
     @Override
     public List<TeamDO> listUserTeams(Long userId) {
         List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
@@ -494,8 +690,18 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         return listByIds(teamIds);
     }
 
+    /**
+     * 设置或更换指导教师
+     *
+     * 仅队长可操作。校验教师用户是否存在且角色为教师（role=2）。
+     * 传入 null 可清空指导教师。
+     *
+     * @param teamId    团队 ID
+     * @param teacherId 新指导教师 ID（null 表示清空）
+     * @param userId    操作人用户 ID（需为队长）
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void setTeacher(Long teamId, Long teacherId, Long userId) {
         TeamDO team = getById(teamId);
         if (team == null) {
@@ -517,6 +723,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         updateById(team);
     }
 
+    /**
+     * 获取教师指导的所有团队列表
+     *
+     * @param teacherId 教师用户 ID
+     * @return 团队列表
+     */
     @Override
     public List<TeamDO> getTeamsByTeacher(Long teacherId) {
         return list(new LambdaQueryWrapper<TeamDO>()

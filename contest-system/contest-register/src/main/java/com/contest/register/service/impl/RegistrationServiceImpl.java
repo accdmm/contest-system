@@ -24,7 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** 报名服务实现，包含个人/团队报名、审核、取消及报名校验等核心业务逻辑 */
+/**
+ * 报名服务实现，包含个人/团队报名、审核、取消及报名校验等核心业务逻辑
+ *
+ * 事务说明：报名、审核、驳回、取消等操作均标注 @Transactional，
+ * 确保报名记录、竞赛人数、通知发送等操作的数据一致性。
+ *
+ * 并发安全性说明：
+ * - 重复报名校验通过 count 查询 + 数据库唯一约束（业务层面无唯一约束，通过查询保证）
+ * - 人数上限校验：报名时检查 count，审核时再次检查 currentCount，双层校验防止超限
+ * - 活跃报名数校验：每人同时最多 3 个非取消状态报名
+ */
 @Service
 public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, RegistrationDO> implements RegistrationService {
 
@@ -42,6 +52,16 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         this.adminNotifyService = adminNotifyService;
     }
 
+    /**
+     * 校验竞赛是否可报名
+     *
+     * 校验顺序：竞赛是否存在 → 是否开放报名 → 报名开始时间 → 报名截止时间 → 报名类型匹配。
+     * 任一条件不满足立即抛出 BusinessException，避免无效请求继续执行。
+     *
+     * @param contestId       竞赛 ID
+     * @param requiredRegType 报名类型（个人/团队），与竞赛类型匹配检查
+     * @return 校验通过的竞赛对象
+     */
     private ContestDO validateContest(Long contestId, Integer requiredRegType) {
         ContestDO contest = contestService.getById(contestId);
         if (contest == null) {
@@ -66,6 +86,15 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return contest;
     }
 
+    /**
+     * 校验报名人数是否已达上限
+     *
+     * 查询数据库中该竞赛所有非取消状态的报名记录数，与竞赛设定的上限比较。
+     * MyBatis-Plus 的 @TableLogic 自动过滤 is_delete=1 的记录。
+     *
+     * @param contestId       竞赛 ID
+     * @param maxParticipants 人数上限（0 或 null 表示不限）
+     */
     private void checkMaxParticipants(Long contestId, Integer maxParticipants) {
         if (maxParticipants == null || maxParticipants <= 0) return;
         long currentTotal = count(new LambdaQueryWrapper<RegistrationDO>()
@@ -76,6 +105,14 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         }
     }
 
+    /**
+     * 审核时再次校验人数上限
+     *
+     * 与 checkMaxParticipants 的区别：此方法读取 ContestDO 中的 currentCount 字段
+     * （已通过审核的计数），而非数据库中报名记录总数。用于审批通过时确保不会超出上限。
+     *
+     * @param contest 竞赛实体
+     */
     private void checkMaxParticipantsForApproval(ContestDO contest) {
         Integer max = contest.getMaxParticipants();
         if (max != null && max > 0 && contest.getCurrentCount() != null && contest.getCurrentCount() >= max) {
@@ -84,11 +121,18 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     }
 
     /**
-     * 个人赛报名：校验竞赛开放状态和时间 → 校验人数上限 → 校验重复报名（同一竞赛不可重复报名）→
-     * 校验每人最多3个活跃报名 → 创建待审核记录 → 发送管理员通知
+     * 个人赛报名
+     *
+     * 校验流程：竞赛开放状态和时间 → 人数上限 → 重复报名（同一竞赛不可重复报名）→
+     * 每人最多 3 个活跃报名 → 创建待审核记录 → 发送管理员通知。
+     *
+     * @param userId    报名用户 ID
+     * @param contestId 目标竞赛 ID
+     * @param remark    报名备注（可选）
+     * @return 创建的报名记录
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public RegistrationDO registerPersonal(Long userId, Long contestId, String remark) {
         ContestDO contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
@@ -124,11 +168,18 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     }
 
     /**
-     * 团队赛报名：验证团队有效性和队长身份 → 校验竞赛状态和时间 → 校验人数上限 →
-     * 校验重复报名（同一团队不可重复报名同一竞赛）→ 校验每人最多3个活跃报名 → 创建待审核记录 → 发送管理员通知
+     * 团队赛报名
+     *
+     * 校验流程：团队有效性和队长身份 → 竞赛状态和时间 → 人数上限 →
+     * 重复报名（同一团队不可重复报名同一竞赛）→ 每人最多 3 个活跃报名 → 创建待审核记录。
+     *
+     * @param userId    队长用户 ID
+     * @param contestId 目标竞赛 ID
+     * @param teamId    团队 ID
+     * @return 创建的报名记录
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public RegistrationDO registerTeam(Long userId, Long contestId, Long teamId) {
         teamValidator.validateForRegistration(teamId);
         teamValidator.validateTeamLeader(teamId, userId);
@@ -166,11 +217,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     }
 
     /**
-     * 审核通过报名：仅待审核状态可批准 → 检查人数上限 → 递增竞赛 currentCount →
-     * 状态流转为已通过 → 发送审核通过通知
+     * 审核通过报名
+     *
+     * 校验：仅待审核状态可批准 → 检查人数上限 → 递增竞赛 currentCount → 状态流转为已通过 → 发送通知。
+     * 通过后不可撤销（如需撤销请使用驳回流程）。
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void approveRegistration(Long id) {
         RegistrationDO reg = getById(id);
         if (reg == null) {
@@ -194,11 +247,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     }
 
     /**
-     * 驳回报名：校验驳回原因长度 → 仅待审核或已通过状态可驳回 → 若之前是已通过状态则递减竞赛 currentCount →
-     * 状态流转为已驳回 → 发送驳回通知
+     * 驳回报名
+     *
+     * 校验：驳回原因不少于 5 个字符 → 仅待审核或已通过状态可驳回 → 若之前是已通过状态则递减
+     * 竞赛 currentCount → 状态流转为已驳回 → 发送驳回通知（含原因）。
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void rejectRegistration(Long id, String reason) {
         if (reason == null || reason.trim().length() < 5) {
             throw new BusinessException("驳回原因不少于5个字符");
@@ -228,8 +283,14 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 reg.getContestId(), "contest");
     }
 
+    /**
+     * 取消报名（用户主动操作）
+     *
+     * 校验：仅本人可取消 → 仅待审核或已通过状态可取消 → 若之前是已通过则递减竞赛
+     * currentCount → 状态流转为已取消 → 发送管理员通知。
+     */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void cancelRegistration(Long id, Long userId) {
         RegistrationDO reg = getById(id);
         if (reg == null) {
@@ -263,6 +324,16 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 reg.getContestId(), "contest");
     }
 
+    /**
+     * 查询用户的报名列表
+     *
+     * 按创建时间倒序，同时填充竞赛名称（通过 contestService.listByIds 批量查询）。
+     *
+     * @param userId 用户 ID
+     * @param page   页码
+     * @param size   每页条数
+     * @return 报名记录分页数据
+     */
     @Override
     public IPage<RegistrationDO> pageByUser(Long userId, Integer page, Integer size) {
         LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<RegistrationDO>()
@@ -290,6 +361,15 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return result;
     }
 
+    /**
+     * 按竞赛查询报名列表（管理员后台用）
+     *
+     * @param contestId 竞赛 ID
+     * @param page      页码
+     * @param size      每页条数
+     * @param status    报名状态筛选（可选）
+     * @return 报名记录分页数据
+     */
     @Override
     public IPage<RegistrationDO> pageByContest(Long contestId, Integer page, Integer size, Integer status) {
         LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<RegistrationDO>()
@@ -301,6 +381,17 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         return page(new Page<>(page, size), wrapper);
     }
 
+    /**
+     * 查询全部报名记录（管理员后台用，支持按竞赛和状态筛选）
+     *
+     * 批量填充竞赛名称和用户名称（通过 listByIds + Map 映射避免 N+1 问题）。
+     *
+     * @param contestId 竞赛 ID（可选）
+     * @param status    报名状态（可选）
+     * @param page      页码
+     * @param size      每页条数
+     * @return 报名记录分页数据
+     */
     @Override
     public IPage<RegistrationDO> pageAll(Long contestId, Integer status, Integer page, Integer size) {
         LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<>();

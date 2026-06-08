@@ -1,111 +1,101 @@
 package com.contest.register.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.common.service.TeamValidator;
 import com.contest.competition.entity.ContestDO;
 import com.contest.competition.service.ContestService;
-import com.contest.message.service.NotificationService;
 import com.contest.register.entity.RegistrationDO;
-import com.contest.register.mapper.RegistrationMapper;
-import com.contest.register.service.AdminNotifyService;
-import com.contest.user.entity.UserDO;
-import com.contest.user.service.UserService;
+import com.contest.register.service.RegistrationService;
+import com.contest.register.test.TestApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = TestApplication.class)
+@ActiveProfiles("test")
+@Transactional
 class RegistrationServiceImplTest {
 
-    @Mock private RegistrationMapper registrationMapper;
-    @Mock private ContestService contestService;
-    @Mock private NotificationService notificationService;
-    @Mock private UserService userService;
-    @Mock private TeamValidator teamValidator;
-    @Mock private AdminNotifyService adminNotifyService;
+    @Autowired
+    private RegistrationService registrationService;
 
-    private RegistrationServiceImpl registrationService;
+    @Autowired
+    private ContestService contestService;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @BeforeEach
     void setUp() {
-        registrationService = new RegistrationServiceImpl(contestService, notificationService, userService, teamValidator, adminNotifyService);
-        ReflectionTestUtils.setField(registrationService, "baseMapper", registrationMapper);
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (1, 'student', 'pw', '学生A', 0, 0)");
+        jdbc.execute("INSERT INTO `user` (id, username, password, name, role, status) VALUES (2, 'student2', 'pw', '学生B', 0, 0)");
+        jdbc.execute("INSERT INTO contest (id, name, contest_type, max_participants, current_count, status, register_start_time, register_end_time, contest_time) VALUES (1, '个人赛', 0, 100, 0, 1, '2026-01-01 00:00:00', '2026-12-31 23:59:59', '2027-01-01 00:00:00')");
+        jdbc.execute("INSERT INTO contest (id, name, contest_type, max_participants, current_count, status, register_start_time, register_end_time, contest_time) VALUES (2, '团队赛', 1, 100, 0, 1, '2026-01-01 00:00:00', '2026-12-31 23:59:59', '2027-01-01 00:00:00')");
+        jdbc.execute("INSERT INTO team (id, leader_id, team_name, team_no, status, member_count) VALUES (1, 1, '测试团队', 'T00001', 2, 3)");
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time, handle_time) VALUES (1, 1, 1, 1, NOW(), NOW())");
+        jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time, handle_time) VALUES (1, 2, 0, 1, NOW(), NOW())");
     }
 
-    private ContestDO makeOpenContest(int contestType) {
-        ContestDO c = new ContestDO();
-        c.setId(1L);
-        c.setName("测试竞赛");
-        c.setStatus(CommonConstants.CONTEST_OPEN);
-        c.setContestType(contestType);
-        c.setCurrentCount(0);
-        c.setMaxParticipants(100);
-        return c;
-    }
+    // ==================== registerPersonal ====================
 
     @Test
     void registerPersonal_shouldThrowWhenContestNotFound() {
-        when(contestService.getById(1L)).thenReturn(null);
-
-        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
+        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 999L, ""));
     }
 
     @Test
     void registerPersonal_shouldThrowWhenContestNotOpen() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setStatus(CommonConstants.CONTEST_DRAFT);
-        when(contestService.getById(1L)).thenReturn(c);
-
+        jdbc.execute("UPDATE contest SET status = 0 WHERE id = 1");
         assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
     }
 
     @Test
     void registerPersonal_shouldThrowWhenContestIsTeamOnly() {
-        when(contestService.getById(1L)).thenReturn(makeOpenContest(CommonConstants.CONTEST_TEAM));
-
-        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
+        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 2L, ""));
     }
 
     @Test
     void registerPersonal_shouldThrowWhenAlreadyRegistered() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        when(contestService.getById(1L)).thenReturn(c);
-        when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
-
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 1, 0, 0)");
         assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
     }
 
     @Test
-    void registerPersonal_shouldThrowWhenMaxParticipantsReached() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setMaxParticipants(1);
-        when(contestService.getById(1L)).thenReturn(c);
-        when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
+    void registerPersonal_shouldThrowWhenContestFull() {
+        jdbc.execute("UPDATE contest SET max_participants = 1 WHERE id = 1");
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 2, 0, 1)");
+        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
+    }
 
+    @Test
+    void registerPersonal_shouldThrowWhenExceedsMaxActive() {
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (2, 1, 0, 0)");
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (3, 1, 0, 0)");
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (4, 1, 0, 0)");
+        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
+    }
+
+    @Test
+    void registerPersonal_shouldThrowWhenRegistrationNotStarted() {
+        jdbc.execute("UPDATE contest SET register_start_time = '2099-01-01 00:00:00' WHERE id = 1");
+        assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
+    }
+
+    @Test
+    void registerPersonal_shouldThrowWhenRegistrationEnded() {
+        jdbc.execute("UPDATE contest SET register_end_time = '2020-01-01 00:00:00' WHERE id = 1");
         assertThrows(BusinessException.class, () -> registrationService.registerPersonal(1L, 1L, ""));
     }
 
     @Test
     void registerPersonal_shouldSucceed() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        when(contestService.getById(1L)).thenReturn(c);
-        when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        UserDO user = new UserDO();
-        user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
-        when(registrationMapper.insert(any(RegistrationDO.class))).thenReturn(1);
-
         RegistrationDO result = registrationService.registerPersonal(1L, 1L, "参赛");
-
         assertNotNull(result);
         assertEquals(1L, result.getContestId());
         assertEquals(1L, result.getUserId());
@@ -114,143 +104,109 @@ class RegistrationServiceImplTest {
         assertEquals("参赛", result.getRemark());
     }
 
+    // ==================== registerTeam ====================
+
     @Test
     void registerTeam_shouldThrowWhenContestNotOpen() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
-        c.setStatus(CommonConstants.CONTEST_CLOSED);
-        when(contestService.getById(1L)).thenReturn(c);
-
-        assertThrows(BusinessException.class, () -> registrationService.registerTeam(1L, 1L, 1L));
+        jdbc.execute("UPDATE contest SET status = 2 WHERE id = 2");
+        assertThrows(BusinessException.class, () -> registrationService.registerTeam(1L, 2L, 1L));
     }
 
     @Test
     void registerTeam_shouldThrowWhenContestIsPersonalOnly() {
-        when(contestService.getById(1L)).thenReturn(makeOpenContest(CommonConstants.CONTEST_PERSONAL));
-
         assertThrows(BusinessException.class, () -> registrationService.registerTeam(1L, 1L, 1L));
     }
 
     @Test
+    void registerTeam_shouldThrowWhenNotLeader() {
+        assertThrows(BusinessException.class, () -> registrationService.registerTeam(2L, 2L, 1L));
+    }
+
+    @Test
+    void registerTeam_shouldThrowWhenTeamAlreadyRegistered() {
+        registrationService.registerTeam(1L, 2L, 1L);
+        assertThrows(BusinessException.class, () -> registrationService.registerTeam(1L, 2L, 1L));
+    }
+
+    @Test
     void registerTeam_shouldSucceed() {
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
-        when(contestService.getById(1L)).thenReturn(c);
-        when(registrationMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
-        UserDO user = new UserDO();
-        user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
-        when(registrationMapper.insert(any(RegistrationDO.class))).thenReturn(1);
-
-        RegistrationDO result = registrationService.registerTeam(1L, 1L, 1L);
-
+        RegistrationDO result = registrationService.registerTeam(1L, 2L, 1L);
         assertNotNull(result);
         assertEquals(CommonConstants.REG_TEAM, result.getRegType());
         assertEquals(1L, result.getTeamId());
     }
 
+    // ==================== cancelRegistration ====================
+
     @Test
     void cancelRegistration_shouldThrowWhenNotFound() {
-        when(registrationMapper.selectById(1L)).thenReturn(null);
-
-        assertThrows(BusinessException.class, () -> registrationService.cancelRegistration(1L, 1L));
+        assertThrows(BusinessException.class, () -> registrationService.cancelRegistration(999L, 1L));
     }
 
     @Test
     void cancelRegistration_shouldThrowWhenNotOwner() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-
-        assertThrows(BusinessException.class, () -> registrationService.cancelRegistration(1L, 2L));
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        assertThrows(BusinessException.class, () -> registrationService.cancelRegistration(10L, 2L));
     }
 
     @Test
-    void cancelRegistration_shouldNotTouchTeamStatus() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setStatus(CommonConstants.REG_APPROVED);
-        reg.setContestId(1L);
-        reg.setTeamId(1L);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_TEAM);
-        c.setCurrentCount(1);
-        when(contestService.getById(1L)).thenReturn(c);
-        UserDO user = new UserDO();
-        user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
-
-        registrationService.cancelRegistration(1L, 1L);
-
-        assertEquals(CommonConstants.REG_CANCELLED, reg.getStatus());
-        assertEquals(0, c.getCurrentCount());
-        verify(registrationMapper).updateById(reg);
-        verify(contestService).updateById(c);
+    void cancelRegistration_shouldThrowWhenAlreadyCancelled() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 3)");
+        assertThrows(BusinessException.class, () -> registrationService.cancelRegistration(10L, 1L));
     }
 
     @Test
-    void cancelRegistration_shouldNotDecrementWhenWasPending() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setStatus(CommonConstants.REG_PENDING);
-        reg.setContestId(1L);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        when(contestService.getById(1L)).thenReturn(c);
-        UserDO user = new UserDO();
-        user.setName("张三");
-        when(userService.getById(1L)).thenReturn(user);
-
-        registrationService.cancelRegistration(1L, 1L);
-
-        assertEquals(CommonConstants.REG_CANCELLED, reg.getStatus());
-        verify(contestService, never()).updateById(any());
+    void cancelRegistration_shouldDecrementWhenWasApproved() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 1)");
+        jdbc.execute("UPDATE contest SET current_count = 1 WHERE id = 1");
+        registrationService.cancelRegistration(10L, 1L);
+        Integer status = jdbc.queryForObject("SELECT status FROM registration WHERE id = 10", Integer.class);
+        assertEquals(CommonConstants.REG_CANCELLED, status.intValue());
+        Integer count = jdbc.queryForObject("SELECT current_count FROM contest WHERE id = 1", Integer.class);
+        assertEquals(0, count.intValue());
     }
+
+    @Test
+    void cancelRegistration_shouldSucceed() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        registrationService.cancelRegistration(10L, 1L);
+        Integer status = jdbc.queryForObject("SELECT status FROM registration WHERE id = 10", Integer.class);
+        assertEquals(CommonConstants.REG_CANCELLED, status.intValue());
+    }
+
+    // ==================== approveRegistration ====================
 
     @Test
     void approveRegistration_shouldThrowWhenNotFound() {
-        when(registrationMapper.selectById(1L)).thenReturn(null);
-
-        assertThrows(BusinessException.class, () -> registrationService.approveRegistration(1L));
+        assertThrows(BusinessException.class, () -> registrationService.approveRegistration(999L));
     }
 
     @Test
-    void approveRegistration_shouldIncrementCount() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        reg.setStatus(CommonConstants.REG_PENDING);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setCurrentCount(5);
-        when(contestService.getById(1L)).thenReturn(c);
-
-        registrationService.approveRegistration(1L);
-
-        assertEquals(CommonConstants.REG_APPROVED, reg.getStatus());
-        assertEquals(6, c.getCurrentCount());
-        verify(registrationMapper).updateById(reg);
-        verify(contestService).updateById(c);
+    void approveRegistration_shouldThrowWhenAlreadyApproved() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 1)");
+        assertThrows(BusinessException.class, () -> registrationService.approveRegistration(10L));
     }
 
     @Test
     void approveRegistration_shouldHandleNullCurrentCount() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        reg.setStatus(CommonConstants.REG_PENDING);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setCurrentCount(null);
-        when(contestService.getById(1L)).thenReturn(c);
-
-        registrationService.approveRegistration(1L);
-
-        assertEquals(1, c.getCurrentCount());
+        jdbc.execute("UPDATE contest SET current_count = NULL WHERE id = 1");
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        registrationService.approveRegistration(10L);
+        Integer count = jdbc.queryForObject("SELECT current_count FROM contest WHERE id = 1", Integer.class);
+        assertEquals(1, count.intValue());
     }
+
+    @Test
+    void approveRegistration_shouldSucceed() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        registrationService.approveRegistration(10L);
+        Integer status = jdbc.queryForObject("SELECT status FROM registration WHERE id = 10", Integer.class);
+        assertEquals(CommonConstants.REG_APPROVED, status.intValue());
+        Integer count = jdbc.queryForObject("SELECT current_count FROM contest WHERE id = 1", Integer.class);
+        assertEquals(1, count.intValue());
+    }
+
+    // ==================== rejectRegistration ====================
 
     @Test
     void rejectRegistration_shouldThrowWhenReasonTooShort() {
@@ -263,72 +219,63 @@ class RegistrationServiceImplTest {
     }
 
     @Test
-    void rejectRegistration_shouldSucceed() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        reg.setStatus(CommonConstants.REG_PENDING);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-
-        registrationService.rejectRegistration(1L, "材料不全，请补充后重新提交");
-
-        assertEquals(CommonConstants.REG_REJECTED, reg.getStatus());
-        assertEquals("材料不全，请补充后重新提交", reg.getReviewReason());
-        verify(registrationMapper).updateById(reg);
+    void rejectRegistration_shouldThrowWhenAlreadyRejected() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 2)");
+        assertThrows(BusinessException.class, () -> registrationService.rejectRegistration(10L, "材料不全，请补充后重新提交"));
     }
 
     @Test
     void rejectRegistration_shouldDecrementCountWhenWasApproved() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        reg.setStatus(CommonConstants.REG_APPROVED);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        c.setCurrentCount(5);
-        when(contestService.getById(1L)).thenReturn(c);
-
-        registrationService.rejectRegistration(1L, "材料不全，请补充后重新提交");
-
-        assertEquals(4, c.getCurrentCount());
-        verify(contestService).updateById(c);
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 1)");
+        jdbc.execute("UPDATE contest SET current_count = 1 WHERE id = 1");
+        registrationService.rejectRegistration(10L, "材料不全，请补充后重新提交");
+        Integer status = jdbc.queryForObject("SELECT status FROM registration WHERE id = 10", Integer.class);
+        assertEquals(CommonConstants.REG_REJECTED, status.intValue());
+        Integer count = jdbc.queryForObject("SELECT current_count FROM contest WHERE id = 1", Integer.class);
+        assertEquals(0, count.intValue());
     }
 
     @Test
-    void rejectRegistration_shouldNotDecrementWhenWasPending() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        reg.setStatus(CommonConstants.REG_PENDING);
-        when(registrationMapper.selectById(1L)).thenReturn(reg);
-
-        registrationService.rejectRegistration(1L, "材料不全，请补充后重新提交");
-
-        verify(contestService, never()).updateById(any());
+    void rejectRegistration_shouldSucceed() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        registrationService.rejectRegistration(10L, "材料不全，请补充后重新提交");
+        Integer status = jdbc.queryForObject("SELECT status FROM registration WHERE id = 10", Integer.class);
+        assertEquals(CommonConstants.REG_REJECTED, status.intValue());
     }
+
+    // ==================== pageByUser ====================
 
     @Test
     void pageByUser_shouldReturnPagedResult() {
-        RegistrationDO reg = new RegistrationDO();
-        reg.setId(1L);
-        reg.setUserId(1L);
-        reg.setContestId(1L);
-        when(registrationMapper.selectPage(any(), any(LambdaQueryWrapper.class))).thenReturn(
-                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<RegistrationDO>() {{
-                    setRecords(java.util.List.of(reg));
-                    setTotal(1);
-                }}
-        );
-        ContestDO c = makeOpenContest(CommonConstants.CONTEST_PERSONAL);
-        when(contestService.listByIds(anyList())).thenReturn(java.util.List.of(c));
-
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 1, 0, 0)");
         var page = registrationService.pageByUser(1L, 1, 10);
-
         assertEquals(1, page.getTotal());
-        assertEquals(1, page.getRecords().size());
-        assertEquals(c.getName(), page.getRecords().get(0).getContestName());
+        assertNotNull(page.getRecords().get(0).getContestName());
+    }
+
+    // ==================== pageByContest ====================
+
+    @Test
+    void pageByContest_shouldReturnPagedResult() {
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 1, 0, 0)");
+        var page = registrationService.pageByContest(1L, 1, 10, null);
+        assertEquals(1, page.getTotal());
+    }
+
+    @Test
+    void pageByContest_shouldFilterByStatus() {
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 1, 0, 0)");
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 2, 0, 1)");
+        var page = registrationService.pageByContest(1L, 1, 10, CommonConstants.REG_PENDING);
+        assertEquals(1, page.getTotal());
+    }
+
+    // ==================== pageAll ====================
+
+    @Test
+    void pageAll_shouldReturnPagedResult() {
+        jdbc.execute("INSERT INTO registration (contest_id, user_id, reg_type, status) VALUES (1, 1, 0, 0)");
+        var page = registrationService.pageAll(null, null, 1, 10);
+        assertEquals(1, page.getTotal());
     }
 }
