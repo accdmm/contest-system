@@ -14,7 +14,7 @@
             <el-tab-pane label="轮播图" name="banner">
               <div class="cms-tab-header">
                 <span class="cms-tab-count">{{ banners.length }} 项</span>
-                <button class="cms-add-btn" @click="showAdd('banner')">
+                <button v-if="store.hasPerm('cms:create')" class="cms-add-btn" @click="showAdd('banner')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                   添加轮播图
                 </button>
@@ -31,8 +31,8 @@
                 <el-table-column prop="linkUrl" label="跳转链接" min-width="160" />
                 <el-table-column label="操作" width="160" align="right">
                   <template #default="{ row }">
-                    <el-button class="cms-action-btn" @click="editItem(row)">编辑</el-button>
-                    <el-button class="cms-action-btn cms-action--danger" @click="del(row.id)">删除</el-button>
+                    <el-button v-if="store.hasPerm('cms:update')" class="cms-action-btn" @click="editItem(row)">编辑</el-button>
+                    <el-button v-if="store.hasPerm('cms:delete')" class="cms-action-btn cms-action--danger" @click="del(row.id)">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -41,7 +41,7 @@
             <el-tab-pane label="公告" name="announcement">
               <div class="cms-tab-header">
                 <span class="cms-tab-count">{{ announcements.length }} 项</span>
-                <button class="cms-add-btn" @click="showAdd('announcement')">
+                <button v-if="store.hasPerm('cms:create')" class="cms-add-btn" @click="showAdd('announcement')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                   添加公告
                 </button>
@@ -64,8 +64,8 @@
                 <el-table-column prop="publishTime" label="发布时间" width="180" />
                 <el-table-column label="操作" width="160" align="right">
                   <template #default="{ row }">
-                    <el-button class="cms-action-btn" @click="editItem(row)">编辑</el-button>
-                    <el-button class="cms-action-btn cms-action--danger" @click="del(row.id)">删除</el-button>
+                    <el-button v-if="store.hasPerm('cms:update')" class="cms-action-btn" @click="editItem(row)">编辑</el-button>
+                    <el-button v-if="store.hasPerm('cms:delete')" class="cms-action-btn cms-action--danger" @click="del(row.id)">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -127,7 +127,10 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FileUpload from '../../components/FileUpload.vue'
+import { useUserStore } from '../../stores/user'
 import { listBanners, listAnnouncements, createCmsContent, updateCmsContent, deleteCmsContent } from '../../api/cms'
+
+const store = useUserStore()
 
 const activeTab = ref('banner')
 const banners = ref([])

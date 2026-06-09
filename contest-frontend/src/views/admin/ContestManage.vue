@@ -7,7 +7,7 @@
             <h1 class="cm-title">竞赛管理</h1>
             <p class="cm-subtitle">发布、编辑与管理所有竞赛项目</p>
           </div>
-          <el-button class="cm-add-btn" @click="openCreate">
+          <el-button v-if="store.hasPerm('contest:create')" class="cm-add-btn" @click="openCreate">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
             新建竞赛
           </el-button>
@@ -32,10 +32,10 @@
             </el-table-column>
             <el-table-column label="操作" width="290" fixed="right" align="right">
               <template #default="{ row }">
-                <el-button class="cm-action-btn" @click="edit(row)">编辑</el-button>
-                <el-button v-if="row.status === 0" class="cm-action-btn cm-action--success" @click="publish(row.id)">上架</el-button>
-                <el-button v-if="row.status === 1" class="cm-action-btn cm-action--warning" @click="unpublish(row.id)">下架</el-button>
-                <el-button v-if="row.status === 0" class="cm-action-btn cm-action--danger" @click="del(row.id)">删除</el-button>
+                <el-button v-if="store.hasPerm('contest:update')" class="cm-action-btn" @click="edit(row)">编辑</el-button>
+                <el-button v-if="store.hasPerm('contest:publish') && row.status === 0" class="cm-action-btn cm-action--success" @click="publish(row.id)">上架</el-button>
+                <el-button v-if="store.hasPerm('contest:publish') && row.status === 1" class="cm-action-btn cm-action--warning" @click="unpublish(row.id)">下架</el-button>
+                <el-button v-if="store.hasPerm('contest:delete') && row.status === 0" class="cm-action-btn cm-action--danger" @click="del(row.id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -157,7 +157,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FileUpload from '../../components/FileUpload.vue'
+import { useUserStore } from '../../stores/user'
 import { pageAdminContests, createContest, updateContest, publishContest, unpublishContest, deleteContest } from '../../api/contest'
+
+const store = useUserStore()
 
 const categories = ['理工类', '文史类', '艺术类', '体育类', '创新创业类']
 const list = ref([])

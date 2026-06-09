@@ -75,8 +75,8 @@
             <el-table-column label="操作" width="170" align="right" fixed="right">
               <template #default="{ row }">
                 <template v-if="row.status === 0">
-                  <button class="rr-btn rr-btn--approve" @click="approveReg(row.id)">通过</button>
-                  <button class="rr-btn rr-btn--reject" @click="showRejectReg(row)">驳回</button>
+                  <button v-if="store.hasPerm('registration:approve')" class="rr-btn rr-btn--approve" @click="approveReg(row.id)">通过</button>
+                  <button v-if="store.hasPerm('registration:approve')" class="rr-btn rr-btn--reject" @click="showRejectReg(row)">驳回</button>
                 </template>
                 <span v-else class="rr-done">-</span>
               </template>
@@ -130,8 +130,8 @@
             <el-table-column label="操作" width="170" align="right" fixed="right">
               <template #default="{ row }">
                 <template v-if="row.status === 1">
-                  <button class="rr-btn rr-btn--approve" @click="approveTeam(row.id)">通过</button>
-                  <button class="rr-btn rr-btn--reject" @click="showRejectTeam(row)">驳回</button>
+                  <button v-if="store.hasPerm('team:approve')" class="rr-btn rr-btn--approve" @click="approveTeam(row.id)">通过</button>
+                  <button v-if="store.hasPerm('team:approve')" class="rr-btn rr-btn--reject" @click="showRejectTeam(row)">驳回</button>
                 </template>
                 <span v-else class="rr-done">-</span>
               </template>
@@ -161,9 +161,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '../../stores/user'
 import { pageContests } from '../../api/contest'
 import { pageRegistration, approveRegistration, rejectRegistration } from '../../api/registration'
 import { pageTeams, adminApproveTeam, adminRejectTeam } from '../../api/team'
+
+const store = useUserStore()
 
 const activeTab = ref('reg')
 

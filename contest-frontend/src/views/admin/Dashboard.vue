@@ -304,6 +304,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', resizeHandler)
   ;[chartCategory, chartTrend, chartStatus, chartGrowth, chartLevel, chartTop].forEach(ref => {
+    if (!ref.value) return
     const c = echarts.getInstanceByDom(ref.value)
     if (c) c.dispose()
   })

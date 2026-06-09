@@ -31,7 +31,7 @@
                   <el-option :value="4" label="系统通知" />
                 </el-select>
               </el-form-item>
-              <el-button class="nm-btn" @click="handleSend" :loading="sending">发送</el-button>
+              <el-button v-if="store.hasPerm('notification:send')" class="nm-btn" @click="handleSend" :loading="sending">发送</el-button>
             </el-form>
           </div>
 
@@ -53,7 +53,7 @@
                   <el-option :value="4" label="系统通知" />
                 </el-select>
               </el-form-item>
-              <el-button class="nm-btn nm-btn--accent" @click="handleBroadcast" :loading="broadcasting">群发广播</el-button>
+              <el-button v-if="store.hasPerm('notification:broadcast')" class="nm-btn nm-btn--accent" @click="handleBroadcast" :loading="broadcasting">群发广播</el-button>
             </el-form>
           </div>
         </div>
@@ -65,7 +65,10 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '../../stores/user'
 import { sendNotification, sendBroadcast } from '../../api/notification'
+
+const store = useUserStore()
 
 const sending = ref(false)
 const broadcasting = ref(false)

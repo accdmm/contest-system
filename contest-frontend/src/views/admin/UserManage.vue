@@ -14,7 +14,7 @@
               </template>
             </el-input>
             <el-button class="um-search-btn" @click="search">搜索</el-button>
-            <el-button class="um-add-btn" @click="openCreate">新建用户</el-button>
+            <el-button v-if="store.hasPerm('user:create')" class="um-add-btn" @click="openCreate">新建用户</el-button>
           </div>
         </div>
 
@@ -91,7 +91,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '../../stores/user'
 import { pageUsers, updateProfile, getUserById, getColleges, getMajors, adminCreateUser } from '../../api/user'
+
+const store = useUserStore()
 
 const list = ref([])
 const total = ref(0)
