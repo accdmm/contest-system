@@ -9,6 +9,8 @@ export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
   const permissions = ref([])
 
+  if (savedUser) fetchPermissions()
+
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 1)
   const isTeacher = computed(() => user.value?.role === 2)
