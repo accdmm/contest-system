@@ -55,7 +55,11 @@
                     <span v-else style="color:#999;font-size:12px;">无图片</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="position" label="位置" width="150" />
+                <el-table-column label="位置" width="150">
+                  <template #default="{ row }">
+                    {{ { home_scroll: '首页滚动', message_center: '消息中心', popup: '弹窗' }[row.position] || row.position }}
+                  </template>
+                </el-table-column>
                 <el-table-column prop="status" label="状态" width="80" align="center">
                   <template #default="{ row }">
                     <span :class="['cms-status', row.status === 1 ? 'cms-status--active' : 'cms-status--hidden']">{{ row.status === 1 ? '展示' : '隐藏' }}</span>
@@ -162,6 +166,9 @@ function showAdd(type) {
 function editItem(row) {
   isEdit.value = true
   Object.assign(form, row)
+  if (!['home_scroll', 'message_center', 'popup'].includes(form.position)) {
+    form.position = 'home_scroll'
+  }
   dialogVisible.value = true
 }
 
