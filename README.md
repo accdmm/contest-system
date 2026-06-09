@@ -181,23 +181,23 @@ contest-admin ───┬── contest-common
 |------|------|------|------|
 | POST | `/api/user/login` | 公开 | 登录，返回用户信息 + JWT Token |
 | POST | `/api/user/register` | 公开 | 注册学生账号 |
-| GET | `/api/user/{id}` | 公开 | 获取用户信息 |
-| GET | `/api/user/page` | 管理员 | 分页用户列表 |
+| GET | `/api/user/detail/{id}` | 公开 | 获取用户信息 |
+| GET | `/api/user/page` | `user:list` | 分页用户列表 |
 | PUT | `/api/user/{id}/profile` | 用户本人 | 更新个人资料 |
 | PUT | `/api/user/{id}/password` | 用户本人 | 修改密码 |
-| PUT | `/api/user/{id}/freeze` | 管理员 | 冻结账号 |
-| PUT | `/api/user/{id}/unfreeze` | 管理员 | 解冻账号 |
-| POST | `/api/user/admin/create` | 管理员 | 管理员创建用户（支持选择角色 0/1/2） |
+| POST | `/api/user/{id}/freeze` | `user:freeze` | 冻结账号 |
+| POST | `/api/user/{id}/unfreeze` | `user:freeze` | 解冻账号 |
+| POST | `/api/user/admin/create` | `user:create` | 管理员创建用户（支持选择角色 0/1/2） |
 
 ### 竞赛
 
 | 方法 | 路径 | 权限 | 说明 |
 |------|------|------|------|
-| POST | `/api/contest` | 管理员 | 创建竞赛 |
-| PUT | `/api/contest` | 管理员 | 更新竞赛 |
-| DELETE | `/api/contest/{id}` | 管理员 | 删除草稿竞赛 |
-| PUT | `/api/contest/{id}/publish` | 管理员 | 发布竞赛 |
-| PUT | `/api/contest/{id}/unpublish` | 管理员 | 下架竞赛 |
+| POST | `/api/contest` | `contest:create` | 创建竞赛 |
+| PUT | `/api/contest/update` | `contest:update` | 更新竞赛 |
+| DELETE | `/api/contest/{id}` | `contest:delete` | 删除草稿竞赛 |
+| PUT | `/api/contest/{id}/publish` | `contest:publish` | 发布竞赛 |
+| PUT | `/api/contest/{id}/unpublish` | `contest:publish` | 下架竞赛 |
 | GET | `/api/contest/{id}` | 公开 | 获取竞赛详情 |
 | GET | `/api/contest/page` | 公开 | 分页列表（关键字、类别、状态筛选） |
 | GET | `/api/contest/hot` | 公开 | 热门竞赛 Top N |
@@ -210,19 +210,19 @@ contest-admin ───┬── contest-common
 | POST | `/api/team` | 用户 | 创建团队 |
 | POST | `/api/team/{teamId}/invite` | 队长 | 生成6位邀请码 |
 | POST | `/api/team/join` | 用户 | 通过邀请码加入团队 |
-| PUT | `/api/team/{teamId}/members/{memberId}/approve` | 队长 | 批准入队申请 |
-| PUT | `/api/team/{teamId}/members/{memberId}/reject` | 队长 | 拒绝入队申请 |
-| DELETE | `/api/team/{teamId}/members/{memberId}` | 队长 | 移除成员 |
-| PUT | `/api/team/{teamId}/dissolve` | 队长 | 解散团队 |
-| PUT | `/api/team/{teamId}/leave` | 成员 | 退出团队 |
-| PUT | `/api/team/{teamId}/submit` | 队长 | 提交团队待管理员审核 |
+| POST | `/api/team/{teamId}/members/{memberId}/approve` | 队长 | 批准入队申请 |
+| POST | `/api/team/{teamId}/members/{memberId}/reject` | 队长 | 拒绝入队申请 |
+| POST | `/api/team/{teamId}/members/{memberId}` | 队长 | 移除成员 |
+| POST | `/api/team/{teamId}/dissolve` | 队长 | 解散团队 |
+| POST | `/api/team/{teamId}/leave` | 成员 | 退出团队 |
+| POST | `/api/team/{teamId}/submit` | 队长 | 提交团队待管理员审核 |
 | GET | `/api/team/{teamId}/members` | 公开 | 获取已通过成员列表 |
 | GET | `/api/team/{teamId}/pending` | 队长 | 获取待审核入队申请 |
-| GET | `/api/team/{id}/detail` | 公开 | 获取团队详情 |
+| GET | `/api/team/{teamId}/detail` | 公开 | 获取团队详情 |
 | GET | `/api/team/leader` | 用户 | 获取本人创建的团队 |
 | GET | `/api/team/user/{userId}` | 公开 | 获取用户的所有团队 |
-| PUT | `/api/team/{teamId}/admin-approve` | 管理员 | 管理员通过团队 |
-| PUT | `/api/team/{teamId}/admin-reject` | 管理员 | 管理员驳回团队 |
+| POST | `/api/team/{teamId}/admin-approve` | `team:approve` | 管理员通过团队 |
+| POST | `/api/team/{teamId}/admin-reject` | `team:approve` | 管理员驳回团队 |
 
 ### 报名
 
@@ -230,9 +230,9 @@ contest-admin ───┬── contest-common
 |------|------|------|------|
 | POST | `/api/registration/personal` | 用户 | 个人报名 |
 | POST | `/api/registration/team` | 队长 | 团队报名 |
-| PUT | `/api/registration/{id}/approve` | 管理员 | 通过报名 |
-| PUT | `/api/registration/{id}/reject` | 管理员 | 驳回报名（需填写原因） |
-| PUT | `/api/registration/{id}/cancel` | 用户 | 取消本人的报名 |
+| POST | `/api/registration/{id}/approve` | `registration:approve` | 通过报名 |
+| POST | `/api/registration/{id}/reject` | `registration:approve` | 驳回报名（需填写原因） |
+| POST | `/api/registration/{id}/cancel` | 用户 | 取消本人的报名 |
 | GET | `/api/registration/user/{userId}` | 用户 | 我的报名记录 |
 | GET | `/api/registration/contest/{contestId}` | 管理员 | 按竞赛查看报名 |
 | GET | `/api/registration/page` | 管理员 | 分页全部报名记录 |
@@ -243,15 +243,15 @@ contest-admin ───┬── contest-common
 |------|------|------|------|
 | GET | `/api/notification/user/{userId}` | 用户 | 分页通知列表 |
 | GET | `/api/notification/unread/{userId}` | 用户 | 未读通知数 |
-| PUT | `/api/notification/{id}/read` | 用户 | 标记已读 |
-| PUT | `/api/notification/read-all/{userId}` | 用户 | 全部标记已读 |
-| POST | `/api/notification/send` | 管理员 | 发送通知 |
-| POST | `/api/notification/broadcast` | 管理员 | 广播通知 |
+| POST | `/api/notification/{id}/read` | 用户 | 标记已读 |
+| POST | `/api/notification/read-all/{userId}` | 用户 | 全部标记已读 |
+| POST | `/api/notification/send` | `notification:send` | 发送通知 |
+| POST | `/api/notification/broadcast` | `notification:broadcast` | 广播通知 |
 | GET | `/api/cms/banners` | 公开 | 获取轮播图列表 |
 | GET | `/api/cms/announcements` | 公开 | 获取公告列表 |
-| POST | `/api/cms` | 管理员 | 创建内容 |
-| PUT | `/api/cms` | 管理员 | 更新内容 |
-| DELETE | `/api/cms/{id}` | 管理员 | 删除内容 |
+| POST | `/api/cms` | `cms:create` | 创建内容 |
+| PUT | `/api/cms/update` | `cms:update` | 更新内容 |
+| DELETE | `/api/cms/{id}` | `cms:delete` | 删除内容 |
 
 ### AI 对话
 
