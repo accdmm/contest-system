@@ -57,7 +57,7 @@
                 </el-table-column>
                 <el-table-column label="位置" width="150">
                   <template #default="{ row }">
-                    {{ { home_scroll: '首页滚动', message_center: '消息中心', popup: '弹窗' }[row.position] || row.position }}
+                    {{ row.contentType === 0 ? '首页滚动' : '消息中心' }}
                   </template>
                 </el-table-column>
                 <el-table-column prop="status" label="状态" width="80" align="center">
@@ -105,13 +105,9 @@
               <el-input-number v-model="form.sortOrder" :min="0" :max="999" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item v-if="activeTab === 'announcement'" label="展示位置">
-              <el-select v-model="form.position" class="cms-select">
-                <el-option label="首页滚动" value="home_scroll" />
-                <el-option label="消息中心" value="message_center" />
-                <el-option label="弹窗" value="popup" />
-              </el-select>
+          <el-col :span="12" v-if="activeTab === 'announcement'">
+            <el-form-item label="展示位置">
+              <el-input value="消息中心" disabled />
             </el-form-item>
           </el-col>
         </el-row>
@@ -159,16 +155,14 @@ async function loadAnnouncements() {
 
 function showAdd(type) {
   isEdit.value = false
-  Object.assign(form, { title: '', content: '', imageUrl: '', linkUrl: '', sortOrder: 0, position: 'home_scroll', publishTime: null })
+  const pos = type === 'banner' ? 'home_scroll' : 'message_center'
+  Object.assign(form, { title: '', content: '', imageUrl: '', linkUrl: '', sortOrder: 0, position: pos, publishTime: null })
   dialogVisible.value = true
 }
 
 function editItem(row) {
   isEdit.value = true
   Object.assign(form, row)
-  if (!['home_scroll', 'message_center', 'popup'].includes(form.position)) {
-    form.position = 'home_scroll'
-  }
   dialogVisible.value = true
 }
 
