@@ -158,7 +158,7 @@ function handleJoin() {
 onMounted(async () => {
   try { const r = await listBanners(); banners.value = r.data || [] } catch (e) { banners.value = [] }
   try {
-    const r = await listAnnouncements('message_center')
+    const r = await listAnnouncements('')
     const raw = r.data || []
     raw.forEach(a => { if (a.content) a.content = sanitizeHtml(a.content) })
     announcements.value = raw
