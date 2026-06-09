@@ -5,19 +5,19 @@ export function createContest(data) {
 }
 
 export function updateContest(data) {
-  return request.post('/contest/update', data)
+  return request.put('/contest/update', data)
 }
 
 export function deleteContest(id) {
-  return request.post(`/contest/${id}`)
+  return request.delete(`/contest/${id}`)
 }
 
 export function publishContest(id) {
-  return request.post(`/contest/${id}/publish`)
+  return request.put(`/contest/${id}/publish`)
 }
 
 export function unpublishContest(id) {
-  return request.post(`/contest/${id}/unpublish`)
+  return request.put(`/contest/${id}/unpublish`)
 }
 
 export function getContestById(id) {

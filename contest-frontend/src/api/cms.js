@@ -15,11 +15,11 @@ export function createCmsContent(data) {
 }
 
 export function updateCmsContent(data) {
-  return request.post('/cms/update', data)
+  return request.put('/cms/update', data)
 }
 
 export function deleteCmsContent(id) {
-  return request.post(`/cms/${id}`)
+  return request.delete(`/cms/${id}`)
 }
 
 export function getCmsContentById(id) {

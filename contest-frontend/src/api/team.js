@@ -13,23 +13,23 @@ export function joinByInviteCode(data) {
 }
 
 export function approveMember(teamId, userId, memberId) {
-  return request.put(`/team/${teamId}/members/${memberId}/approve`, null, { params: { userId } })
+  return request.post(`/team/${teamId}/members/${memberId}/approve`, null, { params: { userId } })
 }
 
 export function rejectMember(teamId, userId, memberId) {
-  return request.put(`/team/${teamId}/members/${memberId}/reject`, null, { params: { userId } })
+  return request.post(`/team/${teamId}/members/${memberId}/reject`, null, { params: { userId } })
 }
 
 export function removeMember(teamId, userId, memberId) {
-  return request.delete(`/team/${teamId}/members/${memberId}`, { params: { userId } })
+  return request.post(`/team/${teamId}/members/${memberId}`, null, { params: { userId } })
 }
 
 export function dissolveTeam(teamId, userId) {
-  return request.put(`/team/${teamId}/dissolve`, null, { params: { userId } })
+  return request.post(`/team/${teamId}/dissolve`, null, { params: { userId } })
 }
 
 export function submitTeamReview(teamId, userId) {
-  return request.put(`/team/${teamId}/submit`, null, { params: { userId } })
+  return request.post(`/team/${teamId}/submit`, null, { params: { userId } })
 }
 
 export function getTeamById(id) {
@@ -49,7 +49,7 @@ export function getTeamsByLeader(userId) {
 }
 
 export function leaveTeam(teamId, userId) {
-  return request.put(`/team/${teamId}/leave`, null, { params: { userId } })
+  return request.post(`/team/${teamId}/leave`, null, { params: { userId } })
 }
 
 export function pageTeams(params) {
@@ -57,11 +57,11 @@ export function pageTeams(params) {
 }
 
 export function adminApproveTeam(teamId) {
-  return request.put(`/team/${teamId}/admin-approve`)
+  return request.post(`/team/${teamId}/admin-approve`)
 }
 
 export function adminRejectTeam(teamId, reason) {
-  return request.put(`/team/${teamId}/admin-reject`, { reason })
+  return request.post(`/team/${teamId}/admin-reject`, { reason })
 }
 
 export function listUserTeams(userId) {
