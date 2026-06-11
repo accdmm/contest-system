@@ -182,7 +182,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         String applicantName = applicant != null ? applicant.getName() : String.format("用户%d", userId);
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_APPLY,
                 "新成员申请", applicantName + " 申请加入你的团队「" + team.getTeamName() + "」，请及时处理。",
-                team.getId(), "team");
+                team.getId(), CommonConstants.RELATED_TYPE_TEAM);
 
         return team;
     }
@@ -223,7 +223,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         updateById(team);
         notificationService.sendNotification(member.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "加入申请已通过", "你已被队长通过加入团队「" + team.getTeamName() + "」的申请。",
-                teamId, "team");
+                teamId, CommonConstants.RELATED_TYPE_TEAM);
     }
 
     /**
@@ -259,7 +259,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
         notificationService.sendNotification(member.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "加入申请未通过", "你加入团队「" + team.getTeamName() + "」的申请已被队长拒绝。",
-                teamId, "team");
+                teamId, CommonConstants.RELATED_TYPE_TEAM);
     }
 
     /**
@@ -324,7 +324,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             if (!Objects.equals(m.getUserId(), userId)) {
                 notificationService.sendNotification(m.getUserId(), CommonConstants.NOTIFY_SYSTEM,
                         "团队已解散", "你所在的团队「" + team.getTeamName() + "」已被队长解散。",
-                        teamId, "team");
+                        teamId, CommonConstants.RELATED_TYPE_TEAM);
             }
         }
 
@@ -357,7 +357,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             }
             notificationService.sendNotification(userId, CommonConstants.NOTIFY_SYSTEM,
                     "报名已取消", "由于团队已解散，竞赛报名已自动取消。",
-                    reg.getContestId(), "contest");
+                    reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
         }
     }
 
@@ -396,7 +396,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             String userName = user != null ? user.getName() : "有成员";
             notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_SYSTEM,
                     "成员退出", userName + " 退出了团队「" + team.getTeamName() + "」。",
-                    teamId, "team");
+                    teamId, CommonConstants.RELATED_TYPE_TEAM);
         }
         List<RegistrationDO> regs = registrationService.lambdaQuery()
                 .eq(RegistrationDO::getTeamId, teamId)
@@ -466,7 +466,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         updateById(team);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "团队提交审核",
                 "团队「" + team.getTeamName() + "」已提交审核申请，请及时审批。",
-                teamId, "team");
+                teamId, CommonConstants.RELATED_TYPE_TEAM);
     }
 
     /**
@@ -581,7 +581,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "团队审核通过", "你的团队「" + team.getTeamName() + "」已通过管理员审核。",
-                teamId, "team");
+                teamId, CommonConstants.RELATED_TYPE_TEAM);
     }
 
     /**
@@ -644,12 +644,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         }
         String rejectMsg = "你的团队「" + team.getTeamName() + "」已被管理员驳回。原因：" + reason;
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
-                "团队审核未通过", rejectMsg, teamId, "team");
+                "团队审核未通过", rejectMsg, teamId, CommonConstants.RELATED_TYPE_TEAM);
         for (TeamMemberDO m : members) {
             if (!Objects.equals(m.getUserId(), team.getLeaderId())) {
                 notificationService.sendNotification(m.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                         "团队审核未通过", "你所在的团队「" + team.getTeamName() + "」已被管理员驳回。原因：" + reason,
-                        teamId, "team");
+                        teamId, CommonConstants.RELATED_TYPE_TEAM);
             }
         }
     }

@@ -165,7 +165,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的个人报名，请及时审核。",
-                contestId, "contest");
+                contestId, CommonConstants.RELATED_TYPE_CONTEST);
         return reg;
     }
 
@@ -214,7 +214,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的团队报名，请及时审核。",
-                contestId, "contest");
+                contestId, CommonConstants.RELATED_TYPE_CONTEST);
         return reg;
     }
 
@@ -245,7 +245,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
 
         notificationService.sendNotification(reg.getUserId(), CommonConstants.NOTIFY_REVIEW_RESULT,
                 "报名审核通过", "你的竞赛报名已通过审核，请及时查看详情。",
-                reg.getContestId(), "contest");
+                reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
     }
 
     /**
@@ -282,7 +282,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
 
         notificationService.sendNotification(reg.getUserId(), CommonConstants.NOTIFY_REVIEW_RESULT,
                 "报名审核未通过", "你的竞赛报名已被驳回，原因：" + reason,
-                reg.getContestId(), "contest");
+                reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
     }
 
     /**
@@ -323,7 +323,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         String contestName = c != null ? c.getName() : UNKNOWN_CONTEST;
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
                 userName + " 取消了竞赛「" + contestName + "」的报名。",
-                reg.getContestId(), "contest");
+                reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
     }
 
     /**

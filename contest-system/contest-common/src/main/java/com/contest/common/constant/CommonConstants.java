@@ -113,6 +113,10 @@ public interface CommonConstants {
     String SORT_HOT = "hot";
     String SORT_DEADLINE = "deadline";
 
+    // ==================== 通知关联业务类型 ====================
+    String RELATED_TYPE_TEAM = "team";
+    String RELATED_TYPE_CONTEST = "contest";
+
     // ==================== 业务限制 ====================
     int MAX_ACTIVE_REGISTRATIONS = 3;
     int MIN_REJECT_REASON_LENGTH = 5;
