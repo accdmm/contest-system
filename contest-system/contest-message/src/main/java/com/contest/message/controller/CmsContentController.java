@@ -3,6 +3,8 @@ package com.contest.message.controller;
 import com.contest.common.result.Result;
 import com.contest.common.util.HtmlSanitizer;
 import com.contest.message.entity.CmsContentDO;
+import com.contest.message.param.CmsContentCreateParam;
+import com.contest.message.param.CmsContentUpdateParam;
 import com.contest.message.service.CmsContentService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,16 +37,34 @@ public class CmsContentController {
     /** 创建内容 */
     @PostMapping
     @PreAuthorize("hasAuthority('cms:create')")
-    public Result<CmsContentDO> create(@RequestBody CmsContentDO content) {
-        content.setContent(HtmlSanitizer.sanitize(content.getContent()));
+    public Result<CmsContentDO> create(@RequestBody CmsContentCreateParam param) {
+        CmsContentDO content = new CmsContentDO();
+        content.setContentType(param.getContentType());
+        content.setTitle(param.getTitle());
+        content.setContent(HtmlSanitizer.sanitize(param.getContent()));
+        content.setImageUrl(param.getImageUrl());
+        content.setLinkUrl(param.getLinkUrl());
+        content.setSortOrder(param.getSortOrder());
+        content.setPosition(param.getPosition());
+        content.setStatus(param.getStatus());
         return Result.success(cmsContentService.createContent(content));
     }
 
     /** 更新内容 */
-    @PutMapping("/update")
+    @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('cms:update')")
-    public Result<CmsContentDO> update(@RequestBody CmsContentDO content) {
-        content.setContent(HtmlSanitizer.sanitize(content.getContent()));
+    public Result<CmsContentDO> update(@PathVariable Long id, @RequestBody CmsContentUpdateParam param) {
+        param.setId(id);
+        CmsContentDO content = new CmsContentDO();
+        content.setId(param.getId());
+        content.setContentType(param.getContentType());
+        content.setTitle(param.getTitle());
+        content.setContent(HtmlSanitizer.sanitize(param.getContent()));
+        content.setImageUrl(param.getImageUrl());
+        content.setLinkUrl(param.getLinkUrl());
+        content.setSortOrder(param.getSortOrder());
+        content.setPosition(param.getPosition());
+        content.setStatus(param.getStatus());
         return Result.success(cmsContentService.updateContent(content));
     }
 
