@@ -109,10 +109,6 @@ public class DashboardServiceImpl implements DashboardService {
     /** 热门竞赛 Top N（横向柱状图） */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getTopContests(int limit) {
-        QueryWrapper<ContestDO> wrapper = new QueryWrapper<>();
-        wrapper.select("id, name, current_count")
-               .orderByDesc("current_count")
-                .last("LIMIT " + Math.min(Math.max(1, limit), 100));
-        return contestMapper.selectMaps(wrapper);
+        return contestMapper.selectTopContests(Math.min(Math.max(1, limit), 100));
     }
 }
