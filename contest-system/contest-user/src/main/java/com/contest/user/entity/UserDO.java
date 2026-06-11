@@ -3,6 +3,7 @@ package com.contest.user.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 用户实体 */
 @TableName("user")
@@ -47,6 +48,7 @@ public class UserDO implements Serializable {
     private Integer deadlineNotify;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

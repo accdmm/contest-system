@@ -3,6 +3,7 @@ package com.contest.team.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 团队成员实体 */
 @TableName("team_member")
@@ -26,6 +27,7 @@ public class TeamMemberDO implements Serializable {
     private Integer status;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

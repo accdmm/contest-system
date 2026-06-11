@@ -3,6 +3,7 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 操作日志实体 */
 @TableName("operation_log")
@@ -26,6 +27,7 @@ public class OperationLogDO implements Serializable {
     private String ipAddress;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

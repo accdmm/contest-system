@@ -51,29 +51,29 @@ describe('team API', () => {
     expect(mockRequest.post).toHaveBeenCalledWith('/team/join', { userId: 1, inviteCode: 'ABC' })
   })
 
-  it('approveMember calls PUT', () => {
+  it('approveMember calls POST', () => {
     approveMember(1, 2, 3)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/members/3/approve', null, { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/members/3/approve', null, { params: { userId: 2 } })
   })
 
-  it('rejectMember calls PUT', () => {
+  it('rejectMember calls POST', () => {
     rejectMember(1, 2, 3)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/members/3/reject', null, { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/members/3/reject', null, { params: { userId: 2 } })
   })
 
-  it('removeMember calls DELETE', () => {
+  it('removeMember calls POST', () => {
     removeMember(1, 2, 3)
-    expect(mockRequest.delete).toHaveBeenCalledWith('/team/1/members/3', { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/members/3', null, { params: { userId: 2 } })
   })
 
-  it('dissolveTeam calls PUT', () => {
+  it('dissolveTeam calls POST', () => {
     dissolveTeam(1, 2)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/dissolve', null, { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/dissolve', null, { params: { userId: 2 } })
   })
 
-  it('submitTeamReview calls PUT', () => {
+  it('submitTeamReview calls POST', () => {
     submitTeamReview(1, 2)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/submit', null, { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/submit', null, { params: { userId: 2 } })
   })
 
   it('getTeamById calls GET', () => {
@@ -96,9 +96,9 @@ describe('team API', () => {
     expect(mockRequest.get).toHaveBeenCalledWith('/team/leader', { params: { userId: 1 } })
   })
 
-  it('leaveTeam calls PUT', () => {
+  it('leaveTeam calls POST', () => {
     leaveTeam(1, 2)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/leave', null, { params: { userId: 2 } })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/leave', null, { params: { userId: 2 } })
   })
 
   it('pageTeams calls GET', () => {
@@ -106,14 +106,14 @@ describe('team API', () => {
     expect(mockRequest.get).toHaveBeenCalledWith('/team/page', { params: { page: 1, size: 10 } })
   })
 
-  it('adminApproveTeam calls PUT', () => {
+  it('adminApproveTeam calls POST', () => {
     adminApproveTeam(1)
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/admin-approve')
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/admin-approve')
   })
 
-  it('adminRejectTeam calls PUT', () => {
+  it('adminRejectTeam calls POST', () => {
     adminRejectTeam(1, 'bad')
-    expect(mockRequest.put).toHaveBeenCalledWith('/team/1/admin-reject', { reason: 'bad' })
+    expect(mockRequest.post).toHaveBeenCalledWith('/team/1/admin-reject', { reason: 'bad' })
   })
 
   it('listUserTeams calls GET', () => {

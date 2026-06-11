@@ -3,6 +3,7 @@ package com.contest.competition.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 竞赛实体 */
 @TableName("contest")
@@ -49,6 +50,7 @@ public class ContestDO implements Serializable {
     private String creatorName;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

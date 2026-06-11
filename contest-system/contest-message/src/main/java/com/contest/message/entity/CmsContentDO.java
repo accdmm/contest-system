@@ -3,6 +3,7 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 内容管理实体 */
 @TableName("cms_content")
@@ -38,6 +39,7 @@ public class CmsContentDO implements Serializable {
     private Integer status;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

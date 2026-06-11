@@ -3,6 +3,7 @@ package com.contest.team.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 团队实体 */
 @TableName("team")
@@ -32,6 +33,7 @@ public class TeamDO implements Serializable {
     private LocalDateTime inviteCodeExpire;
 
     /** 逻辑删除标记 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 

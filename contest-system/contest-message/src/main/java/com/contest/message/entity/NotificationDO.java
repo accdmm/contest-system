@@ -3,6 +3,7 @@ package com.contest.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /** 通知实体 */
 @TableName("notification")
@@ -35,6 +36,7 @@ public class NotificationDO implements Serializable {
     private Integer isRead;
 
     /** 逻辑删除标识：0-未删除，1-已删除 */
+    @JsonIgnore
     @TableLogic
     private Integer isDelete;
 
