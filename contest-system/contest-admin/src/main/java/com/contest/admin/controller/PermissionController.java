@@ -1,6 +1,6 @@
 package com.contest.admin.controller;
 
-import com.contest.admin.entity.PermissionDO;
+import com.contest.admin.entity.Permission;
 import com.contest.admin.security.PermissionService;
 import com.contest.common.result.Result;
 import com.contest.common.security.SecurityUtil;
@@ -49,7 +49,7 @@ public class PermissionController {
     /** 获取所有权限列表 */
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('user:list')")
-    public Result<List<PermissionDO>> list() {
+    public Result<List<Permission>> list() {
         return Result.success(permissionService.getAllPermissions());
     }
 

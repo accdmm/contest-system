@@ -2,9 +2,9 @@ package com.contest.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.contest.ai.config.AiProperties;
-import com.contest.ai.entity.AiConversationDO;
+import com.contest.ai.entity.AiConversation;
 import com.contest.common.constant.CommonConstants;
-import com.contest.ai.entity.AiMessageDO;
+import com.contest.ai.entity.AiMessage;
 import com.contest.ai.dto.ChatEventDTO;
 import com.contest.ai.dto.ChatRequestDTO;
 import com.contest.ai.mapper.AiConversationMapper;
@@ -58,7 +58,7 @@ public class AiChatServiceImpl implements AiChatService {
     /** 对话入口：获取或创建会话 → 保存用户消息 → 加载历史 → 调用AI流式生成 → 保存助手回复并更新标题 */
     @Override
     public Flux<ChatEventDTO> chat(ChatRequestDTO request, Long userId) {
-        AiConversationDO conversation = getOrCreateConversation(request, userId);
+        AiConversation conversation = getOrCreateConversation(request, userId);
         Long conversationId = conversation.getId();
 
         saveUserMessage(conversationId, request.getMessage());
@@ -137,10 +137,10 @@ public class AiChatServiceImpl implements AiChatService {
     /** 加载指定会话的历史消息，按时间升序 */
     @Transactional(readOnly = true)
     private List<Message> loadHistory(Long conversationId) {
-        List<AiMessageDO> records = messageMapper.selectList(
-                new LambdaQueryWrapper<AiMessageDO>()
-                        .eq(AiMessageDO::getConversationId, conversationId)
-                        .orderByAsc(AiMessageDO::getCreateTime)
+        List<AiMessage> records = messageMapper.selectList(
+                new LambdaQueryWrapper<AiMessage>()
+                        .eq(AiMessage::getConversationId, conversationId)
+                        .orderByAsc(AiMessage::getCreateTime)
         );
         return records.stream().map(msg -> {
             if ("user".equals(msg.getRole())) {
@@ -153,16 +153,16 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /** 获取已有会话或创建新会话：校验归属，更新访问时间 */
-    private AiConversationDO getOrCreateConversation(ChatRequestDTO request, Long userId) {
+    private AiConversation getOrCreateConversation(ChatRequestDTO request, Long userId) {
         if (request.getConversationId() != null) {
-            AiConversationDO existing = conversationMapper.selectById(request.getConversationId());
+            AiConversation existing = conversationMapper.selectById(request.getConversationId());
             if (existing != null && Objects.equals(existing.getUserId(), userId)) {
                 existing.setUpdateTime(LocalDateTime.now());
                 conversationMapper.updateById(existing);
                 return existing;
             }
         }
-        AiConversationDO conversation = new AiConversationDO();
+        AiConversation conversation = new AiConversation();
         conversation.setUserId(userId);
         conversation.setTitle(null);
         conversationMapper.insert(conversation);
@@ -171,7 +171,7 @@ public class AiChatServiceImpl implements AiChatService {
 
     /** 保存用户消息 */
     private void saveUserMessage(Long conversationId, String content) {
-        AiMessageDO msg = new AiMessageDO();
+        AiMessage msg = new AiMessage();
         msg.setConversationId(conversationId);
         msg.setRole("user");
         msg.setContent(content);
@@ -180,7 +180,7 @@ public class AiChatServiceImpl implements AiChatService {
 
     /** 保存助手回复消息 */
     private void saveAssistantMessage(Long conversationId, String content) {
-        AiMessageDO msg = new AiMessageDO();
+        AiMessage msg = new AiMessage();
         msg.setConversationId(conversationId);
         msg.setRole("assistant");
         msg.setContent(content);
@@ -188,7 +188,7 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /** 首次对话时，根据用户提问自动生成会话标题（取前30字） */
-    private void updateTitle(AiConversationDO conversation, String question, String response) {
+    private void updateTitle(AiConversation conversation, String question, String response) {
         if (conversation.getTitle() == null && response.length() > 0) {
             String title = question.length() > CommonConstants.AI_QUESTION_TRUNCATE_LENGTH ? question.substring(0, CommonConstants.AI_QUESTION_TRUNCATE_LENGTH) + "..." : question;
             conversation.setTitle(title);
@@ -198,8 +198,8 @@ public class AiChatServiceImpl implements AiChatService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AiMessageDO> listMessages(Long conversationId, Long userId) {
-        AiConversationDO conversation = conversationMapper.selectById(conversationId);
+    public List<AiMessage> listMessages(Long conversationId, Long userId) {
+        AiConversation conversation = conversationMapper.selectById(conversationId);
         if (conversation == null) {
             throw new com.contest.common.exception.BusinessException("会话不存在");
         }
@@ -207,24 +207,24 @@ public class AiChatServiceImpl implements AiChatService {
             throw new com.contest.common.exception.BusinessException("无权查看其他用户的会话");
         }
         return messageMapper.selectList(
-                new LambdaQueryWrapper<AiMessageDO>()
-                        .eq(AiMessageDO::getConversationId, conversationId)
-                        .orderByAsc(AiMessageDO::getCreateTime));
+                new LambdaQueryWrapper<AiMessage>()
+                        .eq(AiMessage::getConversationId, conversationId)
+                        .orderByAsc(AiMessage::getCreateTime));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AiConversationDO> listConversations(Long userId) {
+    public List<AiConversation> listConversations(Long userId) {
         return conversationMapper.selectList(
-                new LambdaQueryWrapper<AiConversationDO>()
-                        .eq(AiConversationDO::getUserId, userId)
-                        .orderByDesc(AiConversationDO::getUpdateTime));
+                new LambdaQueryWrapper<AiConversation>()
+                        .eq(AiConversation::getUserId, userId)
+                        .orderByDesc(AiConversation::getUpdateTime));
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteConversation(Long conversationId, Long userId) {
-        AiConversationDO conversation = conversationMapper.selectById(conversationId);
+        AiConversation conversation = conversationMapper.selectById(conversationId);
         if (conversation == null) {
             throw new com.contest.common.exception.BusinessException("会话不存在");
         }
@@ -232,8 +232,8 @@ public class AiChatServiceImpl implements AiChatService {
             throw new com.contest.common.exception.BusinessException("无权删除其他用户的会话");
         }
         // 先删关联消息，再删会话（无级联外键）
-        messageMapper.delete(new LambdaQueryWrapper<AiMessageDO>()
-                .eq(AiMessageDO::getConversationId, conversationId));
+        messageMapper.delete(new LambdaQueryWrapper<AiMessage>()
+                .eq(AiMessage::getConversationId, conversationId));
         conversationMapper.deleteById(conversationId);
     }
 
@@ -241,14 +241,14 @@ public class AiChatServiceImpl implements AiChatService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteConversations(List<Long> ids, Long userId) {
         if (ids == null || ids.isEmpty()) return;
-        List<AiConversationDO> list = conversationMapper.selectList(
-                new LambdaQueryWrapper<AiConversationDO>()
-                        .in(AiConversationDO::getId, ids)
-                        .eq(AiConversationDO::getUserId, userId));
+        List<AiConversation> list = conversationMapper.selectList(
+                new LambdaQueryWrapper<AiConversation>()
+                        .in(AiConversation::getId, ids)
+                        .eq(AiConversation::getUserId, userId));
         if (list.isEmpty()) return;
-        List<Long> validIds = list.stream().map(AiConversationDO::getId).collect(Collectors.toList());
-        messageMapper.delete(new LambdaQueryWrapper<AiMessageDO>()
-                .in(AiMessageDO::getConversationId, validIds));
+        List<Long> validIds = list.stream().map(AiConversation::getId).collect(Collectors.toList());
+        messageMapper.delete(new LambdaQueryWrapper<AiMessage>()
+                .in(AiMessage::getConversationId, validIds));
         conversationMapper.deleteBatchIds(validIds);
     }
 }

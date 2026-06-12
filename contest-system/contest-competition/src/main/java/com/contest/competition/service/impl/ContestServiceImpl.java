@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.competition.entity.ContestDO;
+import com.contest.competition.entity.Contest;
 import com.contest.competition.mapper.ContestMapper;
 import com.contest.competition.service.ContestService;
-import com.contest.user.entity.UserDO;
+import com.contest.user.entity.User;
 import com.contest.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * - creatorName 通过批量查询（selectBatchIds）+ Map 映射填充，避免 N+1 问题
  */
 @Service
-public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> implements ContestService {
+public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> implements ContestService {
 
     private final UserMapper userMapper;
 
@@ -63,7 +63,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ContestDO createContest(ContestDO contest) {
+    public Contest createContest(Contest contest) {
         LocalDateTime now = LocalDateTime.now();
         if (contest.getRegisterStartTime() != null && contest.getRegisterStartTime().isBefore(now)) {
             throw new BusinessException("报名开始时间不能早于当前时间");
@@ -97,8 +97,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ContestDO updateContest(ContestDO contest) {
-        ContestDO existing = getById(contest.getId());
+    public Contest updateContest(Contest contest) {
+        Contest existing = getById(contest.getId());
         if (existing == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -126,7 +126,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishContest(Long id) {
-        ContestDO contest = getById(id);
+        Contest contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -150,7 +150,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unpublishContest(Long id) {
-        ContestDO contest = getById(id);
+        Contest contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -170,7 +170,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteContest(Long id) {
-        ContestDO contest = getById(id);
+        Contest contest = getById(id);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -190,8 +190,8 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 已逻辑删除的竞赛会返回 null。
      */
     @Override
-    public ContestDO getById(Serializable id) {
-        ContestDO contest = super.getById(id);
+    public Contest getById(Serializable id) {
+        Contest contest = super.getById(id);
         if (contest != null) {
             populateCreatorName(contest);
         }
@@ -199,7 +199,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
     }
 
     @Override
-    public IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy) {
+    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, String sortBy) {
         return pageContests(page, size, keyword, category, status, null, sortBy);
     }
 
@@ -213,41 +213,41 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 和 idx_time（register_end_time 索引），确保在大量竞赛数据下的查询性能。
      */
     @Override
-    public IPage<ContestDO> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
-        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
+    public IPage<Contest> pageContests(Integer page, Integer size, String keyword, String category, Integer status, Integer contestType, String sortBy) {
+        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(ContestDO::getName, keyword);
+            wrapper.like(Contest::getName, keyword);
         }
         if (category != null && !category.isEmpty()) {
-            wrapper.eq(ContestDO::getCategory, category);
+            wrapper.eq(Contest::getCategory, category);
         }
         LocalDateTime now = LocalDateTime.now();
         if (status != null) {
             if (status == CommonConstants.CONTEST_DRAFT) {
-                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_DRAFT);
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_DRAFT);
             } else if (status == CommonConstants.CONTEST_OPEN) {
-                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
-                        .le(ContestDO::getRegisterStartTime, now)
-                        .gt(ContestDO::getRegisterEndTime, now);
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(Contest::getRegisterStartTime, now)
+                        .gt(Contest::getRegisterEndTime, now);
             } else if (status == CommonConstants.CONTEST_CLOSED) {
-                wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
-                        .le(ContestDO::getRegisterEndTime, now);
+                wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                        .le(Contest::getRegisterEndTime, now);
             }
         } else {
-            wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
-                    .gt(ContestDO::getRegisterEndTime, now);
+            wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+                    .gt(Contest::getRegisterEndTime, now);
         }
         if (contestType != null) {
-            wrapper.eq(ContestDO::getContestType, contestType);
+            wrapper.eq(Contest::getContestType, contestType);
         }
         if (CommonConstants.SORT_HOT.equals(sortBy)) {
-            wrapper.orderByDesc(ContestDO::getCurrentCount);
+            wrapper.orderByDesc(Contest::getCurrentCount);
         } else if (CommonConstants.SORT_DEADLINE.equals(sortBy)) {
-            wrapper.orderByAsc(ContestDO::getRegisterEndTime);
+            wrapper.orderByAsc(Contest::getRegisterEndTime);
         } else {
-            wrapper.orderByDesc(ContestDO::getUpdateTime);
+            wrapper.orderByDesc(Contest::getUpdateTime);
         }
-        IPage<ContestDO> result = page(new Page<>(page, size), wrapper);
+        IPage<Contest> result = page(new Page<>(page, size), wrapper);
         populateCreatorNames(result.getRecords());
         return result;
     }
@@ -260,19 +260,19 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 同时支持按状态筛选，status 为 null 时展示全部。
      */
     @Override
-    public IPage<ContestDO> pageAdminContests(Integer page, Integer size, String keyword, String category, Integer status) {
-        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
+    public IPage<Contest> pageAdminContests(Integer page, Integer size, String keyword, String category, Integer status) {
+        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
-            wrapper.like(ContestDO::getName, keyword);
+            wrapper.like(Contest::getName, keyword);
         }
         if (category != null && !category.isEmpty()) {
-            wrapper.eq(ContestDO::getCategory, category);
+            wrapper.eq(Contest::getCategory, category);
         }
         if (status != null) {
-            wrapper.eq(ContestDO::getStatus, status);
+            wrapper.eq(Contest::getStatus, status);
         }
-        wrapper.orderByDesc(ContestDO::getCreateTime);
-        IPage<ContestDO> result = page(new Page<>(page, size), wrapper);
+        wrapper.orderByDesc(Contest::getCreateTime);
+        IPage<Contest> result = page(new Page<>(page, size), wrapper);
         populateCreatorNames(result.getRecords());
         return result;
     }
@@ -283,12 +283,12 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 仅返回已发布且报名未截止的竞赛。限制返回条数（默认 5 条）。
      */
     @Override
-    public List<ContestDO> listHotContests(int limit) {
-        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
-               .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
-        wrapper.orderByDesc(ContestDO::getCurrentCount);
-        List<ContestDO> list = page(new Page<>(1, limit), wrapper).getRecords();
+    public List<Contest> listHotContests(int limit) {
+        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
+        wrapper.orderByDesc(Contest::getCurrentCount);
+        List<Contest> list = page(new Page<>(1, limit), wrapper).getRecords();
         populateCreatorNames(list);
         return list;
     }
@@ -299,12 +299,12 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 仅返回已发布且报名未截止的竞赛。限制返回条数（默认 5 条）。
      */
     @Override
-    public List<ContestDO> listLatestContests(int limit) {
-        LambdaQueryWrapper<ContestDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ContestDO::getStatus, CommonConstants.CONTEST_OPEN)
-               .gt(ContestDO::getRegisterEndTime, LocalDateTime.now());
-        wrapper.orderByDesc(ContestDO::getCreateTime);
-        List<ContestDO> list = page(new Page<>(1, limit), wrapper).getRecords();
+    public List<Contest> listLatestContests(int limit) {
+        LambdaQueryWrapper<Contest> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Contest::getStatus, CommonConstants.CONTEST_OPEN)
+               .gt(Contest::getRegisterEndTime, LocalDateTime.now());
+        wrapper.orderByDesc(Contest::getCreateTime);
+        List<Contest> list = page(new Page<>(1, limit), wrapper).getRecords();
         populateCreatorNames(list);
         return list;
     }
@@ -315,9 +315,9 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 通过 createBy 字段查询 user 表获取 name。
      * 适用于详情页等单条查询场景。
      */
-    private void populateCreatorName(ContestDO contest) {
+    private void populateCreatorName(Contest contest) {
         if (contest == null || contest.getCreateBy() == null) return;
-        UserDO user = userMapper.selectById(contest.getCreateBy());
+        User user = userMapper.selectById(contest.getCreateBy());
         if (user != null) {
             contest.setCreatorName(user.getName());
         }
@@ -329,16 +329,16 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, ContestDO> im
      * 使用 selectBatchIds + Map 映射，避免逐条查询的 N+1 问题。
      * 适用于列表页等批量查询场景。
      */
-    private void populateCreatorNames(List<ContestDO> contests) {
+    private void populateCreatorNames(List<Contest> contests) {
         Set<Long> userIds = contests.stream()
-                .map(ContestDO::getCreateBy)
+                .map(Contest::getCreateBy)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         if (userIds.isEmpty()) return;
-        List<UserDO> users = userMapper.selectBatchIds(userIds);
+        List<User> users = userMapper.selectBatchIds(userIds);
         Map<Long, String> nameMap = users.stream()
-                .collect(Collectors.toMap(UserDO::getId, UserDO::getName));
-        for (ContestDO c : contests) {
+                .collect(Collectors.toMap(User::getId, User::getName));
+        for (Contest c : contests) {
             if (c.getCreateBy() != null) {
                 c.setCreatorName(nameMap.get(c.getCreateBy()));
             }

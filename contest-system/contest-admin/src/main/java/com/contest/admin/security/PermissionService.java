@@ -1,9 +1,9 @@
 package com.contest.admin.security;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.contest.admin.entity.PermissionDO;
-import com.contest.admin.entity.RolePermissionDO;
-import com.contest.admin.entity.UserPermissionDO;
+import com.contest.admin.entity.Permission;
+import com.contest.admin.entity.RolePermission;
+import com.contest.admin.entity.UserPermission;
 import com.contest.admin.mapper.PermissionMapper;
 import com.contest.admin.mapper.RolePermissionMapper;
 import com.contest.admin.mapper.UserPermissionMapper;
@@ -64,22 +64,22 @@ public class PermissionService {
     public Set<String> getPermissions(Long userId, Integer role) {
         Set<String> perms = new HashSet<>();
         try {
-            List<RolePermissionDO> rps = rolePermissionMapper.selectList(
-                    new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role));
+            List<RolePermission> rps = rolePermissionMapper.selectList(
+                    new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRole, role));
             if (!rps.isEmpty()) {
-                Set<Integer> permIds = rps.stream().map(RolePermissionDO::getPermissionId).collect(Collectors.toSet());
+                Set<Integer> permIds = rps.stream().map(RolePermission::getPermissionId).collect(Collectors.toSet());
                 perms.addAll(permissionMapper.selectBatchIds(permIds).stream()
-                        .map(PermissionDO::getCode).collect(Collectors.toSet()));
+                        .map(Permission::getCode).collect(Collectors.toSet()));
             } else if (role == 1) {
                 perms.addAll(allPermissions());
             }
             if (userId != null) {
-                List<UserPermissionDO> ups = userPermissionMapper.selectList(
-                        new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId));
+                List<UserPermission> ups = userPermissionMapper.selectList(
+                        new LambdaQueryWrapper<UserPermission>().eq(UserPermission::getUserId, userId));
                 if (!ups.isEmpty()) {
-                    Set<Integer> upIds = ups.stream().map(UserPermissionDO::getPermissionId).collect(Collectors.toSet());
+                    Set<Integer> upIds = ups.stream().map(UserPermission::getPermissionId).collect(Collectors.toSet());
                     perms.addAll(permissionMapper.selectBatchIds(upIds).stream()
-                            .map(PermissionDO::getCode).collect(Collectors.toSet()));
+                            .map(Permission::getCode).collect(Collectors.toSet()));
                 }
             }
         } catch (DataAccessException e) {
@@ -90,7 +90,7 @@ public class PermissionService {
     }
 
     /** 获取所有权限列表 */
-    public List<PermissionDO> getAllPermissions() {
+    public List<Permission> getAllPermissions() {
         return permissionMapper.selectList(null);
     }
 
@@ -102,8 +102,8 @@ public class PermissionService {
      */
     public List<Integer> getPermissionIdsByRole(Integer role) {
         return rolePermissionMapper.selectList(
-                new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role)
-        ).stream().map(RolePermissionDO::getPermissionId).collect(Collectors.toList());
+                new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRole, role)
+        ).stream().map(RolePermission::getPermissionId).collect(Collectors.toList());
     }
 
     /**
@@ -116,9 +116,9 @@ public class PermissionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveRolePermissions(Integer role, List<Integer> permissionIds) {
-        rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermissionDO>().eq(RolePermissionDO::getRole, role));
+        rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRole, role));
         for (Integer permId : permissionIds) {
-            RolePermissionDO rp = new RolePermissionDO();
+            RolePermission rp = new RolePermission();
             rp.setRole(role);
             rp.setPermissionId(permId);
             rolePermissionMapper.insert(rp);
@@ -133,8 +133,8 @@ public class PermissionService {
      */
     public List<Integer> getPermissionIdsByUser(Long userId) {
         return userPermissionMapper.selectList(
-                new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId)
-        ).stream().map(UserPermissionDO::getPermissionId).collect(Collectors.toList());
+                new LambdaQueryWrapper<UserPermission>().eq(UserPermission::getUserId, userId)
+        ).stream().map(UserPermission::getPermissionId).collect(Collectors.toList());
     }
 
     /**
@@ -145,9 +145,9 @@ public class PermissionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveUserPermissions(Long userId, List<Integer> permissionIds) {
-        userPermissionMapper.delete(new LambdaQueryWrapper<UserPermissionDO>().eq(UserPermissionDO::getUserId, userId));
+        userPermissionMapper.delete(new LambdaQueryWrapper<UserPermission>().eq(UserPermission::getUserId, userId));
         for (Integer permId : permissionIds) {
-            UserPermissionDO up = new UserPermissionDO();
+            UserPermission up = new UserPermission();
             up.setUserId(userId);
             up.setPermissionId(permId);
             userPermissionMapper.insert(up);

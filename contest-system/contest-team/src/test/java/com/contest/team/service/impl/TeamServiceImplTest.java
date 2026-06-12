@@ -2,8 +2,8 @@ package com.contest.team.service.impl;
 
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.team.entity.TeamDO;
-import com.contest.team.entity.TeamMemberDO;
+import com.contest.team.entity.Team;
+import com.contest.team.entity.TeamMember;
 import com.contest.team.service.TeamService;
 import com.contest.team.test.TestApplication;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ class TeamServiceImplTest {
 
     @Test
     void createTeam_shouldCreateTeamAndLeader() {
-        TeamDO result = teamService.createTeam(2L, "新团队", null);
+        Team result = teamService.createTeam(2L, "新团队", null);
         assertNotNull(result);
         assertEquals(2L, result.getLeaderId());
         assertEquals("新团队", result.getTeamName());
@@ -101,7 +101,7 @@ class TeamServiceImplTest {
 
     @Test
     void joinByInviteCode_shouldSucceed() {
-        TeamDO result = teamService.joinByInviteCode(3L, "ABC123");
+        Team result = teamService.joinByInviteCode(3L, "ABC123");
         assertNotNull(result);
         Long memberId = jdbc.queryForObject("SELECT id FROM team_member WHERE team_id = 1 AND user_id = 3", Long.class);
         assertNotNull(memberId);
@@ -180,7 +180,7 @@ class TeamServiceImplTest {
     @Test
     void dissolveTeam_shouldSucceed() {
         teamService.dissolveTeam(1L, 1L);
-        TeamDO team = teamService.getById(1L);
+        Team team = teamService.getById(1L);
         assertNull(team);
     }
 
@@ -223,14 +223,14 @@ class TeamServiceImplTest {
 
     @Test
     void getTeamsByLeader_shouldReturnTeams() {
-        List<TeamDO> result = teamService.getTeamsByLeader(1L);
+        List<Team> result = teamService.getTeamsByLeader(1L);
         assertEquals(1, result.size());
         assertEquals(1L, result.get(0).getLeaderId());
     }
 
     @Test
     void getTeamsByLeader_shouldReturnEmptyWhenNone() {
-        List<TeamDO> result = teamService.getTeamsByLeader(4L);
+        List<Team> result = teamService.getTeamsByLeader(4L);
         assertTrue(result.isEmpty());
     }
 
@@ -238,7 +238,7 @@ class TeamServiceImplTest {
 
     @Test
     void getTeamsByTeacher_shouldReturnEmptyWhenNone() {
-        List<TeamDO> result = teamService.getTeamsByTeacher(1L);
+        List<Team> result = teamService.getTeamsByTeacher(1L);
         assertTrue(result.isEmpty());
     }
 
@@ -246,14 +246,14 @@ class TeamServiceImplTest {
 
     @Test
     void getById_shouldReturnTeam() {
-        TeamDO result = teamService.getById(1L);
+        Team result = teamService.getById(1L);
         assertNotNull(result);
         assertEquals("测试团队", result.getTeamName());
     }
 
     @Test
     void getById_shouldReturnNullWhenNotFound() {
-        TeamDO result = teamService.getById(999L);
+        Team result = teamService.getById(999L);
         assertNull(result);
     }
 
@@ -285,13 +285,13 @@ class TeamServiceImplTest {
 
     @Test
     void listUserTeams_shouldReturnTeams() {
-        List<TeamDO> result = teamService.listUserTeams(1L);
+        List<Team> result = teamService.listUserTeams(1L);
         assertFalse(result.isEmpty());
     }
 
     @Test
     void listUserTeams_shouldReturnEmptyWhenNoMembership() {
-        List<TeamDO> result = teamService.listUserTeams(4L);
+        List<Team> result = teamService.listUserTeams(4L);
         assertTrue(result.isEmpty());
     }
 
@@ -300,7 +300,7 @@ class TeamServiceImplTest {
     @Test
     void listMembers_shouldReturnApprovedMembers() {
         jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time, handle_time) VALUES (1, 2, 0, 1, NOW(), NOW())");
-        List<TeamMemberDO> result = teamService.listMembers(1L);
+        List<TeamMember> result = teamService.listMembers(1L);
         assertEquals(2, result.size());
     }
 
@@ -308,7 +308,7 @@ class TeamServiceImplTest {
     void listMembers_shouldHandleNoMembers() {
         jdbc.execute("DELETE FROM team_member WHERE team_id = 1");
         jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status) VALUES (1, 1, 1, 1)");
-        List<TeamMemberDO> result = teamService.listMembers(1L);
+        List<TeamMember> result = teamService.listMembers(1L);
         assertEquals(1, result.size());
     }
 
@@ -317,7 +317,7 @@ class TeamServiceImplTest {
     @Test
     void listPendingMembers_shouldReturnPendingMembers() {
         jdbc.execute("INSERT INTO team_member (team_id, user_id, role, status, apply_time) VALUES (1, 3, 0, 0, NOW())");
-        List<TeamMemberDO> result = teamService.listPendingMembers(1L);
+        List<TeamMember> result = teamService.listPendingMembers(1L);
         assertEquals(1, result.size());
     }
 
@@ -348,7 +348,7 @@ class TeamServiceImplTest {
     @Test
     void generateInviteCode_shouldUpdateExpiration() {
         teamService.generateInviteCode(1L, 1L);
-        TeamDO team = teamService.getById(1L);
+        Team team = teamService.getById(1L);
         assertNotNull(team.getInviteCode());
         assertNotNull(team.getInviteCodeExpire());
     }

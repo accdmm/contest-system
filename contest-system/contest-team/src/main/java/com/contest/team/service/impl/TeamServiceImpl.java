@@ -6,18 +6,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.competition.entity.ContestDO;
+import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
-import com.contest.register.entity.RegistrationDO;
+import com.contest.register.entity.Registration;
 import com.contest.register.service.AdminNotifyService;
 import com.contest.register.service.RegistrationService;
-import com.contest.team.entity.TeamDO;
-import com.contest.team.entity.TeamMemberDO;
+import com.contest.team.entity.Team;
+import com.contest.team.entity.TeamMember;
 import com.contest.team.mapper.TeamMapper;
 import com.contest.team.mapper.TeamMemberMapper;
 import com.contest.team.service.TeamService;
-import com.contest.user.entity.UserDO;
+import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * 确保只有队长可管理团队。
  */
 @Service
-public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements TeamService {
+public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements TeamService {
 
     private static final String TEAM_NO_PREFIX = "T";
     private static final String TEAM_NO_DATE_FORMAT = "yyyyMMddHHmmss";
@@ -79,8 +79,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TeamDO createTeam(Long userId, String teamName, Long teacherId) {
-        TeamDO team = new TeamDO();
+    public Team createTeam(Long userId, String teamName, Long teacherId) {
+        Team team = new Team();
         team.setLeaderId(userId);
         team.setTeamName(teamName);
         team.setTeacherId(teacherId);
@@ -89,7 +89,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         team.setMemberCount(1);
         save(team);
 
-        TeamMemberDO leader = new TeamMemberDO();
+        TeamMember leader = new TeamMember();
         leader.setTeamId(team.getId());
         leader.setUserId(userId);
         leader.setRole(CommonConstants.MEMBER_LEADER);
@@ -114,7 +114,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String generateInviteCode(Long teamId, Long userId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null) {
             throw new BusinessException("团队不存在");
         }
@@ -142,9 +142,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public TeamDO joinByInviteCode(Long userId, String inviteCode) {
-        TeamDO team = getOne(new LambdaQueryWrapper<TeamDO>()
-                .eq(TeamDO::getInviteCode, inviteCode));
+    public Team joinByInviteCode(Long userId, String inviteCode) {
+        Team team = getOne(new LambdaQueryWrapper<Team>()
+                .eq(Team::getInviteCode, inviteCode));
         if (team == null) {
             throw new BusinessException("邀请码无效");
         }
@@ -155,9 +155,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             throw new BusinessException("该团队当前无法加入");
         }
 
-        TeamMemberDO existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getUserId, userId)
-                .eq(TeamMemberDO::getTeamId, team.getId()));
+        TeamMember existing = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getUserId, userId)
+                .eq(TeamMember::getTeamId, team.getId()));
         if (existing != null && existing.getStatus() == CommonConstants.MEMBER_APPROVED) {
             throw new BusinessException("你已经是该团队成员");
         }
@@ -169,7 +169,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             existing.setHandleTime(null);
             teamMemberMapper.updateById(existing);
         } else {
-            TeamMemberDO member = new TeamMemberDO();
+            TeamMember member = new TeamMember();
             member.setTeamId(team.getId());
             member.setUserId(userId);
             member.setRole(CommonConstants.MEMBER_NORMAL);
@@ -178,7 +178,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             teamMemberMapper.insert(member);
         }
 
-            UserDO applicant = userService.getById(userId);
+            User applicant = userService.getById(userId);
         String applicantName = applicant != null ? applicant.getName() : String.format("用户%d", userId);
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_APPLY,
                 "新成员申请", applicantName + " 申请加入你的团队「" + team.getTeamName() + "」，请及时处理。",
@@ -200,7 +200,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveMember(Long teamId, Long userId, Long memberId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可审核成员");
         }
@@ -209,7 +209,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         if (maxSize != null && currentCount + 1 > maxSize) {
             throw new BusinessException("团队人数已达上限（最多" + maxSize + "人），无法添加更多成员");
         }
-        TeamMemberDO member = teamMemberMapper.selectById(memberId);
+        TeamMember member = teamMemberMapper.selectById(memberId);
         if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员申请不存在");
         }
@@ -238,11 +238,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectMember(Long teamId, Long userId, Long memberId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可审核成员");
         }
-        TeamMemberDO member = teamMemberMapper.selectById(memberId);
+        TeamMember member = teamMemberMapper.selectById(memberId);
         if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员申请不存在");
         }
@@ -275,11 +275,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeMember(Long teamId, Long userId, Long memberId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可移除成员");
         }
-        TeamMemberDO member = teamMemberMapper.selectById(memberId);
+        TeamMember member = teamMemberMapper.selectById(memberId);
         if (member == null || !Objects.equals(member.getTeamId(), teamId)) {
             throw new BusinessException("成员不存在");
         }
@@ -308,17 +308,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void dissolveTeam(Long teamId, Long userId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可解散团队");
         }
 
         removeById(teamId);
 
-        List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .in(TeamMemberDO::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        for (TeamMemberDO m : members) {
+        List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
+        for (TeamMember m : members) {
             m.setStatus(CommonConstants.MEMBER_REJECTED);
             teamMemberMapper.updateById(m);
             if (!Objects.equals(m.getUserId(), userId)) {
@@ -328,28 +328,28 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             }
         }
 
-        List<RegistrationDO> regs = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
 
         // 批量查询关联竞赛，避免 N+1 问题
         List<Long> contestIds = regs.stream()
-                .map(RegistrationDO::getContestId)
+                .map(Registration::getContestId)
                 .filter(java.util.Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, ContestDO> contestMap = contestIds.isEmpty() ?
+        Map<Long, Contest> contestMap = contestIds.isEmpty() ?
                 java.util.Collections.emptyMap() :
                 contestService.listByIds(contestIds).stream()
-                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+                        .collect(Collectors.toMap(Contest::getId, c -> c));
 
-        for (RegistrationDO reg : regs) {
+        for (Registration reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_CANCELLED);
             registrationService.updateById(reg);
             if (wasApproved) {
-                ContestDO contest = contestMap.get(reg.getContestId());
+                Contest contest = contestMap.get(reg.getContestId());
                 if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                     contest.setCurrentCount(contest.getCurrentCount() - 1);
                     contestService.updateById(contest);
@@ -373,9 +373,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void leaveTeam(Long teamId, Long userId) {
-        TeamMemberDO member = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .eq(TeamMemberDO::getUserId, userId));
+        TeamMember member = teamMemberMapper.selectOne(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .eq(TeamMember::getUserId, userId));
         if (member == null) {
             throw new BusinessException("你不是该团队成员");
         }
@@ -388,7 +388,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         member.setStatus(CommonConstants.MEMBER_REJECTED);
         member.setHandleTime(LocalDateTime.now());
         teamMemberMapper.updateById(member);
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team != null) {
             team.setMemberCount(Math.max(0, team.getMemberCount() - 1));
             updateById(team);
@@ -398,28 +398,28 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
                     "成员退出", userName + " 退出了团队「" + team.getTeamName() + "」。",
                     teamId, CommonConstants.RELATED_TYPE_TEAM);
         }
-        List<RegistrationDO> regs = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .eq(RegistrationDO::getUserId, userId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
 
         List<Long> contestIds = regs.stream()
-                .map(RegistrationDO::getContestId)
+                .map(Registration::getContestId)
                 .filter(java.util.Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, ContestDO> contestMap = contestIds.isEmpty()
+        Map<Long, Contest> contestMap = contestIds.isEmpty()
                 ? java.util.Collections.emptyMap()
                 : contestService.listByIds(contestIds).stream()
-                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+                        .collect(Collectors.toMap(Contest::getId, c -> c));
 
-        for (RegistrationDO reg : regs) {
+        for (Registration reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_CANCELLED);
             registrationService.updateById(reg);
             if (wasApproved) {
-                ContestDO contest = contestMap.get(reg.getContestId());
+                Contest contest = contestMap.get(reg.getContestId());
                 if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                     contest.setCurrentCount(contest.getCurrentCount() - 1);
                     contestService.updateById(contest);
@@ -443,7 +443,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submitForReview(Long teamId, Long userId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
             throw new BusinessException("仅队长可提交报名");
         }
@@ -455,10 +455,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         if (currentCount < minSize) {
             throw new BusinessException("团队人数不足最低要求（至少" + minSize + "人），无法提交审核");
         }
-        long approvedNonLeaderCount = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .eq(TeamMemberDO::getStatus, CommonConstants.MEMBER_APPROVED)
-                .ne(TeamMemberDO::getRole, CommonConstants.MEMBER_LEADER));
+        long approvedNonLeaderCount = teamMemberMapper.selectCount(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .eq(TeamMember::getStatus, CommonConstants.MEMBER_APPROVED)
+                .ne(TeamMember::getRole, CommonConstants.MEMBER_LEADER));
         if (approvedNonLeaderCount == 0) {
             throw new BusinessException("团队中暂无已通过的普通成员，无法提交审核");
         }
@@ -478,10 +478,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 成员列表
      */
     @Override
-    public List<TeamMemberDO> listMembers(Long teamId) {
-        List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .eq(TeamMemberDO::getStatus, CommonConstants.MEMBER_APPROVED));
+    public List<TeamMember> listMembers(Long teamId) {
+        List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .eq(TeamMember::getStatus, CommonConstants.MEMBER_APPROVED));
         return enrichWithUserName(members);
     }
 
@@ -492,10 +492,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 待审批成员列表
      */
     @Override
-    public List<TeamMemberDO> listPendingMembers(Long teamId) {
-        List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .eq(TeamMemberDO::getStatus, CommonConstants.MEMBER_PENDING));
+    public List<TeamMember> listPendingMembers(Long teamId) {
+        List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .eq(TeamMember::getStatus, CommonConstants.MEMBER_PENDING));
         return enrichWithUserName(members);
     }
 
@@ -507,20 +507,20 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @param members 成员列表（不含 userName）
      * @return 含 userName 的成员列表
      */
-    private List<TeamMemberDO> enrichWithUserName(List<TeamMemberDO> members) {
+    private List<TeamMember> enrichWithUserName(List<TeamMember> members) {
         List<Long> userIds = members.stream()
-                .map(TeamMemberDO::getUserId)
+                .map(TeamMember::getUserId)
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
         if (userIds.isEmpty()) {
             return members;
         }
-        List<UserDO> users = userService.listByIds(userIds);
-        java.util.Map<Long, UserDO> userMap = users.stream()
-                .collect(Collectors.toMap(UserDO::getId, u -> u));
+        List<User> users = userService.listByIds(userIds);
+        java.util.Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
         return members.stream().peek(m -> {
             if (m.getUserId() != null) {
-                UserDO user = userMap.get(m.getUserId());
+                User user = userMap.get(m.getUserId());
                 m.setUserName(user != null ? user.getName() : null);
             }
         }).collect(Collectors.toList());
@@ -533,9 +533,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 团队列表
      */
     @Override
-    public List<TeamDO> getTeamsByLeader(Long userId) {
-        return list(new LambdaQueryWrapper<TeamDO>()
-                .eq(TeamDO::getLeaderId, userId));
+    public List<Team> getTeamsByLeader(Long userId) {
+        return list(new LambdaQueryWrapper<Team>()
+                .eq(Team::getLeaderId, userId));
     }
 
     /**
@@ -547,12 +547,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 团队分页数据
      */
     @Override
-    public IPage<TeamDO> pageTeams(Integer status, Integer page, Integer size) {
-        LambdaQueryWrapper<TeamDO> wrapper = new LambdaQueryWrapper<>();
+    public IPage<Team> pageTeams(Integer status, Integer page, Integer size) {
+        LambdaQueryWrapper<Team> wrapper = new LambdaQueryWrapper<>();
         if (status != null) {
-            wrapper.eq(TeamDO::getStatus, status);
+            wrapper.eq(Team::getStatus, status);
         }
-        wrapper.orderByDesc(TeamDO::getCreateTime);
+        wrapper.orderByDesc(Team::getCreateTime);
         return page(new Page<>(page, size), wrapper);
     }
 
@@ -565,16 +565,16 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adminApproveTeam(Long teamId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null) throw new BusinessException("团队不存在");
         if (team.getStatus() != CommonConstants.TEAM_SUBMITTED) {
             throw new BusinessException("该团队未提交审核");
         }
         team.setStatus(CommonConstants.TEAM_APPROVED);
         updateById(team);
-        RegistrationDO reg = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .eq(RegistrationDO::getStatus, CommonConstants.REG_PENDING)
+        Registration reg = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getStatus, CommonConstants.REG_PENDING)
                 .one();
         if (reg != null) {
             registrationService.approveRegistration(reg.getId());
@@ -599,35 +599,35 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
         if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
             throw new BusinessException("驳回原因不少于5个字符");
         }
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null) throw new BusinessException("团队不存在");
         team.setStatus(CommonConstants.TEAM_REJECTED);
         team.setMemberCount(0);
         updateById(team);
 
-        List<RegistrationDO> regs = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
 
         // 批量查询关联竞赛，避免 N+1 问题
         List<Long> contestIds = regs.stream()
-                .map(RegistrationDO::getContestId)
+                .map(Registration::getContestId)
                 .filter(java.util.Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, ContestDO> contestMap = contestIds.isEmpty() ?
+        Map<Long, Contest> contestMap = contestIds.isEmpty() ?
                 java.util.Collections.emptyMap() :
                 contestService.listByIds(contestIds).stream()
-                        .collect(Collectors.toMap(ContestDO::getId, c -> c));
+                        .collect(Collectors.toMap(Contest::getId, c -> c));
 
-        for (RegistrationDO reg : regs) {
+        for (Registration reg : regs) {
             boolean wasApproved = reg.getStatus() == CommonConstants.REG_APPROVED;
             reg.setStatus(CommonConstants.REG_REJECTED);
             reg.setReviewReason(reason);
             registrationService.updateById(reg);
             if (wasApproved) {
-                ContestDO contest = contestMap.get(reg.getContestId());
+                Contest contest = contestMap.get(reg.getContestId());
                 if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                     contest.setCurrentCount(contest.getCurrentCount() - 1);
                     contestService.updateById(contest);
@@ -635,17 +635,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             }
         }
 
-        List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getTeamId, teamId)
-                .in(TeamMemberDO::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
-        for (TeamMemberDO m : members) {
+        List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getTeamId, teamId)
+                .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
+        for (TeamMember m : members) {
             m.setStatus(CommonConstants.MEMBER_REJECTED);
             teamMemberMapper.updateById(m);
         }
         String rejectMsg = "你的团队「" + team.getTeamName() + "」已被管理员驳回。原因：" + reason;
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "团队审核未通过", rejectMsg, teamId, CommonConstants.RELATED_TYPE_TEAM);
-        for (TeamMemberDO m : members) {
+        for (TeamMember m : members) {
             if (!Objects.equals(m.getUserId(), team.getLeaderId())) {
                 notificationService.sendNotification(m.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                         "团队审核未通过", "你所在的团队「" + team.getTeamName() + "」已被管理员驳回。原因：" + reason,
@@ -661,12 +661,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * 若团队尚未报名则返回 null（无限制）。
      */
     private Integer resolveTeamMaxSize(Long teamId) {
-        List<RegistrationDO> regs = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
         if (!regs.isEmpty()) {
-            ContestDO contest = contestService.getById(regs.get(0).getContestId());
+            Contest contest = contestService.getById(regs.get(0).getContestId());
             if (contest != null && contest.getTeamMaxSize() != null && contest.getTeamMaxSize() > 0) {
                 return contest.getTeamMaxSize();
             }
@@ -682,12 +682,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * 若关联竞赛未设置最小值则返回 0，未关联竞赛则返回 null。
      */
     private Integer resolveTeamMinSize(Long teamId) {
-        List<RegistrationDO> regs = registrationService.lambdaQuery()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED)
+        List<Registration> regs = registrationService.lambdaQuery()
+                .eq(Registration::getTeamId, teamId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED)
                 .list();
         if (!regs.isEmpty()) {
-            ContestDO contest = contestService.getById(regs.get(0).getContestId());
+            Contest contest = contestService.getById(regs.get(0).getContestId());
             if (contest != null && contest.getTeamMinSize() != null && contest.getTeamMinSize() > 0) {
                 return contest.getTeamMinSize();
             }
@@ -706,12 +706,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 团队列表（不包括被拒绝的）
      */
     @Override
-    public List<TeamDO> listUserTeams(Long userId) {
-        List<TeamMemberDO> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMemberDO>()
-                .eq(TeamMemberDO::getUserId, userId)
-                .in(TeamMemberDO::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
+    public List<Team> listUserTeams(Long userId) {
+        List<TeamMember> members = teamMemberMapper.selectList(new LambdaQueryWrapper<TeamMember>()
+                .eq(TeamMember::getUserId, userId)
+                .in(TeamMember::getStatus, CommonConstants.MEMBER_PENDING, CommonConstants.MEMBER_APPROVED));
         if (members.isEmpty()) return List.of();
-        List<Long> teamIds = members.stream().map(TeamMemberDO::getTeamId).collect(Collectors.toList());
+        List<Long> teamIds = members.stream().map(TeamMember::getTeamId).collect(Collectors.toList());
         return listByIds(teamIds);
     }
 
@@ -728,7 +728,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void setTeacher(Long teamId, Long teacherId, Long userId) {
-        TeamDO team = getById(teamId);
+        Team team = getById(teamId);
         if (team == null) {
             throw new BusinessException("团队不存在");
         }
@@ -736,7 +736,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
             throw new BusinessException("仅队长可设置指导教师");
         }
         if (teacherId != null) {
-            UserDO teacher = userService.getById(teacherId);
+            User teacher = userService.getById(teacherId);
             if (teacher == null) {
                 throw new BusinessException("教师用户不存在");
             }
@@ -755,8 +755,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, TeamDO> implements 
      * @return 团队列表
      */
     @Override
-    public List<TeamDO> getTeamsByTeacher(Long teacherId) {
-        return list(new LambdaQueryWrapper<TeamDO>()
-                .eq(TeamDO::getTeacherId, teacherId));
+    public List<Team> getTeamsByTeacher(Long teacherId) {
+        return list(new LambdaQueryWrapper<Team>()
+                .eq(Team::getTeacherId, teacherId));
     }
 }

@@ -2,9 +2,9 @@ package com.contest.message.controller;
 
 import com.contest.common.result.Result;
 import com.contest.common.util.HtmlSanitizer;
-import com.contest.message.entity.CmsContentDO;
-import com.contest.message.param.CmsContentCreateParam;
-import com.contest.message.param.CmsContentUpdateParam;
+import com.contest.message.entity.CmsContent;
+import com.contest.message.param.CmsContentCreateRequest;
+import com.contest.message.param.CmsContentUpdateRequest;
 import com.contest.message.service.CmsContentService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -24,21 +24,21 @@ public class CmsContentController {
 
     /** 获取轮播图列表 */
     @GetMapping("/banners")
-    public Result<List<CmsContentDO>> banners() {
+    public Result<List<CmsContent>> banners() {
         return Result.success(cmsContentService.listBanners());
     }
 
     /** 获取公告列表（可按位置筛选） */
     @GetMapping("/announcements")
-    public Result<List<CmsContentDO>> announcements(@RequestParam(required = false) String position) {
+    public Result<List<CmsContent>> announcements(@RequestParam(required = false) String position) {
         return Result.success(cmsContentService.listAnnouncements(position));
     }
 
     /** 创建内容 */
     @PostMapping
     @PreAuthorize("hasAuthority('cms:create')")
-    public Result<CmsContentDO> create(@RequestBody CmsContentCreateParam param) {
-        CmsContentDO content = new CmsContentDO();
+    public Result<CmsContent> create(@RequestBody CmsContentCreateRequest param) {
+        CmsContent content = new CmsContent();
         content.setContentType(param.getContentType());
         content.setTitle(param.getTitle());
         content.setContent(HtmlSanitizer.sanitize(param.getContent()));
@@ -53,9 +53,9 @@ public class CmsContentController {
     /** 更新内容 */
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('cms:update')")
-    public Result<CmsContentDO> update(@PathVariable Long id, @RequestBody CmsContentUpdateParam param) {
+    public Result<CmsContent> update(@PathVariable Long id, @RequestBody CmsContentUpdateRequest param) {
         param.setId(id);
-        CmsContentDO content = new CmsContentDO();
+        CmsContent content = new CmsContent();
         content.setId(param.getId());
         content.setContentType(param.getContentType());
         content.setTitle(param.getTitle());
@@ -70,8 +70,8 @@ public class CmsContentController {
 
     /** 根据ID获取内容详情 */
     @GetMapping("/{id}")
-    public Result<CmsContentDO> getById(@PathVariable Long id) {
-        CmsContentDO content = cmsContentService.getById(id);
+    public Result<CmsContent> getById(@PathVariable Long id) {
+        CmsContent content = cmsContentService.getById(id);
         if (content == null) {
             return Result.error("内容不存在");
         }

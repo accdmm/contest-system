@@ -2,7 +2,7 @@ package com.contest.admin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.result.Result;
-import com.contest.competition.entity.ContestDO;
+import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +38,7 @@ public class AdminContestController {
      */
     @GetMapping("/page")
     @PreAuthorize("isAuthenticated()")
-    public Result<IPage<ContestDO>> page(@RequestParam(defaultValue = "1") Integer page,
+    public Result<IPage<Contest>> page(@RequestParam(defaultValue = "1") Integer page,
                                        @RequestParam(defaultValue = "10") Integer size,
                                        @RequestParam(required = false) String keyword,
                                        @RequestParam(required = false) String category,

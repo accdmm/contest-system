@@ -3,7 +3,7 @@ package com.contest.message.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.contest.message.entity.OperationLogDO;
+import com.contest.message.entity.OperationLog;
 import com.contest.message.mapper.OperationLogMapper;
 import com.contest.message.service.OperationLogService;
 import org.springframework.stereotype.Service;
@@ -21,12 +21,12 @@ public class OperationLogServiceImpl implements OperationLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public IPage<OperationLogDO> page(Long userId, Integer page, Integer size) {
-        Page<OperationLogDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<OperationLogDO> wrapper = new LambdaQueryWrapper<OperationLogDO>()
-                .orderByDesc(OperationLogDO::getCreateTime);
+    public IPage<OperationLog> page(Long userId, Integer page, Integer size) {
+        Page<OperationLog> p = new Page<>(page, size);
+        LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<OperationLog>()
+                .orderByDesc(OperationLog::getCreateTime);
         if (userId != null) {
-            wrapper.eq(OperationLogDO::getUserId, userId);
+            wrapper.eq(OperationLog::getUserId, userId);
         }
         return operationLogMapper.selectPage(p, wrapper);
     }

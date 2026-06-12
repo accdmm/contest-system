@@ -2,10 +2,10 @@ package com.contest.message.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.message.entity.NotificationDO;
+import com.contest.message.entity.Notification;
 
 /** 通知服务接口 */
-public interface NotificationService extends IService<NotificationDO> {
+public interface NotificationService extends IService<Notification> {
 
     /** 发送通知给指定用户
      * @param userId 接收用户ID
@@ -27,7 +27,7 @@ public interface NotificationService extends IService<NotificationDO> {
      * @param page 页码
      * @param size 每页条数
      * @return 分页结果 */
-    IPage<NotificationDO> pageByUser(Long userId, Integer page, Integer size);
+    IPage<Notification> pageByUser(Long userId, Integer page, Integer size);
 
     /** 标记单条通知为已读
      * @param id 通知ID

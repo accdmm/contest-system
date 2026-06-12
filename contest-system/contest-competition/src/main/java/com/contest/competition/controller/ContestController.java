@@ -5,9 +5,9 @@ import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
 import com.contest.common.util.HtmlSanitizer;
-import com.contest.competition.entity.ContestDO;
-import com.contest.competition.param.ContestCreateParam;
-import com.contest.competition.param.ContestUpdateParam;
+import com.contest.competition.entity.Contest;
+import com.contest.competition.param.ContestCreateRequest;
+import com.contest.competition.param.ContestUpdateRequest;
 import com.contest.competition.service.ContestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +32,8 @@ public class ContestController {
     /** 创建竞赛 */
     @PostMapping
     @PreAuthorize("hasAuthority('contest:create')")
-    public Result<ContestDO> create(@RequestBody @Valid ContestCreateParam param) {
-        ContestDO contest = new ContestDO();
+    public Result<Contest> create(@RequestBody @Valid ContestCreateRequest param) {
+        Contest contest = new Contest();
         contest.setName(param.getName());
         contest.setCategory(param.getCategory());
         contest.setLevel(param.getLevel());
@@ -58,8 +58,8 @@ public class ContestController {
     /** 修改竞赛 */
     @PutMapping("/update")
     @PreAuthorize("hasAuthority('contest:update')")
-    public Result<ContestDO> update(@RequestBody @Valid ContestUpdateParam param) {
-        ContestDO contest = new ContestDO();
+    public Result<Contest> update(@RequestBody @Valid ContestUpdateRequest param) {
+        Contest contest = new Contest();
         contest.setId(param.getId());
         contest.setName(param.getName());
         contest.setCategory(param.getCategory());
@@ -111,8 +111,8 @@ public class ContestController {
 
     /** 查询竞赛详情 */
     @GetMapping("/{id}")
-    public Result<ContestDO> getById(@PathVariable Long id) {
-        ContestDO contest = contestService.getById(id);
+    public Result<Contest> getById(@PathVariable Long id) {
+        Contest contest = contestService.getById(id);
         if (contest == null) {
             return Result.error("竞赛不存在");
         }
@@ -121,7 +121,7 @@ public class ContestController {
 
     /** 分页查询竞赛列表 */
     @GetMapping("/page")
-    public Result<IPage<ContestDO>> page(@RequestParam(defaultValue = "1") Integer page,
+    public Result<IPage<Contest>> page(@RequestParam(defaultValue = "1") Integer page,
                                        @RequestParam(defaultValue = "10") Integer size,
                                        @RequestParam(required = false) String keyword,
                                        @RequestParam(required = false) String category,
@@ -133,13 +133,13 @@ public class ContestController {
 
     /** 获取热门竞赛（按报名人数倒序） */
     @GetMapping("/hot")
-    public Result<List<ContestDO>> hot(@RequestParam(defaultValue = "5") int limit) {
+    public Result<List<Contest>> hot(@RequestParam(defaultValue = "5") int limit) {
         return Result.success(contestService.listHotContests(limit));
     }
 
     /** 获取最新竞赛（按创建时间倒序） */
     @GetMapping("/latest")
-    public Result<List<ContestDO>> latest(@RequestParam(defaultValue = "5") int limit) {
+    public Result<List<Contest>> latest(@RequestParam(defaultValue = "5") int limit) {
         return Result.success(contestService.listLatestContests(limit));
     }
 }

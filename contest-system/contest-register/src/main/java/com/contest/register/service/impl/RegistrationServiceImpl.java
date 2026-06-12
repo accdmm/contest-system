@@ -7,14 +7,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.common.service.TeamValidator;
-import com.contest.competition.entity.ContestDO;
+import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
 import com.contest.message.service.NotificationService;
-import com.contest.register.entity.RegistrationDO;
+import com.contest.register.entity.Registration;
 import com.contest.register.mapper.RegistrationMapper;
 import com.contest.register.service.AdminNotifyService;
 import com.contest.register.service.RegistrationService;
-import com.contest.user.entity.UserDO;
+import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * - 活跃报名数校验：每人同时最多 3 个非取消状态报名
  */
 @Service
-public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, RegistrationDO> implements RegistrationService {
+public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Registration> implements RegistrationService {
 
     private static final String UNKNOWN_CONTEST = "未知竞赛";
 
@@ -64,8 +64,8 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      * @param requiredRegType 报名类型（个人/团队），与竞赛类型匹配检查
      * @return 校验通过的竞赛对象
      */
-    private ContestDO validateContest(Long contestId, Integer requiredRegType) {
-        ContestDO contest = contestService.getById(contestId);
+    private Contest validateContest(Long contestId, Integer requiredRegType) {
+        Contest contest = contestService.getById(contestId);
         if (contest == null) {
             throw new BusinessException("竞赛不存在");
         }
@@ -99,9 +99,9 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      */
     private void checkMaxParticipants(Long contestId, Integer maxParticipants) {
         if (maxParticipants == null || maxParticipants <= 0) return;
-        long currentTotal = count(new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getContestId, contestId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
+        long currentTotal = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getContestId, contestId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (currentTotal >= maxParticipants) {
             throw new BusinessException("报名人数已满，无法继续报名");
         }
@@ -110,12 +110,12 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     /**
      * 审核时再次校验人数上限
      *
-     * 与 checkMaxParticipants 的区别：此方法读取 ContestDO 中的 currentCount 字段
+     * 与 checkMaxParticipants 的区别：此方法读取 Contest 中的 currentCount 字段
      * （已通过审核的计数），而非数据库中报名记录总数。用于审批通过时确保不会超出上限。
      *
      * @param contest 竞赛实体
      */
-    private void checkMaxParticipantsForApproval(ContestDO contest) {
+    private void checkMaxParticipantsForApproval(Contest contest) {
         Integer max = contest.getMaxParticipants();
         if (max != null && max > 0 && contest.getCurrentCount() != null && contest.getCurrentCount() >= max) {
             throw new BusinessException("报名人数已满，无法继续报名");
@@ -135,33 +135,33 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public RegistrationDO registerPersonal(Long userId, Long contestId, String remark) {
-        ContestDO contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
+    public Registration registerPersonal(Long userId, Long contestId, String remark) {
+        Contest contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
 
-        long dupCount = count(new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getUserId, userId)
-                .eq(RegistrationDO::getContestId, contestId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
+        long dupCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .eq(Registration::getContestId, contestId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (dupCount > 0) {
             throw new BusinessException("您已报名该竞赛");
         }
 
-        long activeCount = count(new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getUserId, userId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
+        long activeCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (activeCount >= CommonConstants.MAX_ACTIVE_REGISTRATIONS) {
             throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
-        RegistrationDO reg = new RegistrationDO();
+        Registration reg = new Registration();
         reg.setContestId(contestId);
         reg.setUserId(userId);
         reg.setRegType(CommonConstants.REG_PERSONAL);
         reg.setStatus(CommonConstants.REG_PENDING);
         reg.setRemark(remark);
         save(reg);
-        UserDO user = userService.getById(userId);
+        User user = userService.getById(userId);
         String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的个人报名，请及时审核。",
@@ -182,35 +182,35 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public RegistrationDO registerTeam(Long userId, Long contestId, Long teamId) {
+    public Registration registerTeam(Long userId, Long contestId, Long teamId) {
         teamValidator.validateForRegistration(teamId);
         teamValidator.validateTeamLeader(teamId, userId);
-        ContestDO contest = validateContest(contestId, CommonConstants.REG_TEAM);
+        Contest contest = validateContest(contestId, CommonConstants.REG_TEAM);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
 
-        long dupCount = count(new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getTeamId, teamId)
-                .eq(RegistrationDO::getContestId, contestId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
+        long dupCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getTeamId, teamId)
+                .eq(Registration::getContestId, contestId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (dupCount > 0) {
             throw new BusinessException("该团队已报名该竞赛");
         }
 
-        long activeCount = count(new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getUserId, userId)
-                .ne(RegistrationDO::getStatus, CommonConstants.REG_CANCELLED));
+        long activeCount = count(new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (activeCount >= CommonConstants.MAX_ACTIVE_REGISTRATIONS) {
             throw new BusinessException("每人同时最多报名3个竞赛");
         }
 
-        RegistrationDO reg = new RegistrationDO();
+        Registration reg = new Registration();
         reg.setContestId(contestId);
         reg.setUserId(userId);
         reg.setTeamId(teamId);
         reg.setRegType(CommonConstants.REG_TEAM);
         reg.setStatus(CommonConstants.REG_PENDING);
         save(reg);
-        UserDO user = userService.getById(userId);
+        User user = userService.getById(userId);
         String userName = user != null ? user.getName() : String.format("用户%d", userId);
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的团队报名，请及时审核。",
@@ -227,14 +227,14 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveRegistration(Long id) {
-        RegistrationDO reg = getById(id);
+        Registration reg = getById(id);
         if (reg == null) {
             throw new BusinessException("报名记录不存在");
         }
         if (reg.getStatus() != CommonConstants.REG_PENDING) {
             throw new BusinessException("仅待审核状态的报名可批准");
         }
-        ContestDO contest = contestService.getById(reg.getContestId());
+        Contest contest = contestService.getById(reg.getContestId());
         if (contest != null) {
             checkMaxParticipantsForApproval(contest);
             contest.setCurrentCount(contest.getCurrentCount() == null ? 1 : contest.getCurrentCount() + 1);
@@ -260,7 +260,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
             throw new BusinessException("驳回原因不少于5个字符");
         }
-        RegistrationDO reg = getById(id);
+        Registration reg = getById(id);
         if (reg == null) {
             throw new BusinessException("报名记录不存在");
         }
@@ -273,7 +273,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         updateById(reg);
 
         if (wasApproved) {
-            ContestDO contest = contestService.getById(reg.getContestId());
+            Contest contest = contestService.getById(reg.getContestId());
             if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                 contest.setCurrentCount(contest.getCurrentCount() - 1);
                 contestService.updateById(contest);
@@ -294,7 +294,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelRegistration(Long id, Long userId) {
-        RegistrationDO reg = getById(id);
+        Registration reg = getById(id);
         if (reg == null) {
             throw new BusinessException("报名记录不存在");
         }
@@ -310,15 +310,15 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         updateById(reg);
 
         if (wasApproved) {
-            ContestDO contest = contestService.getById(reg.getContestId());
+            Contest contest = contestService.getById(reg.getContestId());
             if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                 contest.setCurrentCount(contest.getCurrentCount() - 1);
                 contestService.updateById(contest);
             }
 
         }
-        ContestDO c = contestService.getById(reg.getContestId());
-        UserDO user = userService.getById(userId);
+        Contest c = contestService.getById(reg.getContestId());
+        User user = userService.getById(userId);
         String userName = user != null ? user.getName() : String.format("用户%d", userId);
         String contestName = c != null ? c.getName() : UNKNOWN_CONTEST;
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
@@ -337,22 +337,22 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      * @return 报名记录分页数据
      */
     @Override
-    public IPage<RegistrationDO> pageByUser(Long userId, Integer page, Integer size) {
-        LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getUserId, userId)
-                .orderByDesc(RegistrationDO::getCreateTime);
-        IPage<RegistrationDO> result = page(new Page<>(page, size), wrapper);
-        List<RegistrationDO> records = result.getRecords();
+    public IPage<Registration> pageByUser(Long userId, Integer page, Integer size) {
+        LambdaQueryWrapper<Registration> wrapper = new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getUserId, userId)
+                .orderByDesc(Registration::getCreateTime);
+        IPage<Registration> result = page(new Page<>(page, size), wrapper);
+        List<Registration> records = result.getRecords();
         if (!records.isEmpty()) {
             List<Long> contestIds = records.stream()
-                    .map(RegistrationDO::getContestId)
+                    .map(Registration::getContestId)
                     .filter(java.util.Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
             if (!contestIds.isEmpty()) {
-                List<ContestDO> contests = contestService.listByIds(contestIds);
+                List<Contest> contests = contestService.listByIds(contestIds);
                 Map<Long, String> contestNameMap = contests.stream()
-                        .collect(Collectors.toMap(ContestDO::getId, ContestDO::getName));
+                        .collect(Collectors.toMap(Contest::getId, Contest::getName));
                 records.forEach(reg -> {
                     if (reg.getContestId() != null) {
                         reg.setContestName(contestNameMap.get(reg.getContestId()));
@@ -373,13 +373,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      * @return 报名记录分页数据
      */
     @Override
-    public IPage<RegistrationDO> pageByContest(Long contestId, Integer page, Integer size, Integer status) {
-        LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<RegistrationDO>()
-                .eq(RegistrationDO::getContestId, contestId);
+    public IPage<Registration> pageByContest(Long contestId, Integer page, Integer size, Integer status) {
+        LambdaQueryWrapper<Registration> wrapper = new LambdaQueryWrapper<Registration>()
+                .eq(Registration::getContestId, contestId);
         if (status != null) {
-            wrapper.eq(RegistrationDO::getStatus, status);
+            wrapper.eq(Registration::getStatus, status);
         }
-        wrapper.orderByDesc(RegistrationDO::getCreateTime);
+        wrapper.orderByDesc(Registration::getCreateTime);
         return page(new Page<>(page, size), wrapper);
     }
 
@@ -395,39 +395,39 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
      * @return 报名记录分页数据
      */
     @Override
-    public IPage<RegistrationDO> pageAll(Long contestId, Integer status, Integer page, Integer size) {
-        LambdaQueryWrapper<RegistrationDO> wrapper = new LambdaQueryWrapper<>();
+    public IPage<Registration> pageAll(Long contestId, Integer status, Integer page, Integer size) {
+        LambdaQueryWrapper<Registration> wrapper = new LambdaQueryWrapper<>();
         if (contestId != null) {
-            wrapper.eq(RegistrationDO::getContestId, contestId);
+            wrapper.eq(Registration::getContestId, contestId);
         }
         if (status != null) {
-            wrapper.eq(RegistrationDO::getStatus, status);
+            wrapper.eq(Registration::getStatus, status);
         }
-        wrapper.orderByDesc(RegistrationDO::getCreateTime);
-        IPage<RegistrationDO> result = page(new Page<>(page, size), wrapper);
-        List<RegistrationDO> records = result.getRecords();
+        wrapper.orderByDesc(Registration::getCreateTime);
+        IPage<Registration> result = page(new Page<>(page, size), wrapper);
+        List<Registration> records = result.getRecords();
         if (!records.isEmpty()) {
             List<Long> contestIds = records.stream()
-                    .map(RegistrationDO::getContestId)
+                    .map(Registration::getContestId)
                     .filter(java.util.Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
             Map<Long, String> contestNameMap = java.util.Collections.emptyMap();
             if (!contestIds.isEmpty()) {
-                List<ContestDO> contests = contestService.listByIds(contestIds);
+                List<Contest> contests = contestService.listByIds(contestIds);
                 contestNameMap = contests.stream()
-                        .collect(Collectors.toMap(ContestDO::getId, ContestDO::getName));
+                        .collect(Collectors.toMap(Contest::getId, Contest::getName));
             }
             List<Long> userIds = records.stream()
-                    .map(RegistrationDO::getUserId)
+                    .map(Registration::getUserId)
                     .filter(java.util.Objects::nonNull)
                     .distinct()
                     .collect(Collectors.toList());
             Map<Long, String> userNameMap = java.util.Collections.emptyMap();
             if (!userIds.isEmpty()) {
-                List<UserDO> users = userService.listByIds(userIds);
+                List<User> users = userService.listByIds(userIds);
                 userNameMap = users.stream()
-                        .collect(Collectors.toMap(UserDO::getId, UserDO::getName));
+                        .collect(Collectors.toMap(User::getId, User::getName));
             }
             Map<Long, String> finalContestNameMap = contestNameMap;
             Map<Long, String> finalUserNameMap = userNameMap;

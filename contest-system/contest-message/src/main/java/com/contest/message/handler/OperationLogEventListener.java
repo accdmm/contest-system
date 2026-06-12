@@ -1,7 +1,7 @@
 package com.contest.message.handler;
 
 import com.contest.common.event.OperationLogEvent;
-import com.contest.message.entity.OperationLogDO;
+import com.contest.message.entity.OperationLog;
 import com.contest.message.mapper.OperationLogMapper;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class OperationLogEventListener {
 
     @EventListener
     public void handleOperationLog(OperationLogEvent event) {
-        OperationLogDO log = new OperationLogDO();
+        OperationLog log = new OperationLog();
         log.setUserId(event.getUserId());
         log.setAction(event.getAction());
         log.setDetail(event.getDetail());

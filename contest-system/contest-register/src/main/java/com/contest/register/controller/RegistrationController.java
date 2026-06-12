@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
-import com.contest.register.entity.RegistrationDO;
-import com.contest.register.param.RegPersonalParam;
-import com.contest.register.param.RegTeamParam;
-import com.contest.register.param.RejectParam;
+import com.contest.register.entity.Registration;
+import com.contest.register.param.RegPersonalRequest;
+import com.contest.register.param.RegTeamRequest;
+import com.contest.register.param.RejectRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -33,7 +33,7 @@ public class RegistrationController {
     /** 个人赛报名 */
     @PostMapping("/personal")
     @PreAuthorize("isAuthenticated()")
-    public Result<RegistrationDO> registerPersonal(@RequestBody @Valid RegPersonalParam param) {
+    public Result<Registration> registerPersonal(@RequestBody @Valid RegPersonalRequest param) {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户 {} 报名个人赛: contestId={}", userId, param.getContestId());
         return Result.success(registrationService.registerPersonal(userId, param.getContestId(), param.getRemark()));
@@ -42,7 +42,7 @@ public class RegistrationController {
     /** 团队赛报名 */
     @PostMapping("/team")
     @PreAuthorize("isAuthenticated()")
-    public Result<RegistrationDO> registerTeam(@RequestBody @Valid RegTeamParam param) {
+    public Result<Registration> registerTeam(@RequestBody @Valid RegTeamRequest param) {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户 {} 报名团队赛: contestId={}, teamId={}", userId, param.getContestId(), param.getTeamId());
         return Result.success(registrationService.registerTeam(userId, param.getContestId(), param.getTeamId()));
@@ -61,7 +61,7 @@ public class RegistrationController {
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAuthority('registration:approve')")
     @OperationLog(action = "驳回报名")
-    public Result<Void> reject(@PathVariable Long id, @RequestBody @Valid RejectParam param) {
+    public Result<Void> reject(@PathVariable Long id, @RequestBody @Valid RejectRequest param) {
         registrationService.rejectRegistration(id, param.getReason());
         return Result.success();
     }
@@ -78,7 +78,7 @@ public class RegistrationController {
     /** 查询用户的报名记录 */
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
-    public Result<IPage<RegistrationDO>> byUser(@PathVariable Long userId,
+    public Result<IPage<Registration>> byUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
@@ -94,7 +94,7 @@ public class RegistrationController {
     /** 查询竞赛的报名记录 */
     @GetMapping("/contest/{contestId}")
     @PreAuthorize("hasAuthority('registration:list')")
-    public Result<IPage<RegistrationDO>> byContest(@PathVariable Long contestId,
+    public Result<IPage<Registration>> byContest(@PathVariable Long contestId,
                                                   @RequestParam(defaultValue = "1") Integer page,
                                                   @RequestParam(defaultValue = "10") Integer size,
                                                   @RequestParam(required = false) Integer status) {
@@ -104,7 +104,7 @@ public class RegistrationController {
     /** 分页查询报名列表 */
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('registration:list')")
-    public Result<IPage<RegistrationDO>> page(@RequestParam(required = false) Long contestId,
+    public Result<IPage<Registration>> page(@RequestParam(required = false) Long contestId,
                                              @RequestParam(required = false) Integer status,
                                              @RequestParam(defaultValue = "1") Integer page,
                                              @RequestParam(defaultValue = "10") Integer size) {
@@ -114,8 +114,8 @@ public class RegistrationController {
     /** 查询报名详情 */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public Result<RegistrationDO> getById(@PathVariable Long id) {
-        RegistrationDO reg = registrationService.getById(id);
+    public Result<Registration> getById(@PathVariable Long id) {
+        Registration reg = registrationService.getById(id);
         if (reg == null) {
             return Result.error("报名记录不存在");
         }

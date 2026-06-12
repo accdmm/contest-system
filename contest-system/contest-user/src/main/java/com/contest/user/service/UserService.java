@@ -2,7 +2,7 @@ package com.contest.user.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.contest.user.entity.UserDO;
+import com.contest.user.entity.User;
 import java.util.List;
 
 /**
@@ -11,7 +11,7 @@ import java.util.List;
  * 定义用户注册、登录、资料管理、冻结/解冻等核心业务方法。
  * 安全性相关：密码 BCrypt 加密存储、密码强度校验、账号冻结状态检查。
  */
-public interface UserService extends IService<UserDO> {
+public interface UserService extends IService<User> {
 
     /**
      * 用户登录
@@ -23,7 +23,7 @@ public interface UserService extends IService<UserDO> {
      * @param password 原始密码（非 BCrypt）
      * @return 登录成功的用户对象（不含密码）
      */
-    UserDO login(String username, String password);
+    User login(String username, String password);
 
     /**
      * 用户注册
@@ -34,7 +34,7 @@ public interface UserService extends IService<UserDO> {
      * @param rawPassword 原始密码（8-20位，需含字母和数字）
      * @return 注册成功的用户对象
      */
-    UserDO register(UserDO user, String rawPassword);
+    User register(User user, String rawPassword);
 
     /**
      * 修改用户资料
@@ -42,7 +42,7 @@ public interface UserService extends IService<UserDO> {
      * @param userId 目标用户 ID
      * @param user   新的资料（姓名、邮箱、手机号、头像等）
      */
-    void updateProfile(Long userId, UserDO user);
+    void updateProfile(Long userId, User user);
 
     /**
      * 修改密码
@@ -77,14 +77,14 @@ public interface UserService extends IService<UserDO> {
      * @param size    每页大小
      * @return 用户分页数据
      */
-    IPage<UserDO> pageUsers(String keyword, Integer page, Integer size);
+    IPage<User> pageUsers(String keyword, Integer page, Integer size);
 
     /**
      * 获取教师列表（用于创建团队时选择指导教师）
      *
      * @return 教师用户列表
      */
-    List<UserDO> listTeachers();
+    List<User> listTeachers();
 
     /**
      * 管理员创建用户（可指定角色，非管理员不能创建管理员账号）
@@ -93,5 +93,5 @@ public interface UserService extends IService<UserDO> {
      * @param rawPassword 原始密码
      * @return 创建成功的用户对象
      */
-    UserDO adminCreateUser(UserDO user, String rawPassword);
+    User adminCreateUser(User user, String rawPassword);
 }

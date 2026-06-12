@@ -2,9 +2,9 @@ package com.contest.register.service.impl;
 
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.competition.entity.ContestDO;
+import com.contest.competition.entity.Contest;
 import com.contest.competition.service.ContestService;
-import com.contest.register.entity.RegistrationDO;
+import com.contest.register.entity.Registration;
 import com.contest.register.service.RegistrationService;
 import com.contest.register.test.TestApplication;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,7 +95,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerPersonal_shouldSucceed() {
-        RegistrationDO result = registrationService.registerPersonal(1L, 1L, "参赛");
+        Registration result = registrationService.registerPersonal(1L, 1L, "参赛");
         assertNotNull(result);
         assertEquals(1L, result.getContestId());
         assertEquals(1L, result.getUserId());
@@ -130,7 +130,7 @@ class RegistrationServiceImplTest {
 
     @Test
     void registerTeam_shouldSucceed() {
-        RegistrationDO result = registrationService.registerTeam(1L, 2L, 1L);
+        Registration result = registrationService.registerTeam(1L, 2L, 1L);
         assertNotNull(result);
         assertEquals(CommonConstants.REG_TEAM, result.getRegType());
         assertEquals(1L, result.getTeamId());

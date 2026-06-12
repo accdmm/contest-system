@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.result.Result;
 import com.contest.common.util.HtmlSanitizer;
-import com.contest.message.entity.NotificationDO;
-import com.contest.message.param.NotificationSendParam;
+import com.contest.message.entity.Notification;
+import com.contest.message.param.NotificationSendRequest;
 import com.contest.message.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class NotificationController {
     /** 分页获取用户通知列表 */
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
-    public Result<IPage<NotificationDO>> byUser(@PathVariable Long userId,
+    public Result<IPage<Notification>> byUser(@PathVariable Long userId,
                                                @RequestParam(defaultValue = "1") Integer page,
                                                @RequestParam(defaultValue = "10") Integer size) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
@@ -74,7 +74,7 @@ public class NotificationController {
     /** 发送通知给指定用户 */
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('notification:send')")
-    public Result<Void> send(@RequestBody @Valid NotificationSendParam param) {
+    public Result<Void> send(@RequestBody @Valid NotificationSendRequest param) {
         notificationService.sendNotification(param.getUserId(), param.getType(), param.getTitle(),
                 HtmlSanitizer.sanitize(param.getContent()), param.getRelatedId(), param.getRelatedType());
         return Result.success();

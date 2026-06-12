@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
-import com.contest.team.entity.TeamDO;
-import com.contest.team.entity.TeamMemberDO;
-import com.contest.team.param.TeamCreateParam;
-import com.contest.team.param.TeamJoinParam;
-import com.contest.team.param.RejectParam;
-import com.contest.team.param.SetTeacherParam;
+import com.contest.team.entity.Team;
+import com.contest.team.entity.TeamMember;
+import com.contest.team.param.TeamCreateRequest;
+import com.contest.team.param.TeamJoinRequest;
+import com.contest.team.param.RejectRequest;
+import com.contest.team.param.SetTeacherRequest;
 import com.contest.team.service.TeamService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class TeamController {
     /** 创建团队 */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public Result<TeamDO> create(@RequestBody @Valid TeamCreateParam param) {
+    public Result<Team> create(@RequestBody @Valid TeamCreateRequest param) {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户 {} 创建团队: {}", userId, param.getTeamName());
         return Result.success(teamService.createTeam(userId, param.getTeamName(), param.getTeacherId()));
@@ -52,7 +52,7 @@ public class TeamController {
     /** 通过邀请码加入团队 */
     @PostMapping("/join")
     @PreAuthorize("isAuthenticated()")
-    public Result<TeamDO> join(@RequestBody @Valid TeamJoinParam param) {
+    public Result<Team> join(@RequestBody @Valid TeamJoinRequest param) {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户 {} 通过邀请码加入团队", userId);
         return Result.success(teamService.joinByInviteCode(userId, param.getInviteCode()));
@@ -115,22 +115,22 @@ public class TeamController {
     /** 获取团队成员列表 */
     @GetMapping("/{teamId}/members")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<TeamMemberDO>> members(@PathVariable Long teamId) {
+    public Result<List<TeamMember>> members(@PathVariable Long teamId) {
         return Result.success(teamService.listMembers(teamId));
     }
 
     /** 获取待审批成员列表 */
     @GetMapping("/{teamId}/pending")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<TeamMemberDO>> pendingMembers(@PathVariable Long teamId) {
+    public Result<List<TeamMember>> pendingMembers(@PathVariable Long teamId) {
         return Result.success(teamService.listPendingMembers(teamId));
     }
 
     /** 根据ID获取团队详情 */
     @GetMapping("/{id}/detail")
     @PreAuthorize("isAuthenticated()")
-    public Result<TeamDO> getById(@PathVariable Long id) {
-        TeamDO team = teamService.getById(id);
+    public Result<Team> getById(@PathVariable Long id) {
+        Team team = teamService.getById(id);
         if (team == null) {
             return Result.error("团队不存在");
         }
@@ -140,7 +140,7 @@ public class TeamController {
     /** 获取当前用户创建的团队列表 */
     @GetMapping("/leader")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<TeamDO>> getByLeader() {
+    public Result<List<Team>> getByLeader() {
         Long userId = SecurityUtil.getCurrentUserId();
         return Result.success(teamService.getTeamsByLeader(userId));
     }
@@ -148,7 +148,7 @@ public class TeamController {
     /** 分页查询团队（管理员） */
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('team:list')")
-    public Result<IPage<TeamDO>> page(@RequestParam(required = false) Integer status,
+    public Result<IPage<Team>> page(@RequestParam(required = false) Integer status,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
         return Result.success(teamService.pageTeams(status, page, size));
@@ -157,7 +157,7 @@ public class TeamController {
     /** 获取用户参与的团队列表 */
     @GetMapping("/user/{userId}")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<TeamDO>> userTeams(@PathVariable Long userId) {
+    public Result<List<Team>> userTeams(@PathVariable Long userId) {
         return Result.success(teamService.listUserTeams(userId));
     }
 
@@ -174,7 +174,7 @@ public class TeamController {
     @PostMapping("/{teamId}/admin-reject")
     @PreAuthorize("hasAuthority('team:approve')")
     @OperationLog(action = "驳回团队")
-    public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody @Valid RejectParam param) {
+    public Result<Void> adminReject(@PathVariable Long teamId, @RequestBody @Valid RejectRequest param) {
         teamService.adminRejectTeam(teamId, param.getReason());
         return Result.success();
     }
@@ -182,7 +182,7 @@ public class TeamController {
     /** 设置团队指导教师 */
     @PostMapping("/{teamId}/teacher")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> setTeacher(@PathVariable Long teamId, @RequestBody @Valid SetTeacherParam param) {
+    public Result<Void> setTeacher(@PathVariable Long teamId, @RequestBody @Valid SetTeacherRequest param) {
         Long userId = SecurityUtil.getCurrentUserId();
         teamService.setTeacher(teamId, param.getTeacherId(), userId);
         return Result.success();
@@ -191,7 +191,7 @@ public class TeamController {
     /** 获取当前教师指导的团队列表 */
     @GetMapping("/teacher")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<TeamDO>> getTeacherTeams() {
+    public Result<List<Team>> getTeacherTeams() {
         Long userId = SecurityUtil.getCurrentUserId();
         return Result.success(teamService.getTeamsByTeacher(userId));
     }

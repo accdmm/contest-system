@@ -3,7 +3,7 @@ package com.contest.team.service.impl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
 import com.contest.common.service.TeamValidator;
-import com.contest.team.entity.TeamDO;
+import com.contest.team.entity.Team;
 import com.contest.team.mapper.TeamMapper;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ public class TeamValidatorImpl implements TeamValidator {
 
     @Override
     public void validateForRegistration(Long teamId) {
-        TeamDO team = teamMapper.selectById(teamId);
+        Team team = teamMapper.selectById(teamId);
         if (team == null) {
             throw new BusinessException("团队不存在或已解散");
         }
@@ -29,7 +29,7 @@ public class TeamValidatorImpl implements TeamValidator {
 
     @Override
     public void validateTeamLeader(Long teamId, Long userId) {
-        TeamDO team = teamMapper.selectById(teamId);
+        Team team = teamMapper.selectById(teamId);
         if (team == null) {
             throw new BusinessException("团队不存在或已解散");
         }

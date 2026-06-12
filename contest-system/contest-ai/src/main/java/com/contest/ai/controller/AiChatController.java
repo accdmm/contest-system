@@ -1,7 +1,7 @@
 package com.contest.ai.controller;
 
-import com.contest.ai.entity.AiConversationDO;
-import com.contest.ai.entity.AiMessageDO;
+import com.contest.ai.entity.AiConversation;
+import com.contest.ai.entity.AiMessage;
 import com.contest.ai.dto.ChatEventDTO;
 import com.contest.ai.dto.ChatRequestDTO;
 import com.contest.ai.service.AiChatService;
@@ -46,7 +46,7 @@ public class AiChatController {
     /** 获取当前用户会话列表 */
     @GetMapping("/conversations")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<AiConversationDO>> listConversations() {
+    public Result<List<AiConversation>> listConversations() {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
             return Result.error(ResultCodeEnum.UNAUTHORIZED);
@@ -57,7 +57,7 @@ public class AiChatController {
     /** 获取会话消息列表 */
     @GetMapping("/conversations/{id}/messages")
     @PreAuthorize("isAuthenticated()")
-    public Result<List<AiMessageDO>> listMessages(@PathVariable Long id) {
+    public Result<List<AiMessage>> listMessages(@PathVariable Long id) {
         Long userId = SecurityUtil.getCurrentUserId();
         if (userId == null) {
             return Result.error(ResultCodeEnum.UNAUTHORIZED);

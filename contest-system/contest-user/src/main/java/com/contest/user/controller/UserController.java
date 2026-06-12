@@ -5,14 +5,14 @@ import com.contest.common.security.SecurityUtil;
 import com.contest.common.annotation.OperationLog;
 import com.contest.common.result.Result;
 import com.contest.common.util.JwtUtil;
-import com.contest.user.param.LoginParam;
-import com.contest.user.param.RegisterParam;
-import com.contest.user.param.AdminCreateUserParam;
-import com.contest.user.param.PasswordChangeParam;
-import com.contest.user.param.UserProfileParam;
-import com.contest.user.entity.CollegeDO;
-import com.contest.user.entity.MajorDO;
-import com.contest.user.entity.UserDO;
+import com.contest.user.param.LoginRequest;
+import com.contest.user.param.RegisterRequest;
+import com.contest.user.param.AdminCreateUserRequest;
+import com.contest.user.param.PasswordChangeRequest;
+import com.contest.user.param.UserProfileRequest;
+import com.contest.user.entity.College;
+import com.contest.user.entity.Major;
+import com.contest.user.entity.User;
 import com.contest.user.service.CollegeService;
 import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
@@ -61,8 +61,8 @@ public class UserController {
 
     /** 用户登录：校验学号/邮箱和密码，成功返回用户信息 + JWT Token */
     @PostMapping("/login")
-    public Result<Map<String, Object>> login(@RequestBody @Valid LoginParam req) {
-        UserDO user = userService.login(req.getUsername(), req.getPassword());
+    public Result<Map<String, Object>> login(@RequestBody @Valid LoginRequest req) {
+        User user = userService.login(req.getUsername(), req.getPassword());
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
         user.setPassword(null);
         Map<String, Object> data = new HashMap<>();
@@ -73,8 +73,8 @@ public class UserController {
 
     /** 用户注册：校验唯一性 → BCrypt 加密密码 → 默认学生角色 → 返回用户信息 + JWT Token */
     @PostMapping("/register")
-    public Result<Map<String, Object>> register(@RequestBody @Valid RegisterParam req) {
-        UserDO user = new UserDO();
+    public Result<Map<String, Object>> register(@RequestBody @Valid RegisterRequest req) {
+        User user = new User();
         user.setUsername(req.getUsername());
         user.setName(req.getName());
         user.setEmail(req.getEmail());
@@ -82,7 +82,7 @@ public class UserController {
         user.setCollegeId(req.getCollegeId());
         user.setMajorId(req.getMajorId());
         log.info("新用户注册: username={}", req.getUsername());
-        UserDO saved = userService.register(user, req.getPassword());
+        User saved = userService.register(user, req.getPassword());
         String token = jwtUtil.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         saved.setPassword(null);
         Map<String, Object> data = new HashMap<>();
@@ -94,14 +94,14 @@ public class UserController {
     /** 管理员创建用户：非管理员不能创建管理员账号（角色校验在方法内完成） */
     @PostMapping("/admin/create")
     @PreAuthorize("hasAuthority('user:create')")
-    public Result<UserDO> adminCreateUser(@RequestBody @Valid AdminCreateUserParam req) {
+    public Result<User> adminCreateUser(@RequestBody @Valid AdminCreateUserRequest req) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean callerIsAdmin = auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
         if (req.getRole() != null && req.getRole() == 1 && !callerIsAdmin) {
             return Result.error("仅管理员可创建管理员账号");
         }
-        UserDO user = new UserDO();
+        User user = new User();
         user.setUsername(req.getUsername());
         user.setName(req.getName());
         user.setEmail(req.getEmail());
@@ -109,34 +109,34 @@ public class UserController {
         user.setCollegeId(req.getCollegeId());
         user.setMajorId(req.getMajorId());
         user.setRole(req.getRole());
-        UserDO saved = userService.adminCreateUser(user, req.getPassword());
+        User saved = userService.adminCreateUser(user, req.getPassword());
         saved.setPassword(null);
         return Result.success(saved);
     }
 
     /** 获取学院列表（公开接口，用于注册时下拉选择） */
     @GetMapping("/colleges")
-    public Result<List<CollegeDO>> listColleges() {
+    public Result<List<College>> listColleges() {
         return Result.success(collegeService.list());
     }
 
     /** 根据学院 ID 获取专业列表（公开接口，用于注册时下拉选择） */
     @GetMapping("/majors")
-    public Result<List<MajorDO>> listMajors(@RequestParam Integer collegeId) {
+    public Result<List<Major>> listMajors(@RequestParam Integer collegeId) {
         return Result.success(majorService.getByCollegeId(collegeId));
     }
 
     /** 获取教师列表 */
     @GetMapping("/teachers")
-    public Result<List<UserDO>> listTeachers() {
+    public Result<List<User>> listTeachers() {
         return Result.success(userService.listTeachers());
     }
 
     /** 根据 ID 获取用户详情 */
     @GetMapping("/detail/{id}")
     @PreAuthorize("isAuthenticated()")
-    public Result<UserDO> getById(@PathVariable Long id) {
-        UserDO user = userService.getById(id);
+    public Result<User> getById(@PathVariable Long id) {
+        User user = userService.getById(id);
         if (user == null) {
             return Result.error("用户不存在");
         }
@@ -147,7 +147,7 @@ public class UserController {
     /** 分页查询用户列表 */
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('user:list')")
-    public Result<IPage<UserDO>> page(@RequestParam(required = false) String keyword,
+    public Result<IPage<User>> page(@RequestParam(required = false) String keyword,
                                     @RequestParam(defaultValue = "1") Integer page,
                                     @RequestParam(defaultValue = "10") Integer size) {
         return Result.success(userService.pageUsers(keyword, page, size));
@@ -156,7 +156,7 @@ public class UserController {
     /** 修改用户资料：仅本人或管理员可操作 */
     @PutMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileParam param) {
+    public Result<Void> updateProfile(@PathVariable Long id, @RequestBody @Valid UserProfileRequest param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().stream()
@@ -164,7 +164,7 @@ public class UserController {
         if (!currentUserId.equals(id) && !isAdmin) {
             return Result.error("无权修改其他用户的资料");
         }
-        UserDO user = new UserDO();
+        User user = new User();
         user.setName(param.getName());
         user.setEmail(param.getEmail());
         user.setPhone(param.getPhone());
@@ -179,7 +179,7 @@ public class UserController {
     /** 修改密码：仅本人可操作，需提供旧密码验证 */
     @PutMapping("/{id}/password")
     @PreAuthorize("isAuthenticated()")
-    public Result<Void> changePassword(@PathVariable Long id, @RequestBody @Valid PasswordChangeParam param) {
+    public Result<Void> changePassword(@PathVariable Long id, @RequestBody @Valid PasswordChangeRequest param) {
         Long currentUserId = SecurityUtil.getCurrentUserId();
         if (!currentUserId.equals(id)) {
             return Result.error("无权修改其他用户的密码");

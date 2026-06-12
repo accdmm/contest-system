@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.contest.common.constant.CommonConstants;
 import com.contest.common.exception.BusinessException;
-import com.contest.user.entity.CollegeDO;
-import com.contest.user.entity.MajorDO;
-import com.contest.user.entity.UserDO;
+import com.contest.user.entity.College;
+import com.contest.user.entity.Major;
+import com.contest.user.entity.User;
 import com.contest.user.mapper.CollegeMapper;
 import com.contest.user.mapper.MajorMapper;
 import com.contest.user.mapper.UserMapper;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * - 所有数据库操作使用 MyBatis-Plus 参数化查询，防 SQL 注入
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final CollegeMapper collegeMapper;
     private final MajorMapper majorMapper;
@@ -54,9 +54,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(readOnly = true)
-    public UserDO login(String username, String password) {
-        UserDO user = getOne(new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getUsername, username));
+    public User login(String username, String password) {
+        User user = getOne(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, username));
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
         }
@@ -94,35 +94,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserDO register(UserDO user, String rawPassword) {
+    public User register(User user, String rawPassword) {
         validatePassword(rawPassword);
-        long count = count(new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getUsername, user.getUsername()));
+        long count = count(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            long emailCount = count(new LambdaQueryWrapper<UserDO>()
-                    .eq(UserDO::getEmail, user.getEmail()));
+            long emailCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, user.getEmail()));
             if (emailCount > 0) {
                 throw new BusinessException("邮箱已被其他用户使用");
             }
         }
         if (user.getPhone() != null && !user.getPhone().isBlank()) {
-            long phoneCount = count(new LambdaQueryWrapper<UserDO>()
-                    .eq(UserDO::getPhone, user.getPhone()));
+            long phoneCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getPhone, user.getPhone()));
             if (phoneCount > 0) {
                 throw new BusinessException("手机号已被其他用户使用");
             }
         }
         if (user.getCollegeId() != null) {
-            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
+            College college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             }
         }
         if (user.getMajorId() != null) {
-            MajorDO major = majorMapper.selectById(user.getMajorId());
+            Major major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             }
@@ -142,35 +142,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserDO adminCreateUser(UserDO user, String rawPassword) {
+    public User adminCreateUser(User user, String rawPassword) {
         validatePassword(rawPassword);
-        long count = count(new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getUsername, user.getUsername()));
+        long count = count(new LambdaQueryWrapper<User>()
+                .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            long emailCount = count(new LambdaQueryWrapper<UserDO>()
-                    .eq(UserDO::getEmail, user.getEmail()));
+            long emailCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getEmail, user.getEmail()));
             if (emailCount > 0) {
                 throw new BusinessException("邮箱已被其他用户使用");
             }
         }
         if (user.getPhone() != null && !user.getPhone().isBlank()) {
-            long phoneCount = count(new LambdaQueryWrapper<UserDO>()
-                    .eq(UserDO::getPhone, user.getPhone()));
+            long phoneCount = count(new LambdaQueryWrapper<User>()
+                    .eq(User::getPhone, user.getPhone()));
             if (phoneCount > 0) {
                 throw new BusinessException("手机号已被其他用户使用");
             }
         }
         if (user.getCollegeId() != null) {
-            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
+            College college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             }
         }
         if (user.getMajorId() != null) {
-            MajorDO major = majorMapper.selectById(user.getMajorId());
+            Major major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             }
@@ -197,8 +197,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateProfile(Long userId, UserDO user) {
-        UserDO existing = getById(userId);
+    public void updateProfile(Long userId, User user) {
+        User existing = getById(userId);
         if (existing == null) {
             throw new BusinessException("用户不存在");
         }
@@ -208,7 +208,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }
         // 同步冗余字段：collegeId → college（文字），仅当查找成功时才更新
         if (user.getCollegeId() != null) {
-            CollegeDO college = collegeMapper.selectById(user.getCollegeId());
+            College college = collegeMapper.selectById(user.getCollegeId());
             if (college != null) {
                 user.setCollege(college.getName());
             } else {
@@ -217,7 +217,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             }
         }
         if (user.getMajorId() != null) {
-            MajorDO major = majorMapper.selectById(user.getMajorId());
+            Major major = majorMapper.selectById(user.getMajorId());
             if (major != null) {
                 user.setMajor(major.getName());
             } else {
@@ -240,7 +240,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long userId, String oldPassword, String newPassword) {
-        UserDO user = getById(userId);
+        User user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -258,7 +258,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void freezeUser(Long userId) {
-        UserDO user = getById(userId);
+        User user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -272,7 +272,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unfreezeUser(Long userId) {
-        UserDO user = getById(userId);
+        User user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
@@ -289,19 +289,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(readOnly = true)
-    public IPage<UserDO> pageUsers(String keyword, Integer page, Integer size) {
-        LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
+    public IPage<User> pageUsers(String keyword, Integer page, Integer size) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            wrapper.like(UserDO::getUsername, keyword)
+            wrapper.like(User::getUsername, keyword)
                    .or()
-                   .like(UserDO::getName, keyword)
+                   .like(User::getName, keyword)
                    .or()
-                   .like(UserDO::getCollege, keyword)
+                   .like(User::getCollege, keyword)
                    .or()
-                   .like(UserDO::getMajor, keyword);
+                   .like(User::getMajor, keyword);
         }
-        wrapper.orderByDesc(UserDO::getCreateTime);
-        IPage<UserDO> result = page(new Page<>(page, size), wrapper);
+        wrapper.orderByDesc(User::getCreateTime);
+        IPage<User> result = page(new Page<>(page, size), wrapper);
         result.getRecords().forEach(u -> u.setPassword(null));
         return result;
     }
@@ -313,10 +313,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     @Transactional(readOnly = true)
-    public List<UserDO> listTeachers() {
-        List<UserDO> teachers = list(new LambdaQueryWrapper<UserDO>()
-                .eq(UserDO::getRole, CommonConstants.ROLE_TEACHER)
-                .eq(UserDO::getStatus, CommonConstants.STATUS_NORMAL));
+    public List<User> listTeachers() {
+        List<User> teachers = list(new LambdaQueryWrapper<User>()
+                .eq(User::getRole, CommonConstants.ROLE_TEACHER)
+                .eq(User::getStatus, CommonConstants.STATUS_NORMAL));
         teachers.forEach(t -> t.setPassword(null));
         return teachers;
     }
