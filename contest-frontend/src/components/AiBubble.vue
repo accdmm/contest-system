@@ -266,17 +266,17 @@ function send() {
   loading.value = true
   scrollDown()
 
-  const fullText = ref('')
+  let fullText = ''
   createChatStream(
     currentConversationId.value,
     text,
     chunk => {
-      fullText.value += chunk
+      fullText += chunk
       const last = messages.value[messages.value.length - 1]
       if (last && last.role === 'assistant') {
-        last.content = fullText.value
+        last.content = fullText
       } else {
-        messages.value.push({ role: 'assistant', content: fullText.value })
+        messages.value.push({ role: 'assistant', content: fullText })
       }
       scrollDown()
     },

@@ -121,6 +121,7 @@ async function fetchData() {
     total.value = notifRes.data.total || 0
     unreadCount.value = unreadRes.data || 0
   } catch (e) {
+    ElMessage.error('加载通知失败')
   }
 }
 
@@ -148,6 +149,7 @@ async function markAll() {
     ElMessage.success('已全部标为已读')
     fetchData()
   } catch (e) {
+    ElMessage.error('标记已读失败')
   }
 }
 
