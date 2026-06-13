@@ -13,9 +13,8 @@ import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.contest.common.exception.BusinessException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -41,9 +40,8 @@ import java.util.UUID;
  * 开发环境可切换为本地文件存储。
  */
 @Service
+@Slf4j
 public class MinioServiceImpl implements MinioService {
-
-    private static final Logger log = LoggerFactory.getLogger(MinioServiceImpl.class);
 
     private final MinioProperties properties;
     private MinioClient minioClient;

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 团队服务实现
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * 安全性说明：关键操作（加入、审批、移出、解散等）均校验当前用户身份，
  * 确保只有队长可管理团队。
  */
+@Slf4j
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements TeamService {
 
@@ -80,6 +82,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Team createTeam(Long userId, String teamName, Long teacherId) {
+        log.info("createTeam: userId={}, teamName={}, teacherId={}", userId, teamName, teacherId);
         Team team = new Team();
         team.setLeaderId(userId);
         team.setTeamName(teamName);
@@ -98,6 +101,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         leader.setHandleTime(LocalDateTime.now());
         teamMemberMapper.insert(leader);
 
+        log.info("createTeam success: id={}, teamName={}, teamNo={}", team.getId(), team.getTeamName(), team.getTeamNo());
         return team;
     }
 
@@ -114,8 +118,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String generateInviteCode(Long teamId, Long userId) {
+        log.info("generateInviteCode: teamId={}, userId={}", teamId, userId);
         Team team = getById(teamId);
         if (team == null) {
+            log.warn("generateInviteCode failed: team not found, teamId={}", teamId);
             throw new BusinessException("团队不存在");
         }
         if (!Objects.equals(team.getLeaderId(), userId)) {
@@ -125,6 +131,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         team.setInviteCode(code);
         team.setInviteCodeExpire(LocalDateTime.now().plusDays(CommonConstants.INVITE_CODE_EXPIRE_DAYS));
         updateById(team);
+        log.info("generateInviteCode success: teamId={}, code={}", teamId, code);
         return code;
     }
 
@@ -143,9 +150,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Team joinByInviteCode(Long userId, String inviteCode) {
+        log.info("joinByInviteCode: userId={}, inviteCode={}", userId, inviteCode);
         Team team = getOne(new LambdaQueryWrapper<Team>()
                 .eq(Team::getInviteCode, inviteCode));
         if (team == null) {
+            log.warn("joinByInviteCode failed: invalid inviteCode={}", inviteCode);
             throw new BusinessException("邀请码无效");
         }
         if (team.getInviteCodeExpire() != null && team.getInviteCodeExpire().isBefore(LocalDateTime.now())) {
@@ -184,6 +193,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 "新成员申请", applicantName + " 申请加入你的团队「" + team.getTeamName() + "」，请及时处理。",
                 team.getId(), CommonConstants.RELATED_TYPE_TEAM);
 
+        log.info("joinByInviteCode success: userId={}, teamId={}", userId, team.getId());
         return team;
     }
 
@@ -200,8 +210,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveMember(Long teamId, Long userId, Long memberId) {
+        log.info("approveMember: teamId={}, userId={}, memberId={}", teamId, userId, memberId);
         Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
+            log.warn("approveMember failed: not team leader, teamId={}, userId={}", teamId, userId);
             throw new BusinessException("仅队长可审核成员");
         }
         Integer maxSize = resolveTeamMaxSize(teamId);
@@ -224,6 +236,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         notificationService.sendNotification(member.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "加入申请已通过", "你已被队长通过加入团队「" + team.getTeamName() + "」的申请。",
                 teamId, CommonConstants.RELATED_TYPE_TEAM);
+        log.info("approveMember success: teamId={}, memberId={}", teamId, memberId);
     }
 
     /**
@@ -238,8 +251,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectMember(Long teamId, Long userId, Long memberId) {
+        log.info("rejectMember: teamId={}, userId={}, memberId={}", teamId, userId, memberId);
         Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
+            log.warn("rejectMember failed: not team leader, teamId={}, userId={}", teamId, userId);
             throw new BusinessException("仅队长可审核成员");
         }
         TeamMember member = teamMemberMapper.selectById(memberId);
@@ -260,6 +275,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         notificationService.sendNotification(member.getUserId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "加入申请未通过", "你加入团队「" + team.getTeamName() + "」的申请已被队长拒绝。",
                 teamId, CommonConstants.RELATED_TYPE_TEAM);
+        log.info("rejectMember success: teamId={}, memberId={}", teamId, memberId);
     }
 
     /**
@@ -275,8 +291,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeMember(Long teamId, Long userId, Long memberId) {
+        log.info("removeMember: teamId={}, userId={}, memberId={}", teamId, userId, memberId);
         Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
+            log.warn("removeMember failed: not team leader, teamId={}, userId={}", teamId, userId);
             throw new BusinessException("仅队长可移除成员");
         }
         TeamMember member = teamMemberMapper.selectById(memberId);
@@ -291,6 +309,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         teamMemberMapper.updateById(member);
         team.setMemberCount(Math.max(0, team.getMemberCount() - 1));
         updateById(team);
+        log.info("removeMember success: teamId={}, memberId={}", teamId, memberId);
     }
 
     /**
@@ -308,8 +327,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void dissolveTeam(Long teamId, Long userId) {
+        log.info("dissolveTeam: teamId={}, userId={}", teamId, userId);
         Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
+            log.warn("dissolveTeam failed: not team leader, teamId={}, userId={}", teamId, userId);
             throw new BusinessException("仅队长可解散团队");
         }
 
@@ -359,6 +380,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                     "报名已取消", "由于团队已解散，竞赛报名已自动取消。",
                     reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
         }
+        log.info("dissolveTeam success: teamId={}", teamId);
     }
 
     /**
@@ -443,8 +465,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submitForReview(Long teamId, Long userId) {
+        log.info("submitForReview: teamId={}, userId={}", teamId, userId);
         Team team = getById(teamId);
         if (team == null || !Objects.equals(team.getLeaderId(), userId)) {
+            log.warn("submitForReview failed: not team leader, teamId={}, userId={}", teamId, userId);
             throw new BusinessException("仅队长可提交报名");
         }
         Integer minSize = resolveTeamMinSize(teamId);
@@ -467,6 +491,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "团队提交审核",
                 "团队「" + team.getTeamName() + "」已提交审核申请，请及时审批。",
                 teamId, CommonConstants.RELATED_TYPE_TEAM);
+        log.info("submitForReview success: teamId={}", teamId);
     }
 
     /**
@@ -565,8 +590,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adminApproveTeam(Long teamId) {
+        log.info("adminApproveTeam: teamId={}", teamId);
         Team team = getById(teamId);
-        if (team == null) throw new BusinessException("团队不存在");
+        if (team == null) {
+            log.warn("adminApproveTeam failed: team not found, teamId={}", teamId);
+            throw new BusinessException("团队不存在");
+        }
         if (team.getStatus() != CommonConstants.TEAM_SUBMITTED) {
             throw new BusinessException("该团队未提交审核");
         }
@@ -582,6 +611,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         notificationService.sendNotification(team.getLeaderId(), CommonConstants.NOTIFY_TEAM_RESULT,
                 "团队审核通过", "你的团队「" + team.getTeamName() + "」已通过管理员审核。",
                 teamId, CommonConstants.RELATED_TYPE_TEAM);
+        log.info("adminApproveTeam success: teamId={}", teamId);
     }
 
     /**
@@ -596,11 +626,16 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void adminRejectTeam(Long teamId, String reason) {
+        log.info("adminRejectTeam: teamId={}", teamId);
         if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
+            log.warn("adminRejectTeam failed: reason too short, teamId={}", teamId);
             throw new BusinessException("驳回原因不少于5个字符");
         }
         Team team = getById(teamId);
-        if (team == null) throw new BusinessException("团队不存在");
+        if (team == null) {
+            log.warn("adminRejectTeam failed: team not found, teamId={}", teamId);
+            throw new BusinessException("团队不存在");
+        }
         team.setStatus(CommonConstants.TEAM_REJECTED);
         team.setMemberCount(0);
         updateById(team);
@@ -652,6 +687,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                         teamId, CommonConstants.RELATED_TYPE_TEAM);
             }
         }
+        log.info("adminRejectTeam success: teamId={}", teamId);
     }
 
     /**

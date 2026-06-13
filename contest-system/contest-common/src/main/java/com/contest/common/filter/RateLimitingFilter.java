@@ -4,8 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -32,9 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Order(0)
 @Component
+@Slf4j
 public class RateLimitingFilter extends OncePerRequestFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(RateLimitingFilter.class);
 
     /** 每分钟允许的请求数（普通接口） */
     private static final int DEFAULT_MAX_REQUESTS = 60;

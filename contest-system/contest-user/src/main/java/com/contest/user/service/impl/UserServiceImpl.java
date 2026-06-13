@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import cn.hutool.crypto.digest.DigestUtil;
 import java.util.List;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户服务实现
@@ -34,6 +35,7 @@ import java.util.regex.Pattern;
  * - 账号冻结状态（status=1）在登录时前置检查
  * - 所有数据库操作使用 MyBatis-Plus 参数化查询，防 SQL 注入
  */
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
@@ -55,17 +57,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(readOnly = true)
     public User login(String username, String password) {
+        log.info("login: username={}", username);
         User user = getOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, username));
         if (user == null) {
+            log.warn("login failed: user not found, username={}", username);
             throw new BusinessException("用户名或密码错误");
         }
         if (user.getStatus() == CommonConstants.STATUS_FROZEN) {
+            log.warn("login failed: account frozen, username={}", username);
             throw new BusinessException("账号已被冻结");
         }
         if (!DigestUtil.bcryptCheck(password, user.getPassword())) {
+            log.warn("login failed: wrong password, username={}", username);
             throw new BusinessException("用户名或密码错误");
         }
+        log.info("login success: username={}, id={}", username, user.getId());
         return user;
     }
 
@@ -95,10 +102,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(rollbackFor = Exception.class)
     public User register(User user, String rawPassword) {
+        log.info("register: username={}, name={}", user.getUsername(), user.getName());
         validatePassword(rawPassword);
         long count = count(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
+            log.warn("register failed: username already exists, username={}", user.getUsername());
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
@@ -131,6 +140,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setRole(CommonConstants.ROLE_STUDENT);
         user.setStatus(CommonConstants.STATUS_NORMAL);
         save(user);
+        log.info("register success: id={}, username={}", user.getId(), user.getUsername());
         return user;
     }
 
@@ -143,10 +153,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(rollbackFor = Exception.class)
     public User adminCreateUser(User user, String rawPassword) {
+        log.info("adminCreateUser: username={}, name={}, role={}", user.getUsername(), user.getName(), user.getRole());
         validatePassword(rawPassword);
         long count = count(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, user.getUsername()));
         if (count > 0) {
+            log.warn("adminCreateUser failed: username already exists, username={}", user.getUsername());
             throw new BusinessException("用户名已存在");
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
@@ -184,6 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(DigestUtil.bcrypt(rawPassword));
         user.setStatus(CommonConstants.STATUS_NORMAL);
         save(user);
+        log.info("adminCreateUser success: id={}, username={}, role={}", user.getId(), user.getUsername(), user.getRole());
         return user;
     }
 
@@ -258,12 +271,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void freezeUser(Long userId) {
+        log.info("freezeUser: userId={}", userId);
         User user = getById(userId);
         if (user == null) {
+            log.warn("freezeUser failed: user not found, userId={}", userId);
             throw new BusinessException("用户不存在");
         }
         user.setStatus(CommonConstants.STATUS_FROZEN);
         updateById(user);
+        log.info("freezeUser success: userId={}", userId);
     }
 
     /**
@@ -272,12 +288,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unfreezeUser(Long userId) {
+        log.info("unfreezeUser: userId={}", userId);
         User user = getById(userId);
         if (user == null) {
+            log.warn("unfreezeUser failed: user not found, userId={}", userId);
             throw new BusinessException("用户不存在");
         }
         user.setStatus(CommonConstants.STATUS_NORMAL);
         updateById(user);
+        log.info("unfreezeUser success: userId={}", userId);
     }
 
     /**

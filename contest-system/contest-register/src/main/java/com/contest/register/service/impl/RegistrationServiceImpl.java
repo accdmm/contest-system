@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 报名服务实现，包含个人/团队报名、审核、取消及报名校验等核心业务逻辑
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  * - 人数上限校验：报名时检查 count，审核时再次检查 currentCount，双层校验防止超限
  * - 活跃报名数校验：每人同时最多 3 个非取消状态报名
  */
+@Slf4j
 @Service
 public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Registration> implements RegistrationService {
 
@@ -136,6 +138,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Registration registerPersonal(Long userId, Long contestId, String remark) {
+        log.info("registerPersonal: userId={}, contestId={}", userId, contestId);
         Contest contest = validateContest(contestId, CommonConstants.REG_PERSONAL);
         checkMaxParticipants(contestId, contest.getMaxParticipants());
 
@@ -144,6 +147,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 .eq(Registration::getContestId, contestId)
                 .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (dupCount > 0) {
+            log.warn("registerPersonal failed: duplicate registration, userId={}, contestId={}", userId, contestId);
             throw new BusinessException("您已报名该竞赛");
         }
 
@@ -166,6 +170,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的个人报名，请及时审核。",
                 contestId, CommonConstants.RELATED_TYPE_CONTEST);
+        log.info("registerPersonal success: id={}, userId={}, contestId={}", reg.getId(), userId, contestId);
         return reg;
     }
 
@@ -183,6 +188,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Registration registerTeam(Long userId, Long contestId, Long teamId) {
+        log.info("registerTeam: userId={}, contestId={}, teamId={}", userId, contestId, teamId);
         teamValidator.validateForRegistration(teamId);
         teamValidator.validateTeamLeader(teamId, userId);
         Contest contest = validateContest(contestId, CommonConstants.REG_TEAM);
@@ -193,6 +199,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
                 .eq(Registration::getContestId, contestId)
                 .ne(Registration::getStatus, CommonConstants.REG_CANCELLED));
         if (dupCount > 0) {
+            log.warn("registerTeam failed: team already registered, teamId={}, contestId={}", teamId, contestId);
             throw new BusinessException("该团队已报名该竞赛");
         }
 
@@ -215,6 +222,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "新团队报名申请",
                 userName + " 提交了竞赛「" + contest.getName() + "」的团队报名，请及时审核。",
                 contestId, CommonConstants.RELATED_TYPE_CONTEST);
+        log.info("registerTeam success: id={}, teamId={}, contestId={}", reg.getId(), teamId, contestId);
         return reg;
     }
 
@@ -227,8 +235,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveRegistration(Long id) {
+        log.info("approveRegistration: id={}", id);
         Registration reg = getById(id);
         if (reg == null) {
+            log.warn("approveRegistration failed: registration not found, id={}", id);
             throw new BusinessException("报名记录不存在");
         }
         if (reg.getStatus() != CommonConstants.REG_PENDING) {
@@ -246,6 +256,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         notificationService.sendNotification(reg.getUserId(), CommonConstants.NOTIFY_REVIEW_RESULT,
                 "报名审核通过", "你的竞赛报名已通过审核，请及时查看详情。",
                 reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
+        log.info("approveRegistration success: id={}, contestId={}, userId={}", id, reg.getContestId(), reg.getUserId());
     }
 
     /**
@@ -257,11 +268,14 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectRegistration(Long id, String reason) {
+        log.info("rejectRegistration: id={}", id);
         if (reason == null || reason.trim().length() < CommonConstants.MIN_REJECT_REASON_LENGTH) {
+            log.warn("rejectRegistration failed: reason too short, id={}", id);
             throw new BusinessException("驳回原因不少于5个字符");
         }
         Registration reg = getById(id);
         if (reg == null) {
+            log.warn("rejectRegistration failed: registration not found, id={}", id);
             throw new BusinessException("报名记录不存在");
         }
         if (reg.getStatus() != CommonConstants.REG_PENDING && reg.getStatus() != CommonConstants.REG_APPROVED) {
@@ -283,6 +297,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         notificationService.sendNotification(reg.getUserId(), CommonConstants.NOTIFY_REVIEW_RESULT,
                 "报名审核未通过", "你的竞赛报名已被驳回，原因：" + reason,
                 reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
+        log.info("rejectRegistration success: id={}, contestId={}", id, reg.getContestId());
     }
 
     /**
@@ -294,8 +309,10 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelRegistration(Long id, Long userId) {
+        log.info("cancelRegistration: id={}, userId={}", id, userId);
         Registration reg = getById(id);
         if (reg == null) {
+            log.warn("cancelRegistration failed: registration not found, id={}", id);
             throw new BusinessException("报名记录不存在");
         }
         if (!reg.getUserId().equals(userId)) {
@@ -324,6 +341,7 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
         adminNotifyService.notifyAdmins(CommonConstants.NOTIFY_SYSTEM, "报名已取消",
                 userName + " 取消了竞赛「" + contestName + "」的报名。",
                 reg.getContestId(), CommonConstants.RELATED_TYPE_CONTEST);
+        log.info("cancelRegistration success: id={}, contestId={}", id, reg.getContestId());
     }
 
     /**

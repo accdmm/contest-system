@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 竞赛服务实现
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
  * - 热门/最新竞赛均限制返回条数（limit 参数），避免全表扫描
  * - creatorName 通过批量查询（selectBatchIds）+ Map 映射填充，避免 N+1 问题
  */
+@Slf4j
 @Service
 public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> implements ContestService {
 
@@ -64,8 +66,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Contest createContest(Contest contest) {
+        log.info("createContest: name={}, category={}", contest.getName(), contest.getCategory());
         LocalDateTime now = LocalDateTime.now();
         if (contest.getRegisterStartTime() != null && contest.getRegisterStartTime().isBefore(now)) {
+            log.warn("createContest failed: registerStartTime before now, name={}", contest.getName());
             throw new BusinessException("报名开始时间不能早于当前时间");
         }
         if (contest.getRegisterEndTime() != null && contest.getRegisterEndTime().isBefore(now)) {
@@ -86,6 +90,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         contest.setCurrentCount(0);
         save(contest);
         populateCreatorName(contest);
+        log.info("createContest success: id={}, name={}", contest.getId(), contest.getName());
         return contest;
     }
 
@@ -98,8 +103,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Contest updateContest(Contest contest) {
+        log.info("updateContest: id={}", contest.getId());
         Contest existing = getById(contest.getId());
         if (existing == null) {
+            log.warn("updateContest failed: contest not found, id={}", contest.getId());
             throw new BusinessException("竞赛不存在");
         }
         if (existing.getStatus() != CommonConstants.CONTEST_DRAFT
@@ -117,6 +124,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         contest.setStatus(null);
         contest.setCurrentCount(null);
         updateById(contest);
+        log.info("updateContest success: id={}", contest.getId());
         return contest;
     }
 
@@ -126,8 +134,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void publishContest(Long id) {
+        log.info("publishContest: id={}", id);
         Contest contest = getById(id);
         if (contest == null) {
+            log.warn("publishContest failed: contest not found, id={}", id);
             throw new BusinessException("竞赛不存在");
         }
         if (contest.getStatus() != CommonConstants.CONTEST_DRAFT) {
@@ -139,6 +149,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         }
         contest.setStatus(CommonConstants.CONTEST_OPEN);
         updateById(contest);
+        log.info("publishContest success: id={}", id);
     }
 
     /**
@@ -150,8 +161,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unpublishContest(Long id) {
+        log.info("unpublishContest: id={}", id);
         Contest contest = getById(id);
         if (contest == null) {
+            log.warn("unpublishContest failed: contest not found, id={}", id);
             throw new BusinessException("竞赛不存在");
         }
         if (contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
@@ -159,6 +172,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
         }
         contest.setStatus(CommonConstants.CONTEST_DRAFT);
         updateById(contest);
+        log.info("unpublishContest success: id={}", id);
     }
 
     /**
@@ -170,8 +184,10 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteContest(Long id) {
+        log.info("deleteContest: id={}", id);
         Contest contest = getById(id);
         if (contest == null) {
+            log.warn("deleteContest failed: contest not found, id={}", id);
             throw new BusinessException("竞赛不存在");
         }
         if (contest.getStatus() != CommonConstants.CONTEST_DRAFT) {
@@ -181,6 +197,7 @@ public class ContestServiceImpl extends ServiceImpl<ContestMapper, Contest> impl
             throw new BusinessException("已有报名的竞赛不可删除");
         }
         removeById(id);
+        log.info("deleteContest success: id={}", id);
     }
 
     /**

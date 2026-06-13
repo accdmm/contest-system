@@ -16,8 +16,7 @@ import com.contest.user.entity.User;
 import com.contest.user.service.CollegeService;
 import com.contest.user.service.MajorService;
 import com.contest.user.service.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,9 +42,9 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/user")
+@Slf4j
 public class UserController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final CollegeService collegeService;

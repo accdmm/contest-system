@@ -7,8 +7,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +29,8 @@ import java.util.Date;
  * - 无状态设计：服务器不存储 Token，每次请求自行解析校验
  */
 @Component
+@Slf4j
 public class JwtUtil {
-
-    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
     @Value("${contest.jwt.expire-days:7}")
     private long expireDays;

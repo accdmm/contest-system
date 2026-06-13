@@ -9,8 +9,7 @@ import com.contest.competition.entity.Contest;
 import com.contest.competition.param.ContestCreateRequest;
 import com.contest.competition.param.ContestUpdateRequest;
 import com.contest.competition.service.ContestService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +19,9 @@ import java.util.List;
 /** 竞赛管理接口 */
 @RestController
 @RequestMapping("/api/contest")
+@Slf4j
 public class ContestController {
 
-    private static final Logger log = LoggerFactory.getLogger(ContestController.class);
     private final ContestService contestService;
 
     public ContestController(ContestService contestService) {

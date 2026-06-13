@@ -11,8 +11,7 @@ import com.contest.ai.mapper.AiConversationMapper;
 import com.contest.ai.mapper.AiMessageMapper;
 import com.contest.ai.service.AiChatService;
 import com.contest.ai.tool.ChatTools;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
@@ -32,9 +31,8 @@ import java.util.stream.Collectors;
 
 /** AI对话服务实现：集成大模型API，支持SSE流式输出和工具调用 */
 @Service
+@Slf4j
 public class AiChatServiceImpl implements AiChatService {
-
-    private static final Logger log = LoggerFactory.getLogger(AiChatServiceImpl.class);
 
     private final ChatClient chatClient;
     private final AiConversationMapper conversationMapper;

@@ -8,8 +8,7 @@ import com.contest.register.entity.Registration;
 import com.contest.register.param.RegPersonalRequest;
 import com.contest.register.param.RegTeamRequest;
 import com.contest.register.param.RejectRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.contest.register.service.RegistrationService;
@@ -21,9 +20,9 @@ import jakarta.validation.Valid;
 /** 报名管理接口 */
 @RestController
 @RequestMapping("/api/registration")
+@Slf4j
 public class RegistrationController {
 
-    private static final Logger log = LoggerFactory.getLogger(RegistrationController.class);
     private final RegistrationService registrationService;
 
     public RegistrationController(RegistrationService registrationService) {

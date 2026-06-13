@@ -11,8 +11,7 @@ import com.contest.team.param.TeamJoinRequest;
 import com.contest.team.param.RejectRequest;
 import com.contest.team.param.SetTeacherRequest;
 import com.contest.team.service.TeamService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,9 +21,9 @@ import java.util.List;
 /** 团队管理接口 */
 @RestController
 @RequestMapping("/api/team")
+@Slf4j
 public class TeamController {
 
-    private static final Logger log = LoggerFactory.getLogger(TeamController.class);
     private final TeamService teamService;
 
     public TeamController(TeamService teamService) {

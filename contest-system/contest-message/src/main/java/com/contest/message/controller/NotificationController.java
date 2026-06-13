@@ -7,8 +7,7 @@ import com.contest.common.util.HtmlSanitizer;
 import com.contest.message.entity.Notification;
 import com.contest.message.param.NotificationSendRequest;
 import com.contest.message.service.NotificationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +16,9 @@ import jakarta.validation.Valid;
 /** 通知消息接口 */
 @RestController
 @RequestMapping("/api/notification")
+@Slf4j
 public class NotificationController {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
     private final NotificationService notificationService;
 
     public NotificationController(NotificationService notificationService) {

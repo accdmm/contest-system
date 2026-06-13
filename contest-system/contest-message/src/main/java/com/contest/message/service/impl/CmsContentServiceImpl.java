@@ -6,13 +6,14 @@ import com.contest.common.constant.CommonConstants;
 import com.contest.message.entity.CmsContent;
 import com.contest.message.mapper.CmsContentMapper;
 import com.contest.message.service.CmsContentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** 内容管理服务实现 */
+@Slf4j
 @Service
 public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsContent> implements CmsContentService {
 
@@ -43,6 +44,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CmsContent createContent(CmsContent content) {
+        log.info("create cms content: type={}, title={}", content.getContentType(), content.getTitle());
         content.setStatus(CommonConstants.CMS_VISIBLE);
         save(content);
         return content;
@@ -51,6 +53,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     @Transactional(rollbackFor = Exception.class)
     public CmsContent updateContent(CmsContent content) {
+        log.info("update cms content: id={}, title={}", content.getId(), content.getTitle());
         content.setPublishTime(LocalDateTime.now());
         updateById(content);
         return content;

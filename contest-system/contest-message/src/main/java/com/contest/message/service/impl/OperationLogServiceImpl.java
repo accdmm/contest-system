@@ -6,10 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.contest.message.entity.OperationLog;
 import com.contest.message.mapper.OperationLogMapper;
 import com.contest.message.service.OperationLogService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 操作日志服务实现 */
+@Slf4j
 @Service
 public class OperationLogServiceImpl implements OperationLogService {
 

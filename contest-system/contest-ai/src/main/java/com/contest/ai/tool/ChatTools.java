@@ -10,6 +10,7 @@ import com.contest.team.entity.Team;
 import com.contest.team.service.TeamService;
 import com.contest.user.entity.User;
 import com.contest.user.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -18,13 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Component
+@Slf4j
 public class ChatTools {
 
-    private static final Logger log = LoggerFactory.getLogger(ChatTools.class);
     private static final ThreadLocal<Long> CURRENT_USER_ID = new ThreadLocal<>();
 
     private final ContestService contestService;

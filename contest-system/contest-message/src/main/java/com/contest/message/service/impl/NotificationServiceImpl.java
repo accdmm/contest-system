@@ -1,6 +1,7 @@
 package com.contest.message.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,13 +14,14 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 通知服务实现 */
+@Slf4j
 @Service
 public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Notification> implements NotificationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void sendNotification(Long userId, Integer type, String title, String content, Long relatedId, String relatedType) {
+        log.info("send notification: userId={}, type={}, title={}", userId, type, title);
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setType(type);
@@ -34,6 +36,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void sendBroadcast(Integer type, String title, String content) {
+        log.info("send broadcast: type={}, title={}", type, title);
         Notification notification = new Notification();
         notification.setUserId(0L);
         notification.setType(type);
@@ -59,6 +62,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     public void markAsRead(Long id, Long userId) {
         Notification notification = getById(id);
         if (notification == null) {
+            log.warn("notification not found: id={}", id);
             throw new BusinessException("通知不存在");
         }
         if (!Objects.equals(notification.getUserId(), userId) && notification.getUserId() != 0L) {

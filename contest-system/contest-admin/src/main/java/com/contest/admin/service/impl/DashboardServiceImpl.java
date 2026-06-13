@@ -12,6 +12,7 @@ import com.contest.team.service.TeamService;
 import com.contest.user.entity.User;
 import com.contest.user.mapper.UserMapper;
 import com.contest.user.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
