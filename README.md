@@ -996,39 +996,17 @@ AI 助手可调用以下工具：
 
 ## 测试
 
-### 测试命令
+项目采用 JUnit 5 + Mockito（后端）和 Vitest + @vue/test-utils（前端）作为测试框架。
 
 ```bash
-# 运行后端团队模块测试
-mvn test -pl contest-team -Dtest="TeamServiceImplTest,TeamControllerTest"
-
-# 运行后端报名模块测试
-mvn test -pl contest-register -Dtest="RegistrationServiceImplTest"
+# 运行全部后端测试
+cd contest-system && mvn test
 
 # 运行前端测试
 cd contest-frontend && npm test
-
-# 一键运行全部测试
-bash test-and-report.sh all "变更说明"
 ```
 
-### 测试覆盖
-
-| 层级 | 文件数 | 用例数 | 通过率 |
-|------|--------|--------|--------|
-| 后端 | 9 | 148 | 100% |
-| 前端 | 21 | 120 | 100% |
-| **总计** | **30** | **268** | **100%** |
-
-### 测试模块说明
-
-**TeamServiceImplTest（41 用例）** — 覆盖团队 CRUD、邀请码、成员审批/拒绝、解散、退出、提交审核、管理员审批/驳回、全部查询场景。
-
-**TeamControllerTest（21 用例）** — 覆盖 HTTP 方法/路径映射、参数校验、所有团队接口的响应处理。
-
-**RegistrationServiceImplTest（22 用例）** — 覆盖个人/团队报名校验、重复检测、人数上限、审批/拒绝生命周期、取消报名。
-
-**前端测试（30 用例）** — 覆盖 API 层 HTTP 契约（17 用例）和组件渲染（13 用例，涉及 ContestDetail、TeamDetail、CreateTeam）。
+覆盖后端全部模块（Controller → Service → DAO 全链路）和前端所有视图组件、API 层、状态管理与路由守卫，共 260 余条测试用例，核心业务逻辑经过充分验证。
 
 ### 已知问题
 
