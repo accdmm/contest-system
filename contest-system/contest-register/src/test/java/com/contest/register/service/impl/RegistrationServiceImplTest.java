@@ -197,6 +197,13 @@ class RegistrationServiceImplTest {
     }
 
     @Test
+    void approveRegistration_shouldThrowWhenContestNotFound() {
+        jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
+        jdbc.execute("DELETE FROM contest WHERE id = 1");
+        assertThrows(BusinessException.class, () -> registrationService.approveRegistration(10L));
+    }
+
+    @Test
     void approveRegistration_shouldSucceed() {
         jdbc.execute("INSERT INTO registration (id, contest_id, user_id, reg_type, status) VALUES (10, 1, 1, 0, 0)");
         registrationService.approveRegistration(10L);

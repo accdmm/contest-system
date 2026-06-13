@@ -57,6 +57,7 @@ public class ChatTools {
                     c.getRegisterEndTime(), c.getCurrentCount()))
                 .collect(Collectors.joining("\n"));
         } catch (Exception e) {
+            log.error("queryContests failed", e);
             return "查询竞赛失败: " + e.getMessage();
         }
     }
@@ -80,6 +81,7 @@ public class ChatTools {
                     : c.getDescription()
             );
         } catch (Exception e) {
+            log.error("getContestDetail failed, contestId={}", contestId, e);
             return "查询竞赛详情失败: " + e.getMessage();
         }
     }
@@ -114,6 +116,7 @@ public class ChatTools {
                 })
                 .collect(Collectors.joining("\n"));
         } catch (Exception e) {
+            log.error("queryMyRegistrations failed, userId={}", userId, e);
             return "查询报名状态失败: " + e.getMessage();
         }
     }
@@ -139,6 +142,7 @@ public class ChatTools {
                 user.getPhone() != null ? user.getPhone() : "未设置"
             );
         } catch (Exception e) {
+            log.error("getCurrentUserInfo failed, userId={}", userId, e);
             return "获取用户信息失败: " + e.getMessage();
         }
     }
@@ -164,6 +168,7 @@ public class ChatTools {
                     : c.getDescription()
             );
         } catch (Exception e) {
+            log.error("searchContestDetail failed, contestName={}", contestName, e);
             return "查询竞赛详情失败: " + e.getMessage();
         }
     }
@@ -212,6 +217,7 @@ public class ChatTools {
                 })
                 .collect(Collectors.joining("\n"));
         } catch (Exception e) {
+            log.error("queryMyTeams failed, userId={}", userId, e);
             return "查询团队信息失败: " + e.getMessage();
         }
     }
@@ -236,6 +242,7 @@ public class ChatTools {
                 registrationService.registerPersonal(userId, contest.getId(), remark);
                 return "报名成功！您已成功报名「" + contest.getName() + "」，当前状态为待审核，请耐心等待管理员审核。";
             } catch (Exception e) {
+                log.error("registerForContest registration failed, userId={}, contestId={}", userId, contest.getId(), e);
                 String msg = e.getMessage();
                 if (msg != null && msg.contains("您已报名该竞赛")) {
                     return "您已报名过「" + contest.getName() + "」，无需重复报名";
@@ -243,6 +250,7 @@ public class ChatTools {
                 return "报名失败: " + (msg != null ? msg : "未知错误");
             }
         } catch (Exception e) {
+            log.error("registerForContest search failed, contestName={}", contestName, e);
             return "报名失败: " + e.getMessage();
         }
     }
@@ -274,6 +282,7 @@ public class ChatTools {
                     + "\n邀请码: " + team.getInviteCode()
                     + "\n\n将邀请码分享给队友，他们可以加入你的团队。组队完成后，队长可以提交审核。";
             } catch (Exception e) {
+                log.error("createTeamForContest team creation failed, userId={}, teamName={}", userId, teamName, e);
                 String msg = e.getMessage();
                 if (msg != null) {
                     if (msg.contains("你已在同一竞赛的团队中")) {
@@ -286,6 +295,7 @@ public class ChatTools {
                 return "创建团队失败: " + (msg != null ? msg : "未知错误");
             }
         } catch (Exception e) {
+            log.error("createTeamForContest search failed, contestName={}", contestName, e);
             return "创建团队失败: " + e.getMessage();
         }
     }

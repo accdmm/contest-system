@@ -245,11 +245,13 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
             throw new BusinessException("仅待审核状态的报名可批准");
         }
         Contest contest = contestService.getById(reg.getContestId());
-        if (contest != null) {
-            checkMaxParticipantsForApproval(contest);
-            contest.setCurrentCount(contest.getCurrentCount() == null ? 1 : contest.getCurrentCount() + 1);
-            contestService.updateById(contest);
+        if (contest == null) {
+            log.warn("approveRegistration failed: contest not found, contestId={}", reg.getContestId());
+            throw new BusinessException("关联竞赛不存在，无法审核通过");
         }
+        checkMaxParticipantsForApproval(contest);
+        contest.setCurrentCount(contest.getCurrentCount() == null ? 1 : contest.getCurrentCount() + 1);
+        contestService.updateById(contest);
         reg.setStatus(CommonConstants.REG_APPROVED);
         updateById(reg);
 
@@ -288,7 +290,9 @@ public class RegistrationServiceImpl extends ServiceImpl<RegistrationMapper, Reg
 
         if (wasApproved) {
             Contest contest = contestService.getById(reg.getContestId());
-            if (contest != null && contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
+            if (contest == null) {
+                log.warn("rejectRegistration: contest not found, contestId={}, skipping count decrement", reg.getContestId());
+            } else if (contest.getCurrentCount() != null && contest.getCurrentCount() > 0) {
                 contest.setCurrentCount(contest.getCurrentCount() - 1);
                 contestService.updateById(contest);
             }

@@ -35,7 +35,7 @@ public class JwtUtil {
     @Value("${contest.jwt.expire-days:7}")
     private long expireDays;
 
-    @Value("${contest.jwt.secret:contest-system-jwt-secret-key-2024-2025-2026}")
+    @Value("${contest.jwt.secret}")
     private String secret;
 
     /**
