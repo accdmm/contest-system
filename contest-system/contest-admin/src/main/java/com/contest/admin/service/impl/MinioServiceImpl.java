@@ -138,7 +138,7 @@ public class MinioServiceImpl implements MinioService {
         } catch (InsufficientDataException | InternalException |
                  InvalidResponseException | ServerException | XmlParserException |
                  GeneralSecurityException | IOException e) {
-            log.error("MinIO getFile error: {}", e.getMessage());
+            log.error("MinIO getFile error", e);
             throw new BusinessException("文件读取失败: " + e.getMessage());
         }
     }

@@ -5,6 +5,7 @@ import com.contest.common.result.ResultCodeEnum;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -49,7 +50,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
-        log.warn("Constraint violation: {}", e.getMessage());
+        log.warn("Constraint violation: {}", e.getMessage(), e);
         return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), e.getMessage());
     }
 
@@ -61,7 +62,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public Result<Void> handleMissingParam(MissingServletRequestParameterException e) {
-        log.warn("Missing request parameter: {}", e.getParameterName());
+        log.warn("Missing request parameter: {}", e.getParameterName(), e);
         return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), "缺少必填参数: " + e.getParameterName());
     }
 
@@ -73,12 +74,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Result<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
-        return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), "不支持的请求方法: " + e.getMethod());
+        String method = e.getMethod() != null ? e.getMethod() : "UNKNOWN";
+        return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), "不支持的请求方法: " + method);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
-        log.warn("Illegal argument: {}", e.getMessage());
+        log.warn("Illegal argument: {}", e.getMessage(), e);
         return Result.error(ResultCodeEnum.PARAM_ERROR.getCode(), e.getMessage());
     }
 
@@ -91,6 +93,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Result<Void> handleDataIntegrityViolation(DataIntegrityViolationException e) {
         log.warn("Data integrity violation", e);
+        return Result.error(ResultCodeEnum.CONFLICT);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public Result<Void> handleDataAccess(DataAccessException e) {
+        log.warn("Data access error", e);
         return Result.error(ResultCodeEnum.CONFLICT);
     }
 
